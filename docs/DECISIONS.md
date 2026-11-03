@@ -1655,3 +1655,24 @@ Format: id — decision — reason — consequence. Changing a frozen core contr
   url, notes` and ignores other keys. Tests: a feed with both `platforms` entries and the feed `manifest.py
   --mac-zip` writes both give 0.1.3 (and the frozen 0.1.4 parser) the .exe, same asset / sha256 / url as today's
   win32 reading, within 0.1.3's 256 KiB feed limit.
+- **ADR-271** [macOS build, first real CI run] The first run of `mac-build.yml` (run 41572280122, macos-15 arm64)
+  stopped in `build_mac_app.py install_deps()`: "installed set differs from uv.lock" listing all 7 plugin wheels.
+  Cause: `uv pip freeze` prints a distribution installed from a local wheel file as `name @ file:///...whl` (no
+  `==`; reproduced here with uv 0.13.5 on Linux), and `freeze()` kept only `==` lines, so the plugins were never
+  "installed" while `want` had `name==version` for them. The lock pins matched, which is why only the wheels were
+  listed. Fix: the installed set is read with `uv pip list --python <py> --format json` and compared as (PEP 503
+  normalised name, version) pairs; each lock pin must be an exact `name[extras]==version` (anything else stops the
+  build: "not an exact pin"); the newly installed set must still equal pins + wheels exactly, and a mismatch names
+  each pair as missing or extra. Tests (`tests/test_mac_app.py`): a fake uv that answers `freeze` in the real
+  `@ file://` form for wheels (and `==` for the rest) and `list --format json` with name + version; failing first
+  on the old code with the CI message; extra / missing / wrong-version cases still fail; a differently spelled
+  installed name (Ruamel.YAML vs ruamel-yaml) matches. Also run for real on Linux: `install_deps` with real uv into
+  a fresh venv, 2 lock pins + all 7 plugin wheels built by `uv build --all-packages`: equal.
+  Review of the steps after it, by reading and by Linux rehearsal (macOS NOT RUN): the smoke sequence (headless
+  launcher -> health version -> `doctor` -> db file -> `stop.sh`) was run with the unchanged launcher in a fake
+  bundle (Resources/python -> the dev venv, Resources/app -> the checkout, fresh HOME): launcher 0, health version
+  = pyproject version, doctor exit 0 on a fresh install (only WARN / NOT RUN besides PASS: loopback, low-priv
+  worker, GPU, torch, gpu_preflight), db at `db/researchos.db`, both processes stopped; the setup token appears
+  only in launcher.log and the dump step's sed removes it. `compileall` (non-zero on any syntax error) has nothing
+  to fail on in the dev venv's site-packages or the 262 app .py files. No other defect found that could be proved
+  without a Mac; nothing else changed.

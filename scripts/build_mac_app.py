@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import plistlib
+import re
 import shutil
 import struct
 import subprocess
@@ -109,26 +110,39 @@ def assemble(app: Path, version: str, commit: str, python_tgz: Path) -> dict[str
     return manifest
 
 
-def freeze(py: Path, run: Runner) -> set[str]:
-    out = run(["uv", "pip", "freeze", "--python", str(py)])
-    return {ln.strip().lower() for ln in out.splitlines() if "==" in ln}
+def _norm(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()  # PEP 503
+
+
+def _pin(line: str) -> tuple[str, str]:
+    m = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?==([^\s;]+)", line.strip())
+    if not m:
+        raise SystemExit(f"not an exact pin: {line!r}")
+    return _norm(m[1]), m[2]
+
+
+def installed(py: Path, run: Runner) -> set[tuple[str, str]]:
+    """(normalised name, version) of every installed distribution. Not `uv pip freeze`: it prints a local wheel install
+    as `name @ file:///...` without a version (the plugin wheels; macos-15 run 41572280122)."""
+    return {(_norm(d["name"]), d["version"])
+            for d in json.loads(run(["uv", "pip", "list", "--python", str(py), "--format", "json"]))}
 
 
 def install_deps(res: Path, pins: list[str], project: Path, run: Runner) -> dict[str, object]:
     """Lock pins + plugin wheels into the bundled Python; the newly installed set must equal them exactly."""
     py = res / "python" / "bin" / "python3"
     plugins = sorted(project.glob("researchos_plugin_*.whl"))
-    before = freeze(py, run)
+    want = {_pin(p) for p in pins} | {(_norm(w.name.split("-")[0]), w.name.split("-")[1]) for w in plugins}
+    before = installed(py, run)
     req = project / "requirements-mac.txt"
     req.write_text("\n".join(pins) + "\n", encoding="utf-8")
     run(["uv", "pip", "install", "--python", str(py), "--no-deps", "-r", str(req)])
     if plugins:
         run(["uv", "pip", "install", "--python", str(py), "--no-deps", *map(str, plugins)])
-    want = {p.lower() for p in pins} | {
-        f"{w.name.split('-')[0].replace('_', '-')}=={w.name.split('-')[1]}" for w in plugins}
-    got = freeze(py, run) - before
+    got = installed(py, run) - before
     if got != want:
-        raise SystemExit(f"installed set differs from uv.lock: {sorted(got ^ want)[:10]}")
+        diff = sorted(f"{'missing' if x in want else 'extra'} {x[0]}=={x[1]}" for x in got ^ want)
+        raise SystemExit(f"installed set differs from uv.lock: {diff[:10]}")
     run([str(py), "-m", "compileall", "-q", "--invalidation-mode", "checked-hash", str(res / "app"),
          str(res / "python" / SITE)])
     return {"pins": len(pins), "plugins": [w.name for w in plugins], "resolution": f"{TRIPLE} install equals uv.lock"}

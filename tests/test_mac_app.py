@@ -109,26 +109,94 @@ def test_python_pin() -> None:
     assert "aarch64-apple-darwin-install_only.tar.gz" in bm.PY_URL and "x86_64" not in bm.PY_URL  # type: ignore[attr-defined]
 
 
+class _FakeUv:
+    """The bundled Python's package set as real uv reports it: `uv pip freeze` prints a local wheel install as
+    `name @ file:///...` (no `==`; seen on the first macos-15 run 41572280122 and reproduced with uv 0.13.5 on
+    Linux), `uv pip list --format json` gives name + version for everything."""
+
+    def __init__(self, installed: dict[str, str]) -> None:
+        self.installed, self.wheels, self.calls = dict(installed), set[str](), list[list[str]]()
+
+    def __call__(self, cmd: list[str]) -> str:
+        self.calls.append(cmd)
+        if cmd[:3] == ["uv", "pip", "freeze"]:
+            return "\n".join(f"{n} @ file:///tmp/w/{n}-{v}.whl" if n in self.wheels else f"{n}=={v}"
+                             for n, v in self.installed.items())
+        if cmd[:3] == ["uv", "pip", "list"]:
+            assert cmd[cmd.index("--format") + 1] == "json"
+            return json.dumps([{"name": n, "version": v} for n, v in self.installed.items()])
+        if cmd[:3] == ["uv", "pip", "install"]:
+            if "-r" in cmd:
+                for ln in Path(cmd[cmd.index("-r") + 1]).read_text().split():
+                    name, _, ver = ln.partition("==")
+                    self.installed[name.split("[")[0]] = ver
+            for w in (Path(c).name for c in cmd if c.endswith(".whl")):
+                name, ver = w.split("-")[:2]
+                self.installed[name.replace("_", "-")] = ver
+                self.wheels.add(name.replace("_", "-"))
+        return ""
+
+
 def test_install_deps_requires_the_lock_set(tmp_path: Path) -> None:
     res, project = tmp_path / "Resources", tmp_path / "wheels"
     project.mkdir()
     (project / "researchos_plugin_x-0.1.0-py3-none-any.whl").write_bytes(b"")
-    calls: list[list[str]] = []
-    frozen = [["pip==25.0"], ["pip==25.0", "numpy==2.5.4", "researchos-plugin-x==0.1.0"]]
-
-    def run(cmd: list[str]) -> str:
-        calls.append(cmd)
-        return "\n".join(frozen.pop(0)) if cmd[:3] == ["uv", "pip", "freeze"] else ""
-
-    rep = bm.install_deps(res, ["numpy==2.5.4"], project, run)  # type: ignore[attr-defined]
-    assert rep["pins"] == 1 and rep["plugins"] == ["researchos_plugin_x-0.1.0-py3-none-any.whl"]
-    installs = [c for c in calls if c[:3] == ["uv", "pip", "install"]]
+    run = _FakeUv({"pip": "25.0"})
+    rep = bm.install_deps(res, ["numpy==2.5.4", "ruamel-yaml==0.18.6"], project, run)  # type: ignore[attr-defined]
+    assert rep["pins"] == 2 and rep["plugins"] == ["researchos_plugin_x-0.1.0-py3-none-any.whl"]
+    installs = [c for c in run.calls if c[:3] == ["uv", "pip", "install"]]
     assert all("--no-deps" in c and str(res / "python/bin/python3") in c for c in installs)
-    assert any(c[1:3] == ["-m", "compileall"] for c in calls)
+    assert any(c[1:3] == ["-m", "compileall"] for c in run.calls)
 
-    frozen[:] = [["pip==25.0"], ["pip==25.0", "numpy==2.5.4", "idna==3.0", "researchos-plugin-x==0.1.0"]]
+
+def test_install_deps_matches_local_wheels_reported_as_file_urls(tmp_path: Path) -> None:
+    """The real freeze form of the 7 plugin wheels (`name @ file://`) and a differently spelled installed name
+    (Ruamel.YAML vs the lock's ruamel-yaml) still equal the lock set."""
+    res, project = tmp_path / "Resources", tmp_path / "wheels"
+    project.mkdir()
+    for n in ("diag_stats", "har_datasets"):
+        (project / f"researchos_plugin_{n}-0.1.0-py3-none-any.whl").write_bytes(b"")
+    run = _FakeUv({"pip": "25.0"})
+    real_install = run.__call__
+
+    def spelled(cmd: list[str]) -> str:
+        out = real_install(cmd)
+        if "ruamel-yaml" in run.installed:
+            run.installed["Ruamel.YAML"] = run.installed.pop("ruamel-yaml")
+        return out
+
+    rep = bm.install_deps(res, ["numpy==2.5.4", "ruamel-yaml==0.18.6"], project, spelled)  # type: ignore[attr-defined]
+    assert len(rep["plugins"]) == 2 and run.wheels == {"researchos-plugin-diag-stats", "researchos-plugin-har-datasets"}
+
+
+@pytest.mark.parametrize("change", ["extra", "missing", "version"])
+def test_install_deps_still_demands_exact_equality(tmp_path: Path, change: str) -> None:
+    res, project = tmp_path / "Resources", tmp_path / "wheels"
+    project.mkdir()
+    (project / "researchos_plugin_x-0.1.0-py3-none-any.whl").write_bytes(b"")
+    run = _FakeUv({"pip": "25.0"})
+    real = run.__call__
+
+    def tamper(cmd: list[str]) -> str:
+        out = real(cmd)
+        if cmd[:3] == ["uv", "pip", "install"] and "-r" not in cmd:  # after both installs
+            if change == "extra":
+                run.installed["idna"] = "3.0"
+            elif change == "missing":
+                del run.installed["numpy"]
+            else:
+                run.installed["researchos-plugin-x"] = "0.1.1"
+        return out
+
     with pytest.raises(SystemExit, match="differs from uv.lock"):
-        bm.install_deps(res, ["numpy==2.5.4"], project, run)  # type: ignore[attr-defined]
+        bm.install_deps(res, ["numpy==2.5.4"], project, tamper)  # type: ignore[attr-defined]
+
+
+def test_install_deps_rejects_a_pin_that_is_not_exact(tmp_path: Path) -> None:
+    project = tmp_path / "wheels"
+    project.mkdir()
+    with pytest.raises(SystemExit, match="not an exact pin"):
+        bm.install_deps(tmp_path / "Resources", ["numpy>=2"], project, _FakeUv({}))  # type: ignore[attr-defined]
 
 
 def test_package_signs_then_zips_and_makes_a_dmg(tmp_path: Path) -> None:
