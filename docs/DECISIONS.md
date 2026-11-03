@@ -1532,3 +1532,126 @@ Format: id — decision — reason — consequence. Changing a frozen core contr
   installer build (0.1.3, 2026-10-28 01:40) and never shipped. Test: the pre-0014 state with the sibling and an
   independent rejection at the same timestamp and actor - after 0017 only the confirm has a decision id; the failed
   resumed linking re-opens only it; both rejections stay rejected (confirming them is 409).
+
+- **ADR-263** [macOS build, step 1; owner scope: Apple Silicon only] Platform layer for a bundled Mac install.
+  `platform.IS_MACOS`; `platform/macos.py` holds pure path rules: an app root of `<X>.app/Contents/Resources/app` is a
+  bundled install, whose data defaults to `~/Library/Application Support/ResearchOS` and logs to
+  `~/Library/Logs/ResearchOS` (both outside the bundle, so replacing the .app on update keeps them); a dev checkout
+  on a Mac keeps `<repo>/data` as on Linux. The home comes from the password database (`pwd`), not `$HOME`, because
+  the trusted processes point HOME into the data dir after start. Settings gets `log_dir` ("" = `<data_dir>/logs`,
+  env `RESEARCHOS_LOG_DIR`); `logs_dir` follows it. To let `kernel.config` use these rules, import-linter now layers
+  `kernel > platform` (platform imports nothing from kernel; before, the two were independent siblings).
+  `process.detached_kwargs()` is the one place for "own process group": Windows hidden + new group (+ breakaway from
+  the job for the update helper), POSIX `start_new_session=True`; `spawn()` and the update helper use it, so the
+  Windows flags are unchanged. Tested on Linux with a fake home; macOS NOT RUN.
+- **ADR-264** [macOS build, step 2] `scripts/build_mac_app.py` assembles `ResearchOS.app` for Apple Silicon only
+  (owner scope; no x86_64 pin): `Contents/Info.plist` (no LSUIElement, so a Dock icon), `MacOS/ResearchOS` =
+  `packaging/macos/launcher.sh`, `Resources/python` = python-build-standalone CPython 3.12.15 `install_only`
+  (release 20261021, sha256 pinned from the release's SHA256SUMS and checked on download), `Resources/app` =
+  `build_package.stage_app()` (the Windows file list, one source; its manifest carries the Mac acceptance status),
+  `Resources/ResearchOS.icns` built from the PNGs inside the .ico (stdlib only). Like Windows, the app is source on
+  the path (a relative `.pth` in site-packages), not an installed wheel. Dependencies: `win_runtime.requirements()`
+  (now parametrized by target triple) for `aarch64-apple-darwin` plus the plugin wheels (`win_runtime.
+  project_wheels()`, shared), installed with `uv pip install --python <bundled> --no-deps`; the build fails unless
+  the newly installed set equals them. Bytecode is compiled at build time (checked-hash) and the launcher sets
+  PYTHONDONTWRITEBYTECODE, so nothing writes into the signed bundle. Then `codesign --force --deep -s -` (ad-hoc, no
+  account, not notarized), `ditto -c -k --keepParent` -> `ResearchOS-<v>-mac-arm64.zip` (update asset), `hdiutil`
+  -> `.dmg` with an /Applications link, a `.sha256` per asset and a `.build.json`. The launcher reuses
+  `scripts/start.sh` (which now takes `RESEARCHOS_PYTHON` and `RESEARCHOS_LOG_DIR`) and `stop.sh`: already
+  answering -> `open` the URL; else start detached, wait up to 90 s for `/api/v1/health`, show the first-run setup
+  token in a dialog (copied with pbcopy), open the browser; errors -> dialog + `launcher.log`.
+  `RESEARCHOS_HEADLESS=1` skips dialog and browser (CI smoke). The URL is fixed at http://127.0.0.1:8443 in this
+  first version. Tests stub codesign/ditto/hdiutil/the bundled Python; the launcher was run once on Linux with a
+  fake bundle (server up, data/logs in the Library paths, second start only opens). macOS NOT RUN.
+- **ADR-265** [macOS build, step 3] `.github/workflows/mac-build.yml`: `workflow_dispatch` + push of a `v*` tag, one
+  job on `macos-15` (arm64; no matrix, no Intel runner, owner scope), `permissions: contents: read`, no secrets, no
+  release step. Steps: web build (pnpm 10.34.6, node 20.19.2, frozen lockfile), `build_mac_app.py`, then a smoke
+  test of the built zip as a user would get it: `ditto -x -k`, `codesign --verify --deep --strict`, the launcher
+  with `RESEARCHOS_HEADLESS=1` and a temporary HOME, `/api/v1/health` must report the built version, `doctor`
+  (fails only on FAIL items), the database exists, `stop.sh`; logs are printed even on failure. Uploads zip, dmg,
+  `.sha256` and the build json as workflow artifacts only; the maintainer downloads and verifies them, signs
+  latest.json on the maintainer machine and uploads (the Ed25519 key never reaches CI). Third-party actions are
+  pinned to the commit of their current release tag (resolved with `git ls-remote` on 2026-10-30). The export is a
+  deny list, so the workflow ships with the public export; it passes the leak scan (a test asserts it is not
+  denied). Pushing it is the owner's step. Static tests on Linux; the workflow itself is NOT RUN (macOS NOT RUN).
+- **ADR-266** [macOS build, step 4] Multi-platform update feed, backward compatible. latest.json keeps its top level
+  exactly (`version, asset = ResearchOS-Setup-<v>.exe, sha256, url, notes, notes_zh`, same key order; a Windows-only
+  release is byte-identical to before) and may add `platforms: {"darwin-arm64" | "darwin-x86_64": {asset, sha256,
+  url}}` (the schema keeps the x86_64 key; only arm64 is built). The one Ed25519 signature still covers the whole
+  file. `parse_release(..., platform)`: the top level and every known entry must pass the same rules (sha256 hex,
+  https or loopback http, the feed's own host, path ending in the asset, asset = `asset_name(v, platform)` =
+  `ResearchOS-<v>-mac-<arch>.zip` for Mac); unknown keys are ignored so a later feed can add platforms. A Mac client
+  (`current_platform()` = `darwin-<arm64|x86_64>` from the CPU) returns its entry; a missing entry is the new code
+  `update_platform_missing` (HTTP 409, en/zh UI strings) and never falls back to the .exe; every other platform
+  reads the top level as before. A regression test parses new feeds with a frozen verbatim copy of the 0.1.4
+  parser (`tests/fixtures/update_feed_v0_1_4.py`, from release/v0.1.4 d9434ff): it still gets the exe; 0.1.3 reads
+  the same top-level keys without a signature. `manifest.py --mac-zip <zip>` (next to the exe; name gives the key)
+  fills `platforms`, writes a .sha256 per asset and checks the signed feed for every platform; `publish.py`
+  uploads the zips the feed names with their .sha256 and checks each against the feed. Signing stays on the
+  maintainer machine.
+- **ADR-267** [macOS build, step 5] One-click install on a Mac. `platform.macos.updatable_bundle()` gives the `.app`
+  the updater may replace: an app root of `<X>.app/Contents/Resources/app`, not under `/Volumes` (run from the dmg)
+  or `…/AppTranslocation/…` (Gatekeeper's read-only copy), with a writable parent folder; otherwise `can_install` is
+  false and install answers `update_unsupported` (the owner drags the new version into Applications). The updater
+  dispatches the helper by platform (Windows command unchanged) and on a Mac copies `scripts/apply_update.sh` next
+  to the verified zip and starts `/bin/sh apply_update.sh <zip> <app> <server pid> <version> <health url> <data dir>
+  <log>` detached (own session, `child_env`: no keys; the data dir is an argument because the helper's environment
+  carries no RESEARCHOS_* variables). The helper mirrors ADR-229: stop the app (its stop.sh with the data dir), wait
+  up to 60 s for the server PID, `ditto -x -k` into `<parent>/.ResearchOS-update-<v>`, refuse unless the unpacked
+  app's pyproject version is the expected one (nothing changed, current app reopened), keep the current app as
+  `<app>.prev`, move the new one in, `open` it, poll the health URL for the new version (120 s); healthy -> remove
+  `.prev`; else stop, keep the new app as `<app>.failed`, restore `.prev`, reopen; log `<logs>/update.log` (the
+  diagnostics bundle already collects it). A zip the app downloaded itself carries no quarantine flag, so the
+  replaced app opens without the Gatekeeper prompt (macOS NOT RUN). `e2e_check.py` gains mac-signed /
+  mac-tampered / mac-rollback: a fake .app (version file + the real stop.sh) in a temp Applications folder, a fake
+  app server, stand-ins for `ditto` (unzip) and `open` (starts the fake server), the real Updater and the real
+  apply_update.sh; the captured command's server PID is the fake server's (in the app the updater runs inside the
+  server). The Mac scenarios live in `e2e_mac.py`, shared parts in `e2e_common.py` (the 400-line limit). Runs on
+  Linux in the test suite; the real ditto/open/Gatekeeper path is macOS NOT RUN.
+- **ADR-270** [macOS build, Codex review of steps 4-6] Hardening of the Mac update helper (`apply_update.sh`) and
+  the Mac CI log. (1) Zip integrity at unpack time: the downloaded zip was verified once, but the helper unpacked
+  whatever file lay at that path later. `Updater` now passes the signed feed's sha256 as the helper's 8th argument;
+  the helper copies the zip into a private `mktemp -d` dir (mode 700), hashes the copy (`shasum -a 256`, the e2e
+  box's `sha256sum`) and unpacks only that copy, and only if the digest equals the argument. A missing or malformed
+  digest, or a different one, gives up before `ditto` runs: nothing unpacked, nothing changed, the current app is
+  reopened (exit 1). The check runs after the server stopped (the existing "any failure before the swap" path), so
+  the app restarts with a fresh update state instead of sitting in "installing". The helper is copied from the
+  installed app, so old and new argument lists never mix. e2e: `mac-zip-swapped` (the verified zip replaced after
+  the download by a same-version zip with one extra file) and `mac-no-digest`: exit 1, `ditto` never called (the
+  stand-in logs its calls), no extra file anywhere, the old app intact and answering, update.log says why.
+  macOS NOT RUN: real `shasum`/`ditto` only on a Mac; on Linux the stand-ins and `sha256sum` are used.
+  (2) Rollback waits for the failed version: `stop.sh` only sends SIGTERM and drops the pid files, so a slow server
+  could still answer health requests and make the restored app's launcher skip starting it. The helper reads the
+  API + worker pids first, runs stop.sh and waits until all have exited (`STOP_TIMEOUT_S`, 60 s; the first stop
+  also waits for the worker now). Never SIGKILL (a server killed mid-write could damage the database): still
+  running after the timeout -> nothing is moved, update.log says so and names the pids, exit 3. After the restore
+  the helper polls the health URL for the previous version (read from the app before the swap) and logs "health
+  check after rollback OK" (exit 2) or that it does not answer (exit 3). Exit codes: 0 updated, 1 nothing changed,
+  2 rolled back and answering, 3 needs a look. e2e `mac-rollback-slow`: the new fake app answers with a wrong
+  version and exits 3 s after SIGTERM; the restore waited >= 2 s and the old version answers (with the previous
+  script the restored app could not bind the port and nothing answered). The plain rollback also checks the
+  restored version's health line.
+  (3) Every move is checked and the log tells the real state. Swap: if moving the new app in fails, the current app
+  is moved back and only then is it "nothing changed" + reopen; if that recovery move fails too, update.log names
+  where the old app (`<app>.prev`) and the new one (the unpack dir, kept) are, says nothing is at `<app>`, asks to
+  move `.prev` back by hand, and nothing is opened (exit 3). Rollback: a failed move of the new app aside, or of
+  `.prev` back, logs "rollback failed: ..." with the same facts, never "previous version restored", opens nothing
+  and keeps `.prev` / `.failed` (exit 3). e2e: `mac-rollback-mv-fail` and `mac-swap-mv-fail` inject the failure with
+  an `mv` stand-in on PATH (`E2E_MV_FAIL` source globs); the `open` stand-in logs its calls, so "not opened" is
+  checked by count; with the previous script both scenarios fail (false "restored", extra `open`, unpack dir gone).
+  (4) Mac CI log: start.sh prints the smoke instance's first-run setup token into launcher.log, which the
+  always-run "Logs of the smoke test" step dumped into the public Actions log. The step now prints the logs through
+  `sed -E 's/([Ss]etup [Tt]oken:).*/\1 [redacted]/'` (BSD and GNU sed); start.sh is unchanged because on Linux its
+  output is the owner's way to get the token. `tests/test_mac_app.py` runs the step's own command on fake logs and
+  checks the token is gone and the other lines stay; the existing test keeps every `uses:` pinned to a 40-hex
+  commit. macOS NOT RUN: the step itself only runs on the macos-15 runner (here: sh + GNU sed).
+  (5) The 0.1.3 parser, found: 0.1.3 has no `update_feed.py` (the review looked for that file); its feed parser is
+  `parse_release(raw, feed_url)` in `services/ops/updater.py` at 2400c6c "chore(release): version 0.1.3", and it
+  checks no signature (signing came with ADR-228, 626d697, later the same day). Evidence that this is what shipped:
+  there is no v0.1.3 tag or release branch; ADR-259 records the last installer build as 0.1.3 at 2026-10-28 01:40;
+  2400c6c is from 01:17 and the next commit on master (76c24a3) from 08:42, so the build can only be 2400c6c.
+  `tests/fixtures/update_feed_v0_1_3.py` is a verbatim copy of its lines 38-120 (constants, UpdateError, Release,
+  URL rules, `asset_name`, `parse_release`, `is_newer`; only the imports reduced). It reads `version, asset, sha256,
+  url, notes` and ignores other keys. Tests: a feed with both `platforms` entries and the feed `manifest.py
+  --mac-zip` writes both give 0.1.3 (and the frozen 0.1.4 parser) the .exe, same asset / sha256 / url as today's
+  win32 reading, within 0.1.3's 256 KiB feed limit.

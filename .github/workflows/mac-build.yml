@@ -1,0 +1,71 @@
+# macOS build (ADR-265): ResearchOS.app for Apple Silicon on a GitHub-hosted macos-15 runner, then a smoke test of
+# the built zip. Artifacts only: no release, no tag, no secrets (the feed is signed on the maintainer's machine).
+name: mac-build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15  # arm64; owner scope is darwin-arm64 only
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413  # v6.1.0
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 20.19.2
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Build the web app
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile && pnpm run build
+
+      - name: Build ResearchOS.app, zip and dmg
+        run: uv run --no-project --python 3.12 python scripts/build_mac_app.py --out-dir out
+
+      - name: Smoke test the zip (unpack, launch headless, health + version, doctor, stop)
+        run: |
+          set -eu
+          zip=$(ls out/ResearchOS-*-mac-arm64.zip)
+          want=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' out/*.build.json)
+          inst="$RUNNER_TEMP/inst"; export HOME="$RUNNER_TEMP/smoke"  # data and logs land in its Library
+          mkdir -p "$inst" "$HOME"
+          ditto -x -k "$zip" "$inst"
+          app="$inst/ResearchOS.app"
+          codesign --verify --deep --strict "$app"
+          RESEARCHOS_HEADLESS=1 "$app/Contents/MacOS/ResearchOS"
+          got=$(curl -fsS -m 5 http://127.0.0.1:8443/api/v1/health | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')
+          test "$got" = "$want" || { echo "health reports $got, expected $want"; exit 1; }
+          export RESEARCHOS_DATA_DIR="$HOME/Library/Application Support/ResearchOS"
+          export RESEARCHOS_LOG_DIR="$HOME/Library/Logs/ResearchOS"
+          "$app/Contents/Resources/python/bin/python3" -m researchos.app.cli doctor
+          test -f "$RESEARCHOS_DATA_DIR/db/researchos.db"
+          sh "$app/Contents/Resources/app/scripts/stop.sh"
+
+      - name: Logs of the smoke test (setup token redacted)
+        if: always()
+        # start.sh prints the smoke instance's first-run setup token into launcher.log; public logs never show it
+        # (ADR-270, tests/test_mac_app.py runs this step on a fake log)
+        run: >-
+          sed -E 's/([Ss]etup [Tt]oken:).*/\1 [redacted]/'
+          "$RUNNER_TEMP/smoke/Library/Logs/ResearchOS/"*.log "$RUNNER_TEMP/smoke/Library/Logs/ResearchOS/"*.out || true
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: researchos-mac-arm64
+          path: |
+            out/*.zip
+            out/*.dmg
+            out/*.sha256
+            out/*.build.json
+          if-no-files-found: error

@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -33,9 +34,9 @@ def github_repo(feed_url: str = FEED_URL) -> str:
     return f"{m.group(1)}/{m.group(2)}"
 
 
-def download_url(version: str, feed_url: str = FEED_URL) -> str:
+def download_url(version: str, feed_url: str = FEED_URL, platform: str = "win32") -> str:
     """The URL GitHub serves a release asset under: .../releases/download/v<version>/<asset>."""
-    return f"https://github.com/{github_repo(feed_url)}/releases/download/v{version}/{asset_name(version)}"
+    return f"https://github.com/{github_repo(feed_url)}/releases/download/v{version}/{asset_name(version, platform)}"
 
 
 def default_exe(version: str = __version__) -> Path:
@@ -47,12 +48,12 @@ def sha256_line(digest: str, name: str) -> str:
     return f"{digest}  {name}\n"
 
 
-def json_bytes(data: dict[str, str]) -> bytes:
+def json_bytes(data: Mapping[str, object]) -> bytes:
     """The published form of a JSON file (latest.json is signed over exactly these bytes)."""
     return (json.dumps(data, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
 
 
-def write_json(data: dict[str, str], path: Path) -> Path:
+def write_json(data: Mapping[str, object], path: Path) -> Path:
     path.write_bytes(json_bytes(data))
     return path
 

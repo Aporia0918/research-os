@@ -12,13 +12,30 @@ import tomllib
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
+from ..platform.macos import UserDirs, bundled_dirs
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
+
+
+def _bundled() -> UserDirs | None:
+    """Data/log dirs of a bundled Mac install (ADR-263). The account's home comes from the password database, not
+    $HOME: the trusted processes point HOME into the data dir after start (platform.env)."""
+    if sys.platform != "darwin":
+        return None
+    import pwd
+    return bundled_dirs(REPO_ROOT, Path(pwd.getpwuid(os.getuid()).pw_dir))
 
 
 def _default_data_dir() -> Path:
     if sys.platform == "win32":
         return Path(r"D:\AI\ResearchOS\data")
-    return REPO_ROOT / "data"
+    mac = _bundled()
+    return mac.data if mac else REPO_ROOT / "data"
+
+
+def _default_log_dir() -> str:
+    mac = _bundled()
+    return str(mac.logs) if mac else ""
 
 
 @dataclass
@@ -78,6 +95,8 @@ class Settings:
     update_timeout_s: float = 20.0
     # Low-privilege worker identity (baseline §7). Empty = NOT CONFIGURED (doctor reports it).
     run_as_user: str = ""
+    # Logs: "" = <data_dir>/logs; a bundled Mac install defaults to ~/Library/Logs/ResearchOS (ADR-263).
+    log_dir: str = field(default_factory=_default_log_dir)
     # Dev
     dev_mode: bool = False
     web_dist: Path = field(default_factory=lambda: REPO_ROOT / "apps" / "web" / "dist")
@@ -107,7 +126,7 @@ class Settings:
     @property
     def cache_dir(self) -> Path: return self.data_dir / "cache"
     @property
-    def logs_dir(self) -> Path: return self.data_dir / "logs"
+    def logs_dir(self) -> Path: return Path(self.log_dir) if self.log_dir else self.data_dir / "logs"
     @property
     def datasets_dir(self) -> Path: return self.data_dir / "datasets"
     @property

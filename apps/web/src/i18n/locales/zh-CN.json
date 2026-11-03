@@ -827,6 +827,7 @@
       "update_busy": "已有下载正在进行。",
       "update_not_ready": "请先下载并校验更新。",
       "update_unsupported": "自动安装仅适用于 Windows 安装版。请手动运行已下载的安装包。",
+      "update_platform_missing": "该版本暂时没有适用于本机（Mac）的更新，当前版本不受影响。",
       "update_launch_failed": "无法启动安装程序。当前版本未改动。",
       "update_unsigned": "发布信息未签名，已拒绝；未下载或更改任何内容。",
       "update_bad_signature": "发布信息的签名无效，已拒绝；未下载或更改任何内容。",

@@ -827,6 +827,7 @@
       "update_busy": "A download is already running.",
       "update_not_ready": "Download and verify the update first.",
       "update_unsupported": "Automatic install needs the installed Windows version. Run the downloaded setup yourself.",
+      "update_platform_missing": "This release has no update for this computer (Mac) yet. Your version is unchanged.",
       "update_launch_failed": "The installer could not be started. The current version is unchanged.",
       "update_unsigned": "The release information is not signed. It was refused; nothing was downloaded or changed.",
       "update_bad_signature": "The release information has an invalid signature. It was refused; nothing was downloaded or changed.",

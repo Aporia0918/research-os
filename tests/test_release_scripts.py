@@ -5,6 +5,7 @@ signing key is generated per test and trusted only for that test (the embedded k
 from __future__ import annotations
 
 import importlib.util
+import json
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,8 @@ import researchos
 from researchos.kernel.config import Settings
 from researchos.services.ops import update_signing
 from researchos.services.ops.update_feed import asset_name, parse_release
+from tests.fixtures import update_feed_v0_1_3 as v013
+from tests.fixtures import update_feed_v0_1_4 as v014
 
 ROOT = Path(__file__).resolve().parents[1]
 REL = ROOT / "scripts" / "release"
@@ -123,7 +126,7 @@ def test_publish_is_a_dry_run_without_yes(exe: Path, key: Path, monkeypatch: pyt
 def test_publish_preflight_catches_a_stale_sha256_file(exe: Path, key: Path) -> None:
     manifest.main(["--exe", str(exe), "--key", str(key), "--notes", "n"])
     exe.write_bytes(b"rebuilt after the manifest")
-    problems = publish.file_problems(publish.files(exe.parent, V), V)
+    problems = publish.file_problems(publish.files(exe.parent, V, ["win32"]), V, ["win32"])
     assert any("sha256 does not match" in p for p in problems) and len(problems) == 2
 
 
@@ -131,10 +134,11 @@ def test_publish_preflight_refuses_an_unsigned_or_tampered_feed(exe: Path, key: 
     manifest.main(["--exe", str(exe), "--key", str(key), "--notes", "n"])
     latest = exe.parent / "latest.json"
     latest.write_bytes(latest.read_bytes().replace(b'"n"', b'"N"'))
-    (problem,) = publish.file_problems(publish.files(exe.parent, V), V)
+    (problem,) = publish.file_problems(publish.files(exe.parent, V, ["win32"]), V, ["win32"])
     assert "signature is not valid" in problem
     (exe.parent / "latest.json.sig").unlink()
-    assert publish.file_problems(publish.files(exe.parent, V), V) == [f"missing {exe.parent / 'latest.json.sig'}"]
+    assert publish.file_problems(publish.files(exe.parent, V, ["win32"]), V, ["win32"]) == [
+        f"missing {exe.parent / 'latest.json.sig'}"]
 
 
 def test_bump_rewrites_every_derived_copy(tmp_path: Path) -> None:
@@ -171,6 +175,51 @@ def test_local_update_e2e_with_a_fake_installer(tmp_path: Path) -> None:
         "racing-clicks: check -> available": "PASS",
         "racing-clicks: two clicks -> one download + update_busy": "PASS",
         "racing-clicks: the one download -> ready": "PASS",
+        "mac-signed: check -> available": "PASS",
+        "mac-signed: zip download -> sha256 verified -> ready": "PASS",
+        "mac-signed: apply_update.sh -> the new version answers": "PASS",
+        "mac-signed: app replaced, .prev and the unpack folder removed": "PASS",
+        "mac-signed: update.log records the health check": "PASS",
+        "mac-tampered: check -> available": "PASS",
+        "mac-tampered: zip download -> update_checksum_mismatch": "PASS",
+        "mac-tampered: the installed app is untouched and still answers": "PASS",
+        "mac-rollback: check -> available": "PASS",
+        "mac-rollback: zip download -> sha256 verified -> ready": "PASS",
+        "mac-rollback: apply_update.sh -> health check fails -> exit 2": "PASS",
+        "mac-rollback: previous app restored and answering": "PASS",
+        "mac-rollback: the failed app kept as .failed, no .prev": "PASS",
+        "mac-rollback: update.log records the rollback": "PASS",
+        "mac-rollback: the restored version is health-checked": "PASS",
+        "mac-rollback-slow: check -> available": "PASS",
+        "mac-rollback-slow: zip download -> sha256 verified -> ready": "PASS",
+        "mac-rollback-slow: apply_update.sh -> health check fails -> exit 2": "PASS",
+        "mac-rollback-slow: previous app restored and answering": "PASS",
+        "mac-rollback-slow: the failed app kept as .failed, no .prev": "PASS",
+        "mac-rollback-slow: update.log records the rollback": "PASS",
+        "mac-rollback-slow: the restored version is health-checked": "PASS",
+        "mac-rollback-slow: the restore waits until the failed server has exited": "PASS",
+        "mac-rollback-mv-fail: check -> available": "PASS",
+        "mac-rollback-mv-fail: zip download -> sha256 verified -> ready": "PASS",
+        "mac-rollback-mv-fail: apply_update.sh -> a move fails -> exit 3": "PASS",
+        "mac-rollback-mv-fail: update.log reports the real state, not a restore": "PASS",
+        "mac-rollback-mv-fail: nothing at the app path is opened after the failed move": "PASS",
+        "mac-rollback-mv-fail: the recovery dirs are kept": "PASS",
+        "mac-swap-mv-fail: check -> available": "PASS",
+        "mac-swap-mv-fail: zip download -> sha256 verified -> ready": "PASS",
+        "mac-swap-mv-fail: apply_update.sh -> a move fails -> exit 3": "PASS",
+        "mac-swap-mv-fail: update.log reports the real state, not a restore": "PASS",
+        "mac-swap-mv-fail: nothing at the app path is opened after the failed move": "PASS",
+        "mac-swap-mv-fail: the recovery dirs are kept": "PASS",
+        "mac-zip-swapped: check -> available": "PASS",
+        "mac-zip-swapped: zip download -> sha256 verified -> ready": "PASS",
+        "mac-zip-swapped: apply_update.sh refuses before unpacking -> exit 1": "PASS",
+        "mac-zip-swapped: the old app is intact and answering again": "PASS",
+        "mac-zip-swapped: update.log says why": "PASS",
+        "mac-no-digest: check -> available": "PASS",
+        "mac-no-digest: zip download -> sha256 verified -> ready": "PASS",
+        "mac-no-digest: apply_update.sh refuses before unpacking -> exit 1": "PASS",
+        "mac-no-digest: the old app is intact and answering again": "PASS",
+        "mac-no-digest: update.log says why": "PASS",
         "install (silent setup hand-off)": "NOT RUN",
     }
 
@@ -185,3 +234,49 @@ def _notes(d: Path) -> Path:
     p = d / "notes.md"
     p.write_text("line one\n", encoding="utf-8")
     return p
+
+
+def _zip(d: Path, name: str = f"ResearchOS-{V}-mac-arm64.zip") -> Path:
+    p = d / name
+    p.write_bytes(b"PK fake mac app zip")
+    return p
+
+
+def test_a_windows_only_manifest_has_no_platforms_key(exe: Path, key: Path) -> None:
+    assert manifest.main(["--exe", str(exe), "--key", str(key), "--notes", "n"]) == 0
+    assert list(json.loads((exe.parent / "latest.json").read_bytes())) == ["version", "asset", "sha256", "url",
+                                                                           "notes", "notes_zh"]
+
+
+def test_manifest_adds_the_mac_zip_and_publish_uploads_it(exe: Path, key: Path, monkeypatch: pytest.MonkeyPatch,
+                                                          capsys: pytest.CaptureFixture[str]) -> None:
+    z = _zip(exe.parent)
+    assert manifest.main(["--exe", str(exe), "--mac-zip", str(z), "--key", str(key), "--notes", "n"]) == 0
+    raw, sig = (exe.parent / "latest.json").read_bytes(), _sig(exe.parent)
+    mac = parse_release(raw, Settings.update_feed_url, sig, platform="darwin-arm64")
+    assert (mac.asset, mac.url) == (z.name, common.download_url(V, platform="darwin-arm64"))
+    assert (exe.parent / f"{z.name}.sha256").read_text() == f"{mac.sha256}  {z.name}\n"
+    assert parse_release(raw, Settings.update_feed_url, sig).asset == exe.name
+    # the published feed as installed 0.1.3 / 0.1.4 clients read it: still the exe (ADR-266/270)
+    assert v013.parse_release(raw, Settings.update_feed_url).asset == exe.name
+    assert v014.parse_release(raw, Settings.update_feed_url, sig).asset == exe.name
+    monkeypatch.setattr(publish, "git_problems", lambda tag: [])
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ran")))
+    assert publish.main(["--dir", str(exe.parent)]) == 0
+    out = capsys.readouterr().out
+    assert str(z) in out and str(exe.parent / f"{z.name}.sha256") in out and str(exe) in out
+    z.write_bytes(b"PK swapped after signing")
+    assert publish.main(["--dir", str(exe.parent)]) == 1
+    assert f"latest.json sha256 does not match {z.name}" in capsys.readouterr().err
+
+
+def test_manifest_refuses_a_wrong_or_misplaced_mac_zip(exe: Path, key: Path, tmp_path: Path) -> None:
+    wrong = _zip(exe.parent, "ResearchOS-0.0.1-mac-arm64.zip")
+    assert manifest.main(["--exe", str(exe), "--mac-zip", str(wrong), "--key", str(key), "--notes", "n"]) == 1
+    (tmp_path / "elsewhere").mkdir()
+    away = _zip(tmp_path / "elsewhere")
+    assert manifest.main(["--exe", str(exe), "--mac-zip", str(away), "--key", str(key), "--notes", "n"]) == 1
+    z = _zip(exe.parent)
+    assert manifest.main(["--exe", str(exe), "--mac-zip", str(z), "--mac-zip", str(z), "--key", str(key),
+                          "--notes", "n"]) == 1
+    assert not (exe.parent / "latest.json").exists()

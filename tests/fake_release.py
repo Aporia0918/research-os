@@ -68,18 +68,24 @@ class FakeRelease:
         return self.base + self.feed_path
 
     def publish(self, version: str, body: bytes = INSTALLER, sha: str | None = None, host: str | None = None,
-                **extra: str) -> None:
+                mac_zip: bytes | None = None, **extra: str) -> None:
+        """A signed release; `mac_zip` adds a darwin-arm64 entry (ADR-266) serving those bytes."""
         asset = f"ResearchOS-Setup-{version}.exe"
         path = self.asset_path(version)
-        meta = {"version": version, "asset": asset, "sha256": sha or hashlib.sha256(body).hexdigest(),
-                "url": (host or self.base) + path, "notes": f"notes for {version}", **extra}
+        meta: dict[str, Any] = {"version": version, "asset": asset, "sha256": sha or hashlib.sha256(body).hexdigest(),
+                                "url": (host or self.base) + path, "notes": f"notes for {version}", **extra}
+        if mac_zip is not None:
+            zpath = self.asset_path(version, f"ResearchOS-{version}-mac-arm64.zip")
+            meta["platforms"] = {"darwin-arm64": {"asset": zpath.rsplit("/", 1)[1], "url": self.base + zpath,
+                                                  "sha256": hashlib.sha256(mac_zip).hexdigest()}}
+            self.routes[zpath] = (200, mac_zip, 0.0)
         raw, sig = signed_feed(meta)
         self.routes[self.feed_path] = (200, raw, 0.0)
         self.routes[self.feed_path + ".sig"] = (200, sig, 0.0)
         self.routes[path] = (200, body, 0.0)
 
-    def asset_path(self, version: str) -> str:
-        return f"/owner/research-os/releases/download/v{version}/ResearchOS-Setup-{version}.exe"
+    def asset_path(self, version: str, asset: str = "") -> str:
+        return f"/owner/research-os/releases/download/v{version}/{asset or f'ResearchOS-Setup-{version}.exe'}"
 
 
 def bump(v: str, by: int) -> str:

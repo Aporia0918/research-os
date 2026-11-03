@@ -25,6 +25,9 @@ class ChildProcess:
     job: Any = field(default=None, repr=False)  # Windows Job Object handle
 
 
+CREATE_BREAKAWAY_FROM_JOB = 0x01000000
+
+
 def hidden_window_kwargs() -> dict[str, Any]:
     """Never show a console window on Windows (owner rule)."""
     if not IS_WINDOWS:
@@ -34,17 +37,21 @@ def hidden_window_kwargs() -> dict[str, Any]:
     return {"startupinfo": si}
 
 
+def detached_kwargs(*, breakaway: bool = False) -> dict[str, Any]:
+    """Popen kwargs for a child in its own process group: on Windows hidden, new process group, optionally outside
+    this process's job; on POSIX its own session (`start_new_session`)."""
+    if not IS_WINDOWS:
+        return {"start_new_session": True}
+    flags = (subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined,unused-ignore]
+             | subprocess.CREATE_NO_WINDOW)  # type: ignore[attr-defined,unused-ignore]
+    return {"creationflags": flags | (CREATE_BREAKAWAY_FROM_JOB if breakaway else 0), **hidden_window_kwargs()}
+
+
 def spawn(cmd: Sequence[str], *, cwd: Path, env: Mapping[str, str], stdout: IO[bytes] | int | None = None,
           stderr: IO[bytes] | int | None = None, memory_limit_mb: int | None = None) -> ChildProcess:
     assert_child_env_clean(env)  # experiment/tool children never see provider keys (HARDENING #5)
     kwargs: dict[str, Any] = {"cwd": str(cwd), "env": dict(env), "stdout": stdout, "stderr": stderr,
-                              "stdin": subprocess.DEVNULL}
-    if IS_WINDOWS:
-        kwargs["creationflags"] = (subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined,unused-ignore]
-                                   | subprocess.CREATE_NO_WINDOW)  # type: ignore[attr-defined,unused-ignore]
-        kwargs.update(hidden_window_kwargs())
-    else:
-        kwargs["start_new_session"] = True
+                              "stdin": subprocess.DEVNULL, **detached_kwargs()}
     p = subprocess.Popen(list(cmd), **kwargs)
     job = None
     if IS_WINDOWS:

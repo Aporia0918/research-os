@@ -1,4 +1,5 @@
-"""Platform adapter: path rules (Windows rules tested on every OS), process-tree kill, PID-reuse guard."""
+"""Platform adapter: path rules (Windows rules tested on every OS), Mac install dirs (fake home), process-tree kill,
+PID-reuse guard."""
 from __future__ import annotations
 
 import subprocess
@@ -8,8 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from researchos.platform import IS_WINDOWS, paths
-from researchos.platform.process import kill_tree, pid_alive, spawn
+from researchos.kernel import config
+from researchos.platform import IS_WINDOWS, macos, paths
+from researchos.platform.process import detached_kwargs, kill_tree, pid_alive, spawn
 
 
 @pytest.mark.parametrize("name", ["CON", "con.txt", "COM1.pdf", "a<b", "a:b", "x?", "trail.", "trail ", "..", ""])
@@ -78,3 +80,48 @@ def test_pid_reuse_guard() -> None:
     finally:
         p.kill()
         p.wait()
+
+
+def test_mac_bundle_detected_only_for_the_app_layout(tmp_path: Path) -> None:
+    app = tmp_path / "Applications" / "ResearchOS.app"
+    assert macos.app_bundle(app / "Contents" / "Resources" / "app") == app
+    for not_bundled in (tmp_path / "repo", app / "Contents" / "Resources" / "lib",
+                        tmp_path / "ResearchOS" / "Contents" / "Resources" / "app",
+                        tmp_path / "x" / "Resources" / "app"):
+        assert macos.app_bundle(not_bundled) is None
+
+
+def test_mac_data_and_logs_outside_the_bundle_with_a_fake_home(tmp_path: Path) -> None:
+    home = tmp_path / "Users" / "owner"
+    root = tmp_path / "Applications" / "ResearchOS.app" / "Contents" / "Resources" / "app"
+    dirs = macos.bundled_dirs(root, home, platform="darwin")
+    assert dirs == macos.UserDirs(data=home / "Library" / "Application Support" / "ResearchOS",
+                                  logs=home / "Library" / "Logs" / "ResearchOS")
+    assert macos.bundled_dirs(tmp_path / "checkout", home, platform="darwin") is None  # dev checkout: <repo>/data
+    assert macos.bundled_dirs(root, home, platform="linux") is None
+    assert macos.bundled_dirs(root, home, platform="win32") is None
+
+
+def test_bundled_mac_settings_use_the_user_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(config, "_bundled", lambda: macos.user_dirs(home))
+    monkeypatch.delenv("RESEARCHOS_DATA_DIR", raising=False)
+    monkeypatch.delenv("RESEARCHOS_LOG_DIR", raising=False)
+    if sys.platform != "win32":
+        s = config.load_settings()
+        assert s.data_dir == home / "Library" / "Application Support" / "ResearchOS"
+        assert s.logs_dir == home / "Library" / "Logs" / "ResearchOS"
+    s = config.load_settings(tmp_path / "d")
+    assert s.data_dir == tmp_path / "d" and s.logs_dir == home / "Library" / "Logs" / "ResearchOS"
+
+
+def test_settings_logs_default_to_the_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("RESEARCHOS_LOG_DIR", raising=False)
+    assert config.load_settings(tmp_path).logs_dir == tmp_path / "logs"
+    monkeypatch.setenv("RESEARCHOS_LOG_DIR", str(tmp_path / "elsewhere"))
+    assert config.load_settings(tmp_path).logs_dir == tmp_path / "elsewhere"
+
+
+@pytest.mark.skipif(IS_WINDOWS, reason="POSIX session flag; Windows flags covered by selftest.ps1")
+def test_detached_children_get_their_own_session() -> None:
+    assert detached_kwargs() == {"start_new_session": True} == detached_kwargs(breakaway=True)

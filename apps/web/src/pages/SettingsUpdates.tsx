@@ -35,6 +35,7 @@ const ERROR_KEYS: Record<string, ParseKeys> = {
   update_busy: "update.errors.update_busy",
   update_not_ready: "update.errors.update_not_ready",
   update_unsupported: "update.errors.update_unsupported",
+  update_platform_missing: "update.errors.update_platform_missing",
   update_launch_failed: "update.errors.update_launch_failed",
 };
 

@@ -116,13 +116,14 @@ root_packages = ["researchos", "researchos_worker"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "Layering: worker|app > api > services > kernel|platform > contracts"
+name = "Layering: worker|app > api > services > kernel > platform > contracts"
 type = "layers"
 layers = [
     "researchos_worker | researchos.app",
     "researchos.api",
     "researchos.services",
-    "researchos.kernel | researchos.platform",
+    "researchos.kernel",
+    "researchos.platform",
     "researchos.contracts",
 ]
 containers = []

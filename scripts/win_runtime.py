@@ -56,16 +56,25 @@ def python_runtime(dest: Path) -> dict[str, Any]:
     return {"python": PY_VERSION, "url": PY_URL, "sha256": hashlib.sha256(data).hexdigest()}
 
 
-def requirements() -> list[str]:
-    """Pins from uv.lock with markers evaluated for Windows / CPython 3.12 (no re-resolution)."""
+def requirements(python_platform: str = "x86_64-pc-windows-msvc", name: str = "win") -> list[str]:
+    """Pins from uv.lock with markers evaluated for `python_platform` / CPython 3.12 (no re-resolution); also used
+    by build_mac_app.py."""
     CACHE.mkdir(parents=True, exist_ok=True)
-    allreq, winreq = CACHE / "req-all.txt", CACHE / "req-win.txt"
+    allreq, req = CACHE / "req-all.txt", CACHE / f"req-{name}.txt"
     out = _run(["uv", "export", "--frozen", "--no-dev", "--extra", "experiments", "--extra", "plugins",
                 "--no-emit-workspace", "--no-hashes", "--format", "requirements-txt", "-q"], cwd=ROOT).stdout
     allreq.write_text(out, encoding="utf-8")
-    _run(["uv", "pip", "compile", str(allreq), "--no-deps", "--python-platform", "x86_64-pc-windows-msvc",
-          "--python-version", "3.12", "--no-header", "--no-annotate", "-q", "-o", str(winreq)], cwd=ROOT)
-    return [ln.strip() for ln in winreq.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
+    _run(["uv", "pip", "compile", str(allreq), "--no-deps", "--python-platform", python_platform,
+          "--python-version", "3.12", "--no-header", "--no-annotate", "-q", "-o", str(req)], cwd=ROOT)
+    return [ln.strip() for ln in req.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
+
+
+def project_wheels() -> Path:
+    """The workspace wheels (researchos + the merged plugins), freshly built into the cache."""
+    project = CACHE / "project-wheels"
+    shutil.rmtree(project, ignore_errors=True)
+    _run(["uv", "build", "-q", "--wheel", "--all-packages", "-o", str(project)], cwd=ROOT)
+    return project
 
 
 def _key(name: str, version: str) -> str:
@@ -105,9 +114,7 @@ def wheels(dest: Path, pins: list[str]) -> dict[str, Any]:
             fatal.append(pin)
     if fatal:
         raise SystemExit(f"no Windows wheel and not pure Python (cannot ship offline): {fatal}")
-    project = CACHE / "project-wheels"
-    shutil.rmtree(project, ignore_errors=True)
-    _run(["uv", "build", "-q", "--wheel", "--all-packages", "-o", str(project)], cwd=ROOT)
+    project = project_wheels()
     _run([pip, "download", "-q", "--no-deps", "--only-binary=:all:", "-d", str(dest), PIP])
     wanted = {_key(*p.split("==")) for p in pins}
     copied = set()

@@ -1,12 +1,14 @@
-r"""One-click update (ADR-223/228): check -> download + sha256 verify -> silent NSIS install after the app exits.
+r"""One-click update (ADR-223/228/267): check -> download + sha256 verify -> hand-over to a helper after the app exits.
 
 Nothing here runs unless the owner clicks: there is no startup or background check. The feed is the signed
-`latest.json` asset of the latest GitHub release (update_feed: fields, signature, codes); an optional mirror prefix
-(e.g. https://ghfast.top/) is prepended to the feed and the installer URL, and a click may retry once without it.
-The installer is downloaded to a temp folder, hashed while streaming and kept only if it is complete and the sha256
-matches. Installing (Windows, installed copy only) starts a hidden helper (scripts/apply_update.ps1, copied next to
-the installer) that stops the app, waits for this process to exit, runs `ResearchOS-Setup-<v>.exe /S /RUNAFTER` and
-checks the new version's health; setup keeps data\ and restores the previous app\ on failure. The release notes are
+`latest.json` asset of the latest GitHub release (update_feed: fields, signature, platforms, codes); an optional mirror
+prefix (e.g. https://ghfast.top/) is prepended to the feed and the download URL, and a click may retry once without
+it. The update (Windows installer or Mac app zip) is downloaded to a temp folder, hashed while streaming and kept only
+if it is complete and the sha256 matches. Installing starts a detached helper copied next to the download: on Windows
+(installed copy only) scripts/apply_update.ps1 stops the app, waits for this process to exit, runs
+`ResearchOS-Setup-<v>.exe /S /RUNAFTER` and checks the new version's health (setup keeps data\ and restores the
+previous app\ on failure); on a Mac (a writable, not translocated .app) scripts/apply_update.sh swaps the .app
+(previous kept as .app.prev until the new version answers its health check, else restored). The release notes are
 kept for a one-time "What's new" after the update. Every failure is an UpdateError with a stable code.
 """
 from __future__ import annotations
@@ -17,7 +19,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import threading
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -31,9 +32,21 @@ import httpx
 from ... import __version__
 from ...kernel.backup import file_sha256
 from ...kernel.config import REPO_ROOT, Settings
+from ...platform import IS_WINDOWS
 from ...platform.env import child_env
-from ...platform.process import hidden_window_kwargs
-from .update_feed import MAX_FEED_BYTES, Release, UpdateError, is_newer, parse_release, signature_url, validate_mirror
+from ...platform.macos import updatable_bundle
+from ...platform.process import detached_kwargs
+from .update_feed import (
+    MAC_ARCHES,
+    MAX_FEED_BYTES,
+    Release,
+    UpdateError,
+    current_platform,
+    is_newer,
+    parse_release,
+    signature_url,
+    validate_mirror,
+)
 from .update_signing import MAX_SIG_BYTES, TRUSTED_KEYS
 
 MAX_INSTALLER_BYTES = 1024 * 1024 * 1024
@@ -50,21 +63,23 @@ Spawner = Callable[[Sequence[str], dict[str, str]], None]
 
 
 def _spawn_detached(cmd: Sequence[str], env: dict[str, str]) -> None:
-    """Hidden, own process group, outside any job of this process, so it outlives the server it stops."""
-    base = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined,unused-ignore]
+    """Own process group / session (hidden, outside any job of this process on Windows), so it outlives the server
+    it stops."""
     kw: dict[str, Any] = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL,
-                          "close_fds": True, "env": env, **hidden_window_kwargs()}
+                          "close_fds": True, "env": env}
     try:
-        subprocess.Popen(list(cmd), creationflags=base | 0x01000000, **kw)  # CREATE_BREAKAWAY_FROM_JOB
+        subprocess.Popen(list(cmd), **kw, **detached_kwargs(breakaway=True))
     except OSError:
-        subprocess.Popen(list(cmd), creationflags=base, **kw)
+        if not IS_WINDOWS:
+            raise
+        subprocess.Popen(list(cmd), **kw, **detached_kwargs())  # the job forbids breakaway
 
 
 class Updater:
     """Owner-triggered update state machine: idle -> checking -> up_to_date | available -> downloading -> ready
     -> installing; any step may end in `error` (the current install is untouched)."""
 
-    def __init__(self, settings: Settings, *, download_dir: Path | None = None, platform: str = sys.platform,
+    def __init__(self, settings: Settings, *, download_dir: Path | None = None, platform: str = current_platform(),
                  app_root: Path = REPO_ROOT, spawn: Spawner = _spawn_detached,
                  transport: httpx.BaseTransport | None = None, trusted_keys: Mapping[str, str] = TRUSTED_KEYS) -> None:
         self.s = settings
@@ -134,7 +149,7 @@ class Updater:
             self.state, self.error = "checking", None
         try:
             raw, sig = self._get_feed(self._prefix(direct))
-            rel = parse_release(raw, self.s.update_feed_url, sig, self.trusted_keys)
+            rel = parse_release(raw, self.s.update_feed_url, sig, self.trusted_keys, self.platform)
         except UpdateError as e:
             self._fail(e)
             raise
@@ -175,15 +190,10 @@ class Updater:
             if target is None:
                 raise UpdateError("update_unsupported")
             installer, rel = self.installer, self.release
-        helper = installer.parent / "apply_update.ps1"
         try:
-            shutil.copyfile(self.app_root / "scripts" / "apply_update.ps1", helper)
+            cmd = self._helper(installer, target, rel)
             self._save_whats_new(rel)
-            self.spawn(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden",
-                        "-ExecutionPolicy", "Bypass", "-File", str(helper), "-Installer", str(installer),
-                        "-InstallDir", str(target), "-ServerPid", str(os.getpid()), "-Version", rel.version,
-                        "-HealthUrl", self._health_url()],
-                       child_env(self.s.data_dir / "home"))  # no provider keys in the helper or setup
+            self.spawn(cmd, child_env(self.s.data_dir / "home"))  # no provider keys in the helper or setup
         except OSError as e:
             raise UpdateError("update_launch_failed", type(e).__name__) from e
         with self._lock:
@@ -215,7 +225,26 @@ class Updater:
         return f"{'https' if self.s.tls_enabled else 'http'}://127.0.0.1:{self.s.port}/api/v1/health"
 
     def _install_target(self) -> Path | None:
-        return install_dir(self.app_root) if self.platform == "win32" else None
+        """Windows: the setup-made install dir; Mac: the replaceable .app (ADR-267); else None."""
+        if self.platform == "win32":
+            return install_dir(self.app_root)
+        return updatable_bundle(self.app_root) if self.platform in MAC_ARCHES else None
+
+    def _helper(self, download: Path, target: Path, rel: Release) -> list[str]:
+        """Copy the platform's update helper next to the verified download; returns the command that runs it. The Mac
+        helper gets the signed feed's sha256 and checks the zip again right before unpacking it (ADR-270)."""
+        version = rel.version
+        if self.platform == "win32":
+            helper = download.parent / "apply_update.ps1"
+            shutil.copyfile(self.app_root / "scripts" / "apply_update.ps1", helper)
+            return ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden",
+                    "-ExecutionPolicy", "Bypass", "-File", str(helper), "-Installer", str(download),
+                    "-InstallDir", str(target), "-ServerPid", str(os.getpid()), "-Version", version,
+                    "-HealthUrl", self._health_url()]
+        helper = download.parent / "apply_update.sh"
+        shutil.copyfile(self.app_root / "scripts" / "apply_update.sh", helper)
+        return ["/bin/sh", str(helper), str(download), str(target), str(os.getpid()), version, self._health_url(),
+                str(self.s.data_dir), str(self.s.logs_dir / "update.log"), rel.sha256]
 
     def _fail(self, e: UpdateError) -> None:
         with self._lock:

@@ -16,9 +16,10 @@ from ..deps import principal
 
 router = APIRouter(prefix="/api/v1/update", tags=["update"])
 
+# everything not listed is the release server's / mirror's fault: 502
 _STATUS = {"update_bad_mirror": 400, "update_not_available": 409, "update_busy": 409, "update_not_ready": 409,
-           "update_unsupported": 409, "update_launch_failed": 500, "update_disk_full": 507,
-           "update_write_failed": 500}  # everything else is the release server's / mirror's fault: 502
+           "update_unsupported": 409, "update_platform_missing": 409, "update_launch_failed": 500,
+           "update_disk_full": 507, "update_write_failed": 500}
 _RETRYABLE = {"update_network", "update_timeout", "update_http_error", "update_incomplete"}
 
 

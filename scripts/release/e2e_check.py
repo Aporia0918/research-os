@@ -10,8 +10,19 @@ points at it, and the real Updater runs, trusting only an ephemeral test key gen
   asset-missing     signed feed names a newer version whose installer answers 404 -> update_asset_missing
   racing-clicks     two download clicks at once (slow server) -> one download, the other update_busy -> ready
 (disk full on the .part file is a unit test only: tests/test_update_hardening.py)
-The running copy is presented as version 0.0.0 (the updater only offers newer versions). The install step (silent
-setup, Windows only) replaces the installed copy and is always reported as NOT RUN.
+Mac (ADR-267, e2e_mac.py: a fake .app, the real Updater and the real apply_update.sh, ditto/open stand-ins):
+  mac-signed        darwin-arm64 zip downloaded + verified -> the app swapped -> the new version answers
+  mac-tampered      signed feed with a wrong zip sha256 -> update_checksum_mismatch, the app untouched
+  mac-rollback      the new app never answers -> previous app restored and answering, the new one kept as .failed
+  mac-rollback-slow the new app answers unhealthy and exits 3 s after SIGTERM -> the restore waits, then the old
+                    version is health-checked and answers
+  mac-rollback-mv-fail  moving .prev back fails -> exit 3, no "restored" claim, nothing opened, .prev + .failed kept
+  mac-swap-mv-fail  moving the new app in and the recovery move both fail -> exit 3, .prev + the unpack dir kept
+  mac-zip-swapped   the verified zip is replaced after the download -> sha256 re-check refuses, nothing unpacked
+  mac-no-digest     the helper gets no sha256 -> refuses, nothing unpacked, the old app answers again
+The running copy is presented as version 0.0.0 (the updater only offers newer versions). The Windows install step
+(silent setup) replaces the installed copy and is always reported as NOT RUN; the Mac steps run on any POSIX box
+(macOS NOT RUN: ditto/open are stand-ins).
 
 Usage: python scripts/release/e2e_check.py [--exe release/ResearchOS-Setup-<v>.exe]   (default: small fake installer)
 Exit 0 = PASS."""
@@ -19,103 +30,41 @@ Exit 0 = PASS."""
 from __future__ import annotations
 
 import argparse
-import hashlib
 import re
 import shutil
 import socket
 import sys
 import tempfile
 import threading
-import time
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from dataclasses import dataclass
+from collections.abc import Callable
 from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
-
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from researchos import __version__
 from researchos.kernel.backup import file_sha256
 from researchos.kernel.config import Settings
 from researchos.services.ops import updater
 from researchos.services.ops.update_feed import UpdateError, asset_name
-from researchos.services.ops.update_signing import key_id, public_b64
 from researchos.services.ops.updater import Updater
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from e2e_common import (  # noqa: E402
+    DOWNLOAD_TIMEOUT_S,
+    FAKE_INSTALLER,
+    SIMULATED_INSTALLED,
+    TAMPERED_SHA256,
+    Faults,
+    Signer,
+    Step,
+    check_and_download,
+    serve,
+    step,
+)
+from e2e_mac import mac_run  # noqa: E402
 from manifest import signed, write_release  # noqa: E402
 
-SIMULATED_INSTALLED = "0.0.0"
-FAKE_INSTALLER = b"MZ fake ResearchOS setup for the release e2e check\n" * 2048
-TAMPERED_SHA256 = hashlib.sha256(b"tampered").hexdigest()
-DOWNLOAD_TIMEOUT_S = 600.0
 _ASSET = re.compile(r"^ResearchOS-Setup-(.+)\.exe$")
-
-
-@dataclass(frozen=True)
-class Step:
-    name: str
-    status: str  # PASS | FAIL | NOT RUN
-    detail: str = ""
-
-
-def _step(name: str, ok: bool, detail: str) -> Step:
-    return Step(name, "PASS" if ok else "FAIL", detail)
-
-
-@dataclass(frozen=True)
-class Faults:
-    """Server-side faults for the installer (.exe) responses."""
-    cut_after: int | None = None  # send this many bytes of the announced full length, then close
-    delay_s: float = 0.0          # wait before answering (a slow server)
-
-
-class _QuietHandler(SimpleHTTPRequestHandler):
-    faults = Faults()
-
-    def log_message(self, format: str, *args: Any) -> None:  # noqa: A002 (stdlib signature)
-        pass
-
-    def send_head(self) -> Any:
-        if self.path.endswith(".exe"):
-            time.sleep(self.faults.delay_s)
-        return super().send_head()
-
-    def copyfile(self, source: Any, outputfile: Any) -> None:
-        if self.path.endswith(".exe") and self.faults.cut_after is not None:
-            outputfile.write(source.read(self.faults.cut_after))  # content-length still announces the full file
-            self.close_connection = True
-            return
-        super().copyfile(source, outputfile)
-
-
-@contextmanager
-def serve(root: Path, faults: Faults = Faults()) -> Iterator[str]:  # noqa: B008 (frozen, immutable default)
-    """Serve `root` on 127.0.0.1:<random port>; yields the base URL."""
-    handler = type("Handler", (_QuietHandler,), {"faults": faults})
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), partial(handler, directory=str(root)))
-    threading.Thread(target=srv.serve_forever, daemon=True, name="release-e2e-http").start()
-    try:
-        yield f"http://127.0.0.1:{srv.server_address[1]}"
-    finally:
-        srv.shutdown()
-        srv.server_close()
-
-
-@dataclass(frozen=True)
-class Signer:
-    key: Ed25519PrivateKey
-    trusted: dict[str, str]
-
-    @classmethod
-    def ephemeral(cls) -> Signer:
-        key = Ed25519PrivateKey.generate()
-        return cls(key, {key_id(key.public_key()): public_b64(key.public_key())})
-
 
 def publish_local(root: Path, base: str, installer: Path, version: str, signer: Signer, *, mode: str = "signed") -> str:
     """<root>/download/v<v>/<asset> + <root>/latest.json(.sig) written by the release manifest builder, then altered
@@ -149,46 +98,38 @@ def refused(up: Updater, code: str) -> list[Step]:
     try:
         st = up.check()
     except UpdateError as e:
-        return [_step(f"check -> {code}", e.code == code, f"error={e.code}")]
-    return [_step(f"check -> {code}", False, f"state={st['state']}")]
+        return [step(f"check -> {code}", e.code == code, f"error={e.code}")]
+    return [step(f"check -> {code}", False, f"state={st['state']}")]
 
 
 def mirror_down_run(up: Updater) -> list[Step]:
     steps = refused(up, "update_mirror_failed")
     st = up.check(direct=True)
-    return [*steps, _step("retry without the mirror -> available", st["state"] == "available", f"state={st['state']}")]
-
-
-def _check_and_download(up: Updater) -> list[Step]:
-    st = up.check()
-    steps = [_step("check -> available", st["state"] == "available", f"state={st['state']}")]
-    up.start_download()
-    up.wait(DOWNLOAD_TIMEOUT_S)
-    return steps
+    return [*steps, step("retry without the mirror -> available", st["state"] == "available", f"state={st['state']}")]
 
 
 def good_run(up: Updater, digest: str) -> list[Step]:
-    steps = _check_and_download(up)
+    steps = check_and_download(up)
     st = up.status()
     ok = st["state"] == "ready" and up.installer is not None and file_sha256(up.installer) == digest
-    return [*steps, _step("download -> sha256 verified -> ready", ok, f"state={st['state']} {st['progress']}")]
+    return [*steps, step("download -> sha256 verified -> ready", ok, f"state={st['state']} {st['progress']}")]
 
 
 def tampered_run(up: Updater) -> list[Step]:
-    steps = _check_and_download(up)
+    steps = check_and_download(up)
     code = (up.status()["error"] or {}).get("code")
     left = sorted(p.name for p in up.download_dir.glob("*"))
-    return [*steps, _step("download -> update_checksum_mismatch", code == "update_checksum_mismatch",
+    return [*steps, step("download -> update_checksum_mismatch", code == "update_checksum_mismatch",
                           f"error={code}"),
-            _step("installer deleted", not left, ", ".join(left) or "download dir empty")]
+            step("installer deleted", not left, ", ".join(left) or "download dir empty")]
 
 
 def failed_download_run(up: Updater, code: str) -> list[Step]:
-    steps = _check_and_download(up)
+    steps = check_and_download(up)
     got = (up.status()["error"] or {}).get("code")
     left = sorted(p.name for p in up.download_dir.glob("*"))
-    return [*steps, _step(f"download -> {code}", got == code, f"error={got}"),
-            _step("nothing left in the download dir", not left, ", ".join(left) or "download dir empty")]
+    return [*steps, step(f"download -> {code}", got == code, f"error={got}"),
+            step("nothing left in the download dir", not left, ", ".join(left) or "download dir empty")]
 
 
 def racing_clicks_run(up: Updater) -> list[Step]:
@@ -209,10 +150,10 @@ def racing_clicks_run(up: Updater) -> list[Step]:
         t.join(DOWNLOAD_TIMEOUT_S)
     up.wait(DOWNLOAD_TIMEOUT_S)
     final = up.status()["state"]
-    return [_step("check -> available", st["state"] == "available", f"state={st['state']}"),
-            _step("two clicks -> one download + update_busy", sorted(results) == ["downloading", "update_busy"],
+    return [step("check -> available", st["state"] == "available", f"state={st['state']}"),
+            step("two clicks -> one download + update_busy", sorted(results) == ["downloading", "update_busy"],
                   ", ".join(sorted(results))),
-            _step("the one download -> ready", final == "ready", f"state={final}")]
+            step("the one download -> ready", final == "ready", f"state={final}")]
 
 
 def _scenario(name: str, body: Callable[[], list[Step]]) -> list[Step]:
@@ -257,6 +198,9 @@ def run(installer: Path | None, work: Path) -> list[Step]:
             with serve(work / f"srv-{name}", faults) as base:
                 feed = publish_local(work / f"srv-{name}", base, installer, version, signer, mode=mode)
                 steps += _scenario(name, partial(body, _updater(feed, work / name, signer, mirror)))
+        for mode in ("signed", "tampered", "rollback", "rollback-slow", "rollback-mv-fail", "swap-mv-fail",
+                     "zip-swapped", "no-digest"):
+            steps += _scenario(f"mac-{mode}", partial(mac_run, work / f"mac-{mode}", signer, mode))
     install = Step("install (silent setup hand-off)", "NOT RUN",
                    f"Windows-only and replaces the installed copy; platform here: {sys.platform}")
     return [*steps, install]

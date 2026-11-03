@@ -44,14 +44,15 @@ def version() -> str:
                 if line.startswith("version"))
 
 
-def stage_app(dest: Path, commit: str) -> dict[str, object]:
+def stage_app(dest: Path, commit: str, acceptance: dict[str, str] = ACCEPTANCE) -> dict[str, object]:
+    """The app payload + PACKAGE_MANIFEST.json (also the macOS bundle's Resources/app, build_mac_app.py)."""
     fs = files()
     for p, arc in fs:
         (dest / arc).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(p, dest / arc)
     manifest = {"version": version(), "git": commit, "built_at": datetime.now(UTC).isoformat(timespec="seconds"),
                 "files": {arc: hashlib.sha256(p.read_bytes()).hexdigest() for p, arc in fs},
-                "acceptance": ACCEPTANCE}
+                "acceptance": acceptance}
     (dest / "PACKAGE_MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
     return manifest
 

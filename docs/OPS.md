@@ -83,6 +83,11 @@ the previous version is put back and started. Your data\ is kept. See `<install>
 `data\logs\update.log`. Behind the GFW, set a mirror prefix such as `https://ghfast.top/` (or `update_mirror_prefix`
 in researchos.toml); if the mirror fails, the page offers "Retry without the mirror". Manual update: run the newer
 setup exe; silent: `ResearchOS-Setup-<v>.exe /S`.
+Mac (ADR-266/267; **macOS NOT RUN**): the same signed latest.json carries `platforms.darwin-arm64` (the app zip); "Update" downloads the zip, verifies its sha256, closes the app, checks the sha256 again
+right before unpacking (ADR-270; a zip changed after the download is not unpacked), unpacks the new one next to
+it, keeps the old one as `ResearchOS.app.prev` until the new version answers, otherwise puts it back (the failed
+one stays as `ResearchOS.app.failed`). Log: `~/Library/Logs/ResearchOS/update.log`. A release without a Mac zip shows
+"no update for this computer yet"; a Mac never downloads the .exe.
 
 ## Release (maintainer, Linux build box; ADR-225)
 1. `.venv/bin/python scripts/release/bump_version.py <v>`, then `scripts/check.sh` (tests/test_version.py checks every
