@@ -269,6 +269,8 @@ def test_ci_log_dump_redacts_the_setup_token(tmp_path: Path) -> None:
 
 
 def test_ci_workflow_is_part_of_the_public_export() -> None:
+    if not (ROOT / "scripts" / "public" / "build_export.py").is_file():
+        pytest.skip("scripts/public/build_export.py exists only in the private source repo (excluded from the public export)")
     be = _load_public("build_export")
     assert not be.denied(".github/workflows/mac-build.yml")  # type: ignore[attr-defined]
 
