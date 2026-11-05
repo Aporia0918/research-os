@@ -90,7 +90,7 @@ class Settings:
     # One-click update (ADR-223): only on an explicit "Check for updates" click, never at startup. The feed is the
     # latest release's latest.json; the mirror prefix (e.g. "https://ghfast.top/") is prepended to the feed and the
     # installer URL; the UI choice (config/update.json) overrides it. Timeout applies per connect/read.
-    update_feed_url: str = "https://github.com/Felix1451991535/research-os/releases/latest/download/latest.json"
+    update_feed_url: str = "https://github.com/Aporia0918/research-os/releases/latest/download/latest.json"
     update_mirror_prefix: str = ""
     update_timeout_s: float = 20.0
     # Low-privilege worker identity (baseline §7). Empty = NOT CONFIGURED (doctor reports it).

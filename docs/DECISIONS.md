@@ -1126,7 +1126,7 @@ Format: id — decision — reason — consequence. Changing a frozen core contr
   updates"; nothing checks at startup or in the background (`auto_check: false` in the status; test asserts no
   request before the click) and installing stays fully offline (the setup is the ADR-215 offline exe). Feed: the
   latest GitHub release's `latest.json` asset (`update_feed_url`, default
-  `https://github.com/Felix1451991535/research-os/releases/latest/download/latest.json`; no API token, no rate limit)
+  `https://github.com/Aporia0918/research-os/releases/latest/download/latest.json`; no API token, no rate limit)
   = `{version, asset: ResearchOS-Setup-<version>.exe, sha256, url, notes}`; the asset name must match the version,
   the URL must be on the feed's host and end with the asset, https only (plain http only to loopback: local mirror /
   tests). Optional mirror prefix (`update_mirror_prefix` or the UI choice in `<data>/config/update.json`, e.g.
