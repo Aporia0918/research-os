@@ -181,8 +181,7 @@ def rank_biserial_paired(diff: Vector) -> Effect:
         "rank_biserial",
         (2.0 * float(ranks[d > 0].sum()) - total) / total,
         None,
-        "no CI: the matched-pairs estimand depends on n and bootstrap intervals under-cover near +-1 "
-        "(review #30)",
+        "no CI: the matched-pairs estimand depends on n and bootstrap intervals under-cover near +-1 (review #30)",
     )
 
 
