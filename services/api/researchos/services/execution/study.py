@@ -1,5 +1,5 @@
 """Pre-registered 6-stage study protocol (ARCHITECTURE §6.4): screen -> shrink -> search -> confirm ->
-freeze + shuffled-label control -> [opt-in ablation, ADR-185] -> final_eval once (only after its own approval).
+freeze + null-world control -> [opt-in ablation, ADR-185] -> final_eval once (only after its own approval).
 
 The protocol is fixed at creation (hash stored); following it creates no new forking paths. Narrowing creates an
 immutable plan revision covered by the original approval; nothing here can widen the space or touch the test set.
@@ -27,6 +27,7 @@ DEFAULTS = {
     "confirm": {"top": 3, "seeds": 5},
     "direction": "max",
     "chance_tolerance": 0.15,
+    "control_runs": 3,  # null worlds for the negative control; the full exam (nullworld) runs 19+
 }
 
 
@@ -268,7 +269,15 @@ def _confirm(conn: sqlite3.Connection, kinds: KindRegistry, st: dict[str, Any], 
     }
     sd.save(conn, st["id"], stage="control", data=data)
     sd.enqueue(
-        conn, kinds, sd.get(conn, st["id"]), "control", "trial", [best["config"]], [7], actor, control="shuffled_labels"
+        conn,
+        kinds,
+        sd.get(conn, st["id"]),
+        "control",
+        "trial",
+        [best["config"]],
+        [7 + i for i in range(proto["control_runs"])],
+        actor,
+        control="shuffled_labels",
     )
     return "control"
 
@@ -277,14 +286,11 @@ def _control(conn: sqlite3.Connection, kinds: KindRegistry, st: dict[str, Any], 
     ch = sd.children(conn, st["id"], "control")
     if not sd.all_done(ch):
         return "control"
-    r = sd.results(conn, ch, st["protocol"]["objective"])[0]
+    scores = [r["objective"] for r in sd.results(conn, ch, st["protocol"]["objective"])]
     chance = st["protocol"].get("chance")
-    ok = (
-        chance is not None
-        and r["objective"] is not None
-        and r["objective"] <= chance + st["protocol"]["chance_tolerance"]
-    )
-    data = {**st["data"], "control": {"objective": r["objective"], "chance": chance, "passed": ok}}
+    mean = None if None in scores else sum(scores) / len(scores)
+    ok = chance is not None and mean is not None and mean <= chance + st["protocol"]["chance_tolerance"]
+    data = {**st["data"], "control": {"objective": mean, "runs": scores, "chance": chance, "passed": ok}}
     if not ok:
         sd.save(
             conn,
@@ -292,7 +298,7 @@ def _control(conn: sqlite3.Connection, kinds: KindRegistry, st: dict[str, Any], 
             stage="stopped",
             data={
                 **data,
-                "stop_reason": "shuffled-label control not near chance (possible leakage) or chance undeclared",
+                "stop_reason": "null-world control not near chance (possible leakage) or chance undeclared",
             },
         )
         return "stopped"
