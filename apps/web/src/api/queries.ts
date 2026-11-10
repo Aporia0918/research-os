@@ -1,7 +1,7 @@
 // TanStack Query hooks: one place for every server read/write. Writes go through persisted intents.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { ExperimentTemplate, ExperimentPlan, PlanRevision, RunAttempt, ExperimentRun, Study, StudyAdvice, ExperimentPlanInput, ExperimentRunInput, StudyInput, AuthState, UpdateStatus, Device, EventRecord, KeyStatus, Note, PairingCode, PluginInfo, Project, Task } from "./types";
+import type { FileRoot, ExperimentTemplate, ExperimentPlan, PlanRevision, RunAttempt, ExperimentRun, Study, StudyAdvice, ExperimentPlanInput, ExperimentRunInput, StudyInput, AuthState, UpdateStatus, Device, EventRecord, KeyStatus, Note, PairingCode, PluginInfo, Project, Task } from "./types";
 import { newKey } from "@/lib/utils";
 import { runIntent } from "@/offline/intents";
 
@@ -17,6 +17,7 @@ export const qk = {
   events: (pid?: string) => ["events", pid ?? "all"] as const,
   plugins: ["plugins"] as const,
   update: ["update"] as const,
+  fileRoots: ["file-roots"] as const,
 };
 
 export const useAuthState = () => useQuery({ queryKey: qk.auth, queryFn: ({ signal }) => api.get<AuthState>("/auth/state", signal) });
@@ -32,6 +33,11 @@ export const useTasks = (pid?: string) =>
     refetchInterval: 3000, // honest live status from the backend; no invented progress
   });
 export const useDevices = () => useQuery({ queryKey: qk.devices, queryFn: ({ signal }) => api.get<Device[]>("/devices", signal) });
+export const useFileRoots = () =>
+  useQuery({ queryKey: qk.fileRoots, queryFn: ({ signal }) => api.get<FileRoot[]>("/settings/file-roots", signal) });
+export const rootCalls = {
+  set: (roots: FileRoot[], key: string) => api.put<FileRoot[]>("/settings/file-roots", { roots }, { idempotencyKey: key }),
+};
 export const useKeys = () =>
   useQuery({ queryKey: qk.keys, queryFn: ({ signal }) => api.get<Record<string, KeyStatus>>("/settings/keys", signal) });
 export const useHost = () =>

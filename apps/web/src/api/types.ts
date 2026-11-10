@@ -14,6 +14,8 @@ export type PairingCode = S["PairingCodeOut"];
 export type EventRecord = S["Event"];
 export type PluginInfo = S["PluginInfo"];
 export type TaskState = Task["state"];
+// File roots: the owner's read/write folders (PUT replaces the whole list; the response is the cleaned list).
+export interface FileRoot { path: string; access: "read" | "write"; cloud_allowed?: boolean }
 
 export type ExperimentPlanInput = S["PlanIn"];
 export type ExperimentRunInput = S["RunIn"];
