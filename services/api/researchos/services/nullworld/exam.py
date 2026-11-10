@@ -65,37 +65,56 @@ def _job(spec: ExamSpec) -> runner.Job:
     return runner.Job(project, script, data, spec.python, spec.metric, spec.timeout_s)
 
 
-def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
-    """`run` executes the script on one world's table bytes; the default runs it locally as a child process."""
+@dataclass(frozen=True)
+class Data:
+    raw: bytes
+    table: Table
+    labels: list[str]
+    groups: list[str]
+    layout: Layout
+
+
+def load(spec: ExamSpec) -> Data:
     raw = spec.data.read_bytes()
     table = Table.parse(raw)
     labels, groups = table.column(spec.label), table.column(spec.group)
     if any(g == "" for g in groups):
         raise TableError(f"column {spec.group!r} has empty cells; every row needs a group")
-    lay = layout(labels, groups)
-    execute: Run = run or partial(runner.run, _job(spec))
+    return Data(raw, table, labels, groups, layout(labels, groups))
+
+
+def executor(spec: ExamSpec, run: Run | None) -> Run:
+    """`run` executes the script on one world's table bytes; the default runs it locally as a child process."""
+    return run or partial(runner.run, _job(spec))
+
+
+def distinct_errors(results: list[runner.RunResult]) -> list[str]:
+    return list(dict.fromkeys(r.error for r in results if r.error))[:5]
+
+
+def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
+    d, execute = load(spec), executor(spec, run)
 
     def world(kind: str, i: int) -> bytes:
         rng = Random(f"{spec.seed}:{kind}:{i}")
-        new = null_labels(labels, groups, lay.mode, rng) if kind == "null" else naive_labels(labels, rng)
-        return table.with_column(spec.label, new).to_bytes()
+        new = null_labels(d.labels, d.groups, d.layout.mode, rng) if kind == "null" else naive_labels(d.labels, rng)
+        return d.table.with_column(spec.label, new).to_bytes()
 
     tasks = [("null", i) for i in range(spec.runs)] + [("naive", i) for i in range(spec.runs if spec.contrast else 0)]
     with ThreadPoolExecutor(max_workers=spec.workers) as pool:
-        real_f = pool.submit(execute, raw)
+        real_f = pool.submit(execute, d.raw)
         results = list(pool.map(lambda t: execute(world(*t)), tasks))
     real = real_f.result()
     nulls, naive = results[: spec.runs], results[spec.runs :]
-    chance = spec.chance if spec.chance is not None else chance_level(spec.metric, labels)
-    errors = list(dict.fromkeys(r.error for r in [real, *results] if r.error))[:5]
+    chance = spec.chance if spec.chance is not None else chance_level(spec.metric, d.labels)
     return ExamReport(
         verdict=judge(real.score, [r.score for r in nulls], chance, spec.tolerance),
         real=real.score,
         nulls=[r.score for r in nulls],
         naive=[r.score for r in naive],
-        layout=lay,
+        layout=d.layout,
         seed=spec.seed,
-        data_sha256=hashlib.sha256(raw).hexdigest(),
+        data_sha256=hashlib.sha256(d.raw).hexdigest(),
         script_sha256=hashlib.sha256(spec.script.read_bytes()).hexdigest(),
-        errors=errors,
+        errors=distinct_errors([real, *results]),
     )
