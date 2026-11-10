@@ -38,6 +38,15 @@ def p_value(real: float, nulls: list[float]) -> float:
     return (1 + sum(x >= real for x in nulls)) / (len(nulls) + 1)
 
 
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson interval for k successes out of n."""
+    if n == 0:
+        return 0.0, 1.0
+    p, zz = k / n, z * z
+    centre, half = (p + zz / (2 * n)) / (1 + zz / n), z * math.sqrt(p * (1 - p) / n + zz / (4 * n * n)) / (1 + zz / n)
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
 @dataclass(frozen=True)
 class Verdict:
     outcome: Outcome

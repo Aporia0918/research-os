@@ -50,10 +50,28 @@ class Table:
         i = self.header.index(name)
         return replace(self, rows=tuple((*r[:i], v, *r[i + 1 :]) for r, v in zip(self.rows, values, strict=True)))
 
+    def subset(self, rows: list[int]) -> Table:
+        return replace(self, rows=tuple(self.rows[i] for i in rows))
+
     def to_bytes(self) -> bytes:
         out = io.StringIO()
         csv.writer(out, delimiter=self.delimiter, lineterminator=self.newline).writerows([self.header, *self.rows])
         return ((BOM if self.bom else "") + out.getvalue()).encode()
+
+
+def numeric_features(table: Table, *exclude: str) -> list[str]:
+    """Decimal-valued columns (integers such as window indices are left out), minus `exclude`."""
+    out = []
+    for name in table.header:
+        values = table.column(name)
+        if name in exclude or not any("." in v or "e" in v.lower() for v in values):
+            continue
+        try:
+            [float(v) for v in values]
+        except ValueError:
+            continue
+        out.append(name)
+    return out
 
 
 @dataclass(frozen=True)
