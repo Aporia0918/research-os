@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/layout/AppShell";
 import { QueryView } from "@/components/layout/state";
 import { LanguageSelect } from "@/components/layout/language";
 import { DevicesCard } from "./SettingsDevices";
+import { FoldersCard } from "./SettingsFolders";
 import { UpdatesCard } from "./SettingsUpdates";
 
 type Tier = "routine" | "premium";
@@ -119,10 +120,12 @@ export function SettingsPage() {
       <PageHeader title={t("settings.title")} actions={<Button variant="outline" onClick={() => void logout()}>{t("settings.signOut")}</Button>} />
       <Tabs defaultValue="devices" className="grid gap-4">
         <TabsList className="w-fit"><TabsTrigger value="devices">{t("settings.tabDevices")}</TabsTrigger><TabsTrigger value="models">{t("settings.tabModels")}</TabsTrigger>
+          <TabsTrigger value="folders">{t("settings.tabFolders")}</TabsTrigger>
           <TabsTrigger value="host">{t("settings.tabHost")}</TabsTrigger><TabsTrigger value="general">{t("settings.tabGeneral")}</TabsTrigger>
           <TabsTrigger value="about">{t("settings.tabAbout")}</TabsTrigger></TabsList>
         <TabsContent value="devices"><DevicesCard /></TabsContent>
         <TabsContent value="models"><KeysCard /></TabsContent>
+        <TabsContent value="folders"><FoldersCard /></TabsContent>
         <TabsContent value="host"><HostCard /></TabsContent>
         <TabsContent value="general"><GeneralCard /></TabsContent>
         <TabsContent value="about"><UpdatesCard /></TabsContent>
