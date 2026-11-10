@@ -186,3 +186,18 @@ def test_demo_end_to_end(demo: Path, script: str, outcome: str) -> None:
 def test_cli_detect(demo: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["detect", str(demo / "ecg_features.csv")]) == 0
     assert json.loads(capsys.readouterr().out)["groups"][0]["column"] == "subject"
+
+
+# ---------- blind test ----------
+
+
+def test_blind_test_catches_structure_leaks_and_admits_target_leaks() -> None:
+    blind = runpy.run_path(str(DEMO / "blind.py"))
+    rows = blind["run_blind"](datasets=1, workers=2)
+    by = {x["case"]: x["verdict"] for x in rows}
+    assert by["leak_signal"] == by["leak_nosignal"] == "fail"
+    assert by["clean_signal"] == "pass" and by["clean_nosignal"] != "pass"
+    assert by["target_leak"] == "pass"  # the documented limit: a feature that copies the label is invisible
+    s = blind["score"](rows)
+    assert s["leaks_caught"]["hits"] == 2 and s["leaks_caught_by_naive_shuffle"]["hits"] == 0
+    assert s["false_alarms_on_clean"]["hits"] == 0
