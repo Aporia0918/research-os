@@ -62,11 +62,11 @@ export function UpdateCard({ deps }: { deps?: Partial<UpdateDeps> }) {
       <button className="ghost" disabled={busy} onClick={check}>{tr('检查更新')}</button>
       {msg && <div className="muted" role="status" data-testid="update-msg">{msg}</div>}
       {waited !== null && <div className="muted" data-testid="update-check-progress">
-        <progress max={UPDATE_TIMEOUT_MS / 1000} value={waited} style={{ width: '100%' }} />
+        <progress max={UPDATE_TIMEOUT_MS / 1000} value={waited} />
         {tr('正在检查:已等 {0} 秒,最多等 {1} 秒', waited, UPDATE_TIMEOUT_MS / 1000)}
       </div>}
       {pct !== null && <div className="muted" data-testid="update-download-progress">
-        <progress max={100} value={pct} style={{ width: '100%' }} />
+        <progress max={100} value={pct} />
         {tr('正在下载:{0}%', pct)}
       </div>}
       {offer && (
@@ -74,7 +74,7 @@ export function UpdateCard({ deps }: { deps?: Partial<UpdateDeps> }) {
           <strong>{tr('发现新版本 {0}', offer.m.versionName)}</strong>
           {offer.urgent && <div className="verdict warn">{tr('建议尽快更新:你的版本太旧了。')}</div>}
           <div className="muted">{tr('大小 {0} MB · 发布于 {1}', (offer.m.size / 1048576).toFixed(1), offer.m.publishedAt)}</div>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{offer.m.releaseNotes}</pre>
+          <pre className="prewrap">{offer.m.releaseNotes}</pre>
           <button className="primary" disabled={busy} onClick={confirm}>{tr('下载并安装')}</button>
           <button className="ghost" disabled={busy} onClick={() => setOffer(null)}>{tr('以后再说')}</button>
         </div>
