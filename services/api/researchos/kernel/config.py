@@ -105,6 +105,10 @@ class Settings:
     extra_template_dirs: list[str] = field(default_factory=list)
     # Extra Host header values accepted (tests use "testserver"); never needed in normal use.
     extra_allowed_hosts: list[str] = field(default_factory=list)
+    # Android app: accept the in-app WebView origins https://localhost and capacitor://localhost
+    # on state-changing calls. Default OFF; the owner turns it on (RESEARCHOS_MOBILE_APP_ORIGINS=1). It only relaxes
+    # the Origin check: every call still needs a session from the pairing code, and it never adds a public origin.
+    mobile_app_origins: bool = False
 
     # ---- derived paths (data dir layout, baseline §11) ----
     @property
@@ -156,6 +160,8 @@ class Settings:
         if self.dev_mode:
             out |= {"http://127.0.0.1:5173", "http://localhost:5173"}
         out |= {o.rstrip("/") for o in self.public_origins}
+        if self.mobile_app_origins:
+            out |= set(MOBILE_APP_ORIGINS)
         return out
 
     def validate_network(self) -> list[str]:
@@ -218,3 +224,6 @@ def load_settings(data_dir: str | Path | None = None, **overrides: object) -> Se
     for k, v in overrides.items():
         setattr(s, k, v)
     return s
+
+
+MOBILE_APP_ORIGINS = ("https://localhost", "capacitor://localhost")
