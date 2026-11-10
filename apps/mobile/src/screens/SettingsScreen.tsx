@@ -51,11 +51,11 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
         <div className="muted">{tr('默认中文;只由这里决定,不跟随手机语言。')}</div>
       </div>
       <div className="card">
-        <label className="row"><input type="checkbox" style={{ width: 'auto' }} checked={demo} onChange={e => onDemo(e.target.checked)} aria-label={tr('演示模式')} /> {tr('演示模式(')}{tr(DEMO_LABEL)})</label>
+        <label className="row"><input type="checkbox" checked={demo} onChange={e => onDemo(e.target.checked)} aria-label={tr('演示模式')} /> {tr('演示模式(')}{tr(DEMO_LABEL)})</label>
         <div className="muted">{tr('显示一篇公开论文(EEGNet)和一条示例日志的预先计算结果。离线可用,不发送任何数据。')} {demo ? tr(demoSource) : ''}</div>
       </div>
       <div className="card" data-testid="computer-settings">
-        <label className="row"><input type="checkbox" style={{ width: 'auto' }} checked={computer.enabled} onChange={e => void updateComputer({ ...computer, enabled: e.target.checked })} aria-label={tr('连接电脑（增强功能）')} /> {tr('连接电脑（增强功能）')}</label>
+        <label className="row"><input type="checkbox" checked={computer.enabled} onChange={e => void updateComputer({ ...computer, enabled: e.target.checked })} aria-label={tr('连接电脑（增强功能）')} /> {tr('连接电脑（增强功能）')}</label>
         <div className="muted">{tr('默认关闭。关闭时，导入、解析、提问、记录、计划的本地部分和指导都不联系电脑。')}</div>
         {computer.enabled && <>
           <label>{tr('电脑地址')}</label>

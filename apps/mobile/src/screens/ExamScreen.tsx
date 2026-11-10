@@ -56,7 +56,7 @@ export function ExamScreen() {
   if (client === undefined) return <section className="exam"><h1>{tr('零世界考试')}</h1></section>;
   if (client === null) return (
     <section className="exam"><h1>{tr('零世界考试')}</h1>
-      <div className="card glass"><b>{tr('需要连接电脑')}</b>
+      <div className="card"><b>{tr('需要连接电脑')}</b>
         <div className="muted">{tr('考试会在电脑上把你的脚本运行几十次，手机负责确认、批准和看结果。请先在「设置」里开启“连接电脑”。')}</div></div>
     </section>
   );
@@ -65,7 +65,7 @@ export function ExamScreen() {
     <section className="exam">
       <h1>{tr('零世界考试')}</h1>
       <p className="muted">{tr('把标签打乱、但保留分组结构，造出“没有规律的世界”。如果脚本在这些世界里也能考高分，高分就不可信。')}</p>
-      {!task && <div className="card glass">
+      {!task && <div className="card">
         <label htmlFor="exam-script">{tr('脚本（电脑上的路径）')}</label>
         <input id="exam-script" value={script} onChange={e => setScript(e.target.value)} autoCapitalize="off" placeholder="/…/train.py" />
         <label htmlFor="exam-data">{tr('数据表（CSV 或 TSV）')}</label>
@@ -73,7 +73,7 @@ export function ExamScreen() {
         <button className="ghost" disabled={busy || !script.trim() || !data.trim()} onClick={detect}>{tr('认结构')}</button>
       </div>}
       {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} busy={busy} />}
-      {task && p === 'approve' && <div className="card glass" data-testid="exam-approve">
+      {task && p === 'approve' && <div className="card" data-testid="exam-approve">
         <b>{tr('批准电脑运行这次考试？')}</b>
         <div>{tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', (input?.runs ?? 0) + 1, input?.runs ?? 0)}</div>
         <div className="muted mono">{String(task.payload.script)}<br />{String(task.payload.data)}</div>
@@ -81,14 +81,14 @@ export function ExamScreen() {
         <div className="row"><button className="primary" disabled={busy} onClick={approve}>{tr('批准运行')}</button>
           <button className="ghost" disabled={busy} onClick={cancel}>{tr('取消')}</button></div>
       </div>}
-      {task && p === 'running' && <div className="card glass" role="status">
+      {task && p === 'running' && <div className="card" role="status">
         <b>{tr('正在考试')}</b>
         <progress max={(input?.runs ?? 0) + 1} value={runsDone(task)} />
         <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), (input?.runs ?? 0) + 1)}</div>
         <button className="ghost" disabled={busy || task.state === 'cancelling'} onClick={cancel}>{tr('停止')}</button>
       </div>}
       {task && p === 'done' && task.result && <Result report={task.result} />}
-      {task && (p === 'failed' || p === 'cancelled') && <div className="card glass">
+      {task && (p === 'failed' || p === 'cancelled') && <div className="card">
         <b>{p === 'cancelled' ? tr('考试已停止') : tr('考试没有完成')}</b>
         {p === 'failed' && <div className="muted">{describeError(new ApiError(422, task.error_code ?? 'http_error', ''))}</div>}
       </div>}
@@ -111,7 +111,7 @@ function Columns({ found, input, onInput, onStart, busy }: { found: Detected; in
   const others = (picked: string[]) => found.columns.filter(c => !picked.includes(c));
   const groups = [...found.groups.map(c => c.column), ...others(found.groups.map(c => c.column))];
   const labels = [...found.labels.map(c => c.column), ...others(found.labels.map(c => c.column))].filter(c => c !== input.group);
-  return <div className="card glass" data-testid="exam-columns">
+  return <div className="card" data-testid="exam-columns">
     <b>{tr('共 {0} 行。请确认这两列（已按可能性排好）：', found.rows)}</b>
     <label>{tr('分组列：同一个人（或同一批）的数据')}</label>
     <Chips label={tr('分组列')} options={groups} value={input.group} onPick={group => onInput({ ...input, group, label: input.label === group ? '' : input.label })} />
@@ -128,8 +128,8 @@ function Result({ report }: { report: ExamReport }) {
   const v = describeVerdict(report.verdict);
   const s = strip(report);
   return <>
-    <div className={`card glass verdict-hero ${v.tone}`} data-testid="exam-verdict"><b>{v.title}</b><div>{v.body}</div></div>
-    <div className="card glass">
+    <div className={`card verdict-hero ${v.tone}`} data-testid="exam-verdict"><b>{v.title}</b><div>{v.body}</div></div>
+    <div className="card">
       <div className="strip" role="img" aria-label={tr('零世界分数分布，真分数用竖线标出')}>
         <span className="strip-chance" style={{ left: `${s.chance}%` }} />
         {s.nulls.map((x, i) => <span key={i} className="strip-dot" style={{ left: `${x}%` }} />)}
