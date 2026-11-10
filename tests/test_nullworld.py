@@ -186,3 +186,19 @@ def test_demo_end_to_end(demo: Path, script: str, outcome: str) -> None:
 def test_cli_detect(demo: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["detect", str(demo / "ecg_features.csv")]) == 0
     assert json.loads(capsys.readouterr().out)["groups"][0]["column"] == "subject"
+
+
+# ---------- study negative control ----------
+
+
+def test_study_control_keeps_subjects_together() -> None:
+    from researchos.services.execution.datasets import _null_world
+
+    groups = [f"s{i // 4}" for i in range(40)]
+    y = [i // 4 % 2 for i in range(40)]  # one label per subject: a row shuffle would split subjects
+    out = _null_world(y, groups, 3)
+    assert {g: {out[i] for i, h in enumerate(groups) if h == g} for g in groups} == {
+        g: {out[groups.index(g)]} for g in groups
+    }
+    assert sorted(out) == sorted(y) and all(type(v) is int for v in out)
+    assert _null_world(y, groups, 3) == out
