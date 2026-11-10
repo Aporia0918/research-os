@@ -12,14 +12,19 @@ import sys
 from pathlib import Path
 
 
-def write_demo(path: Path, seed: int = 7, subjects: int = 60, windows: int = 8) -> None:
+def write_demo(
+    path: Path, seed: int = 7, subjects: int = 60, windows: int = 8, signal: float = 3.0, morph_is_label: bool = False
+) -> None:
+    """`signal` scales the AF effect on `rr` (0 = none). `morph_is_label` turns `morph` into a copy of the label,
+    a target leak that no label shuffle can reveal (the blind test keeps it to show the exam's limit)."""
     rng = random.Random(seed)
     with path.open("w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["subject", "window", "rr", "morph", "af"])
         for s in range(subjects):
             af = s % 2
-            rr, morph = 3.0 * af + rng.gauss(0, 0.6), rng.uniform(-1, 1)
+            rr = signal * af + rng.gauss(0, 0.6)
+            morph = float(af) if morph_is_label else rng.uniform(-1, 1)
             for k in range(windows):
                 w.writerow([f"S{s:02d}", k, f"{rr + rng.gauss(0, 0.03):.4f}", f"{morph + rng.gauss(0, 0.03):.4f}", af])
 
