@@ -1,0 +1,62 @@
+import { tr, trObj } from '../i18n';
+import type { CompareResult, LocalLog } from '../logic/types';
+export type { Answer, CompareResult, Guidance, GuidanceDecision, GuidanceDecisionIn, Hypothesis, HypothesisStatus, KeyAction, Plan, PlanCategory, PlanItemEdit, Passage, LocalLog as ServerLogEntry } from '../logic/types';
+export interface Health { status: string; version: string; db_ok: boolean }
+export interface ServerLog { id: string; client_id: string; created: boolean; kind: string }
+export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
+export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
+export function normalizeBaseUrl(url: string): string {
+  const u = url.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\/[^\s/]+/.test(u)) throw new Error(tr('电脑地址必须以 http:// 或 https:// 开头'));
+  return u;
+}
+/** Optional computer service; no construction is done by core screens. */
+export class ResearchOsClient {
+  private base: string;
+  constructor(baseUrl: string, private fetchImpl: FetchLike = (i, init) => fetch(i, init), private timeoutMs = 5000) { this.base = normalizeBaseUrl(baseUrl); }
+  health(): Promise<Health> { return this.request('GET', '/api/v1/health'); }
+  createLog(form: FormData, idempotencyKey: string): Promise<ServerLog> { return this.request('POST', '/api/v1/mobile/logs', form, { 'Idempotency-Key': idempotencyKey }); }
+  compare(logId: string, versionId: string, idempotencyKey: string, useModel = false): Promise<CompareResult> {
+    return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });
+  }
+  listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
+  private async request<T>(method: string, path: string, body?: unknown, extra: Record<string, string> = {}): Promise<T> {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    const ctrl = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Hard limit: Promise.race, because the native HTTP bridge on Android may ignore AbortSignal.
+    const limit = new Promise<never>((_, rej) => { timer = setTimeout(() => { ctrl.abort(); rej(new Error('timeout')); }, Math.min(5000, Math.max(1000, this.timeoutMs))); });
+    const headers: Record<string, string> = { Accept: 'application/json', ...extra, 'x-researchos-client': 'android' };
+    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
+    let res: Response;
+    let text: string;
+    try {
+      res = await Promise.race([this.fetchImpl(this.base + path, { method, headers, body: body === undefined ? undefined : isForm ? body as FormData : JSON.stringify(body), credentials: 'include', signal: ctrl.signal }), limit]);
+      text = await Promise.race([res.text(), limit]);
+    }
+    catch { throw new ApiError(0, 'network', tr('电脑未连接，已用手机处理')); }
+    finally { clearTimeout(timer); }
+    let data: unknown;
+    try { data = text ? JSON.parse(text) : undefined; } catch { /* no JSON details exposed */ }
+    if (!res.ok) {
+      const d = (data ?? {}) as { code?: string };
+      throw new ApiError(res.status, d.code ?? 'http_error', res.status === 0 ? tr('电脑未连接，已用手机处理') : 'request_failed');
+    }
+    return data as T;
+  }
+}
+export const ERROR_ZH: Record<string, string> = trObj({
+  not_found: '找不到这项内容。', bad_decision: '这个选择不合法,请重新选。',
+  plan_confirmed: '计划已经确认,不能再改。', plan_not_confirmed: '请先确认计划。',
+  unauthenticated: '还没登录。请先在「设置」页配对。',
+  plan_action_unapproved: '有关键动作需要你先批准或拒绝,再确认计划。',
+  citation_gate_open: '有数字在引用页找不到原文(需确认),请逐条确认或否认后再确认计划。',
+  guidance_confirmed: '这份指导已经确认,不能再改。',
+  bad_hypothesis: '假设内容不合法(请写文字并至少勾一条计划条目)。',
+  network: '电脑未连接，已用手机处理', busy: '电脑正忙,请稍后再试。',
+  internal_error: '电脑出错了,请稍后再试。', http_error: '请求没有成功。',
+});
+export function describeError(e: unknown): string {
+  if (e instanceof ApiError) return e.status === 0 ? tr('电脑未连接，已用手机处理') : ERROR_ZH[e.code] ?? tr('请求没有成功(错误代码 {0})。', e.code);
+  return (e as Error)?.message ?? String(e);
+}
