@@ -100,7 +100,7 @@ Plugins import only `researchos.contracts` and the template/plugin SDK.
 - NOT in K5: statistics and diagnosis (K9).
 
 ### K6 Model Gateway
-- Responsibility: provider adapters (DeepSeek, Zhipu/GLM, Anthropic, OpenAI), router, budget ledger, prompt-template
+- Responsibility: provider adapters (DeepSeek, Zhipu/GLM, Qwen/DashScope, Anthropic, OpenAI), router, budget ledger, prompt-template
   registry (versioned, hashed), tool registry, model/prompt certification, bounded `AgentRun`.
 - Tiers by **cost class**: routine = DeepSeek V4 + GLM (incl. GLM OCR / vision); premium = Claude + OpenAI/Codex;
   emergency fallback per MODEL_ROUTING_SPEC only; global premium switch; per-task manual "use highest model".

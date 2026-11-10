@@ -20,6 +20,7 @@ import { UpdatesCard } from "./SettingsUpdates";
 type Tier = "routine" | "premium";
 const PROVIDERS: { id: string; name: string; tier: Tier }[] = [
   { id: "deepseek", name: "DeepSeek", tier: "routine" }, { id: "zhipu", name: "GLM / Zhipu", tier: "routine" },
+  { id: "qwen", name: "Qwen / DashScope", tier: "routine" },
   { id: "anthropic", name: "Anthropic (Claude)", tier: "premium" }, { id: "openai", name: "OpenAI", tier: "premium" },
 ];
 const TIER_LABEL: Record<Tier, ParseKeys> = { routine: "settings.tierRoutine", premium: "settings.tierPremium" };

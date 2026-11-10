@@ -15,6 +15,7 @@ from ...kernel.logsetup import register_secret
 PROVIDER_ENV = {
     "deepseek": "DEEPSEEK_API_KEY",
     "zhipu": "ZHIPU_API_KEY",
+    "qwen": "DASHSCOPE_API_KEY",
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
     "relay": "RESEARCHOS_RELAY_API_KEY",  # OpenAI-compatible relay (Settings.relay_base_url)

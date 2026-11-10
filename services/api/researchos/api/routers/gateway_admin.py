@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/v1/gateway", tags=["gateway"])
 
 
 class AliasIn(BaseModel):
-    provider: str = Field(pattern="^(deepseek|zhipu|anthropic|openai)$")
+    provider: str = Field(pattern="^(deepseek|zhipu|qwen|anthropic|openai)$")
     model_id: str = Field(min_length=1, max_length=120)
     tier: str = Field(pattern="^(routine|premium|fallback|top)$")
     enabled: bool = True
