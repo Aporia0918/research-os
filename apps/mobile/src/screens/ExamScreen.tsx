@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tr } from '../i18n';
 import { ApiError, ResearchOsClient, describeError } from '../api/computer';
 import { newId } from '../local/store';
+import { auditHeadline, describeFinding, type AuditReport } from '../logic/audit';
 import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
@@ -18,6 +19,7 @@ export function ExamScreen() {
   const [script, setScript] = useState('');
   const [data, setData] = useState('');
   const [found, setFound] = useState<Detected | null>(null);
+  const [audit, setAudit] = useState<AuditReport | null>(null);
   const [input, setInput] = useState<ExamInput | null>(null);
   const [task, setTask] = useState<Task | null>(null);
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,11 @@ export function ExamScreen() {
     try { await f(); } catch (e) { setError(describeError(e)); } finally { setBusy(false); }
   }
   const detect = () => act(async () => {
-    const d = await client!.detectColumns(data.trim());
+    const [d, a] = await Promise.all([ // the rule check is a bonus: an older computer without it still runs the exam
+      client!.detectColumns(data.trim()),
+      client!.auditScript(script.trim(), []).then(r => (Array.isArray(r?.findings) ? r : null), () => null),
+    ]);
+    setAudit(a);
     await preferencesKV.set(PATHS_KEY, JSON.stringify({ script: script.trim(), data: data.trim() }));
     setFound(d); setTask(null);
     setInput({ script: script.trim(), data: d.data, group: d.groups[0]?.column ?? '', label: d.labels[0]?.column ?? '', runs: RUN_CHOICES[0], seed: 0 });
@@ -77,6 +83,7 @@ export function ExamScreen() {
         <input id="exam-data" value={data} onChange={e => setData(e.target.value)} autoCapitalize="off" placeholder="/…/features.csv" />
         <button className="ghost" disabled={busy || !script.trim() || !data.trim()} onClick={detect}>{tr('认结构')}</button>
       </div>}
+      {audit && found && !task && <Audit report={audit} />}
       {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} onPower={() => start(input, true)} busy={busy} />}
       {task && p === 'approve' && <div className="card" data-testid="exam-approve">
         <b>{power ? tr('批准电脑测检出率？') : tr('批准电脑运行这次考试？')}</b>
@@ -184,4 +191,20 @@ function PowerLine({ r }: { r: PowerReport['rows'][number] }) {
     <span>{tr('{0} 组 · 效应 {1}', r.groups, r.effect)}</span>
     <b>{`${r.detected}/${r.runs}`} <span className="muted">({pct(r.low)}–{pct(r.high)})</span></b>
   </>;
+}
+
+function Audit({ report }: { report: AuditReport }) {
+  const h = auditHeadline(report);
+  return <div className={`card verdict-hero ${h.tone}`} data-testid="exam-audit">
+    <b>{h.title}</b>
+    {report.error && <div className="muted mono">{report.error.message}</div>}
+    {report.findings.map((f, i) => {
+      const d = describeFinding(f);
+      return <div key={i} className="plan-item">
+        <span><span className="entry-kind">{tr('第 {0} 行', f.line)}</span> {d.what}</span>
+        {d.fix && <span className="muted">{d.fix}</span>}
+      </div>;
+    })}
+    <div className="muted">{tr('只读脚本、不运行。规则查的是常见写法，查不出不等于没有泄漏，零世界考试会再验一次。')}</div>
+  </div>;
 }
