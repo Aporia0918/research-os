@@ -32,6 +32,7 @@ from .knowledge.http_fetch import HostHttp
 from .knowledge.parse_task import parse_kind
 from .literature import monitor
 from .literature.tasks import Late, literature_kinds
+from .nullworld.task import nullworld_kinds
 from .orchestration.builtin import core_kinds
 from .orchestration.registry import KindRegistry
 from .research import deep_store, deep_tasks
@@ -68,6 +69,7 @@ def build_services(
         + effect_kinds(late)
         + [deep_tasks.deep_kind(late)]
         + core_kinds(settings)
+        + nullworld_kinds(settings)
         + [parse_kind(settings), experiment_kind(settings, templates), dataset_kind(settings, extensions)]
         + (extra_kinds or [])
     )
