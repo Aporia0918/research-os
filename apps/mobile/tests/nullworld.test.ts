@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { ResearchOsClient, type FetchLike } from '../src/api/computer';
 import { describePower, describeVerdict, examPayload, phase, plannedRuns, powerPayload, retake, strip, type ExamReport, type PowerReport, type Task } from '../src/logic/nullworld';
 import { ExamScreen } from '../src/screens/ExamScreen';
+import { auditHeadline, describeFinding } from '../src/logic/audit';
 import { saveComputerSettings } from '../src/settings';
 import { preferencesKV } from '../src/storage/kv';
 
@@ -49,6 +50,12 @@ describe('null-world logic', () => {
     expect(ok.title).toContain('0.5');
     expect(describePower(rep([row(60, 0.2, 1), row(60, 0.8, 9)])).title).toContain('只检出 9');
     expect(describePower(rep([{ ...row(60, 0.8, 0), rate: null }])).tone).toBe('warn');
+  });
+  it('words rule-check findings by code and keeps unknown codes visible', () => {
+    expect(describeFinding({ code: 'R1.random_split', rule: 'R1', severity: 'red', line: 11 }).what).toContain('同一个人');
+    expect(describeFinding({ code: 'R9.new', rule: 'R9', severity: 'yellow', line: 1 })).toEqual({ what: 'R9.new', fix: '' });
+    expect(auditHeadline({ file: 's.py', status: 'green', findings: [] }).tone).toBe('ok');
+    expect(auditHeadline({ file: 's.py', status: 'red', findings: [] }).tone).toBe('bad');
   });
   it('approves the exact hash the server showed', async () => {
     const calls: { url: string; body?: string }[] = [];
@@ -115,6 +122,7 @@ describe('exam screen', () => {
     vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
       const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status });
       if (url.endsWith('/null-world/detect')) return json({ data: '/p/d.csv', rows: 300, columns: ['subject', 'af', 'rr'], groups: [{ column: 'subject', score: 2, reason: '' }], labels: [{ column: 'af', score: 2, reason: '' }], features: ['rr'] });
+      if (url.endsWith('/leak-audit/script')) return json({ file: 's.py', status: 'red', findings: [{ code: 'R1.random_split', rule: 'R1', severity: 'red', line: 11 }] });
       if (url.endsWith('/tasks')) { created.push(JSON.parse(init!.body as string)); state = { ...state, payload: (created[0] as { payload: Record<string, unknown> }).payload }; return json(state, 202); }
       if (url.includes('subject-hash')) return json({ hash: 'h' });
       if (url.endsWith('/approvals')) { state = { ...state, state: 'succeeded', result: power }; return json({}, 201); }
@@ -124,7 +132,9 @@ describe('exam screen', () => {
     const [script, data] = [...h.querySelectorAll('input')];
     await type(script, '/p/s.py'); await type(data, '/p/d.csv');
     await act(async () => { button(h, '认结构').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-audit]')?.textContent).toContain('第 11 行');
     await act(async () => { button(h, '先测检出率').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-audit]')).toBeNull(); // the rule check sits with the set-up, not the run
     expect(created[0]).toMatchObject({ kind: 'nullworld.power', payload: { effects: [0.2, 0.5, 0.8], fractions: [0.5, 1] } });
     expect(h.querySelector('[data-testid=exam-approve]')?.textContent).toContain('160 次');
     await act(async () => { button(h, '批准运行').click(); }); await flush();

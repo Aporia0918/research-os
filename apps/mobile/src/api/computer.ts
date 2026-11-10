@@ -1,6 +1,7 @@
 import { tr, trObj } from '../i18n';
 import type { CompareResult, LocalLog } from '../logic/types';
 import type { Detected, Task } from '../logic/nullworld';
+import type { AuditReport } from '../logic/audit';
 export type { Answer, CompareResult, Guidance, GuidanceDecision, GuidanceDecisionIn, Hypothesis, HypothesisStatus, KeyAction, Plan, PlanCategory, PlanItemEdit, Passage, LocalLog as ServerLogEntry } from '../logic/types';
 export interface Health { status: string; version: string; db_ok: boolean }
 export interface ServerLog { id: string; client_id: string; created: boolean; kind: string }
@@ -23,6 +24,10 @@ export class ResearchOsClient {
   listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
   // 零世界考试: the computer runs the exam as a task that waits for the owner's approval of its exact payload.
   detectColumns(data: string): Promise<Detected> { return this.request('POST', '/api/v1/null-world/detect', { data }); }
+  /** 规则体检: the computer parses the script inside a read root; nothing is run. */
+  auditScript(path: string, subjectColumns: string[]): Promise<AuditReport> {
+    return this.request('POST', '/api/v1/leak-audit/script', { path, subject_columns: subjectColumns });
+  }
   createTask(kind: string, payload: Record<string, unknown>, idempotencyKey: string): Promise<Task> {
     return this.request('POST', '/api/v1/tasks', { kind, payload }, { 'Idempotency-Key': idempotencyKey });
   }
