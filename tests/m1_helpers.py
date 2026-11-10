@@ -14,7 +14,7 @@ from researchos.services.orchestration import workers
 from researchos_worker.loop import WorkerState, run_loop
 
 Responder = Callable[[ChatRequest], str | ProviderError]
-PROVIDERS = ("deepseek", "zhipu", "anthropic", "openai")
+PROVIDERS = ("deepseek", "zhipu", "qwen", "anthropic", "openai")
 
 
 def mock_providers(responders: dict[str, Responder] | None = None) -> dict[str, MockProvider]:

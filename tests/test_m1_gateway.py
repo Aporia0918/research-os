@@ -76,6 +76,13 @@ def test_routine_down_uses_sibling_not_premium(conn: sqlite3.Connection, svc: Se
     assert not mocks["anthropic"].calls
 
 
+def test_qwen_is_the_third_routine_sibling(conn: sqlite3.Connection, svc: Services, mocks: dict) -> None:
+    configure_models(conn, svc, ("qwen", "anthropic"))  # no deepseek or zhipu key/price
+    mocks["qwen"].responder = lambda req: '{"ok": true}'
+    assert call(svc, conn).alias == "ROUTINE_TEXT_QWEN"
+    assert not mocks["anthropic"].calls
+
+
 def test_invalid_twice_escalates_when_premium_enabled(conn: sqlite3.Connection, svc: Services, mocks: dict) -> None:
     configure_models(conn, svc)
     mocks["deepseek"].responder = lambda req: '{"ok": false}'
