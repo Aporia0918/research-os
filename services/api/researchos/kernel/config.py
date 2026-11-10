@@ -84,6 +84,9 @@ class Settings:
     # K2 time triggers (saved searches, weekly retraction checks): worker tick interval in seconds.
     trigger_interval_s: float = 60.0
     relay_for: list[str] = field(default_factory=list)
+    # Our model id -> the relay's model id, e.g. {"deepseek-v4" = "deepseek/deepseek-v4"} for OpenRouter. Unlisted ids
+    # go to the relay unchanged. Env form: RESEARCHOS_RELAY_MODELS="deepseek-v4=deepseek/deepseek-v4,...".
+    relay_models: dict[str, str] = field(default_factory=dict)
     # Egress gate (ADR-159/162): provider names the owner trusts as LOCAL inference (e.g. an Ollama endpoint on this
     # machine whose downstream processing the owner controls). Everything else is cloud; the relay never counts.
     trusted_local_providers: list[str] = field(default_factory=list)
@@ -188,6 +191,9 @@ def _coerce(name: str, current: object, raw: object) -> object:
         return float(str(raw))
     if isinstance(current, Path):
         return Path(str(raw))
+    if isinstance(current, dict):
+        pairs = raw.items() if isinstance(raw, dict) else (p.split("=", 1) for p in str(raw).split(",") if "=" in p)
+        return {str(k).strip(): str(v).strip() for k, v in pairs}
     if isinstance(current, list):
         if isinstance(raw, list):
             return [str(x) for x in raw]

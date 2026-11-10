@@ -4,6 +4,7 @@ make no paid calls). Keys are passed per call from the keystore and never logged
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -15,6 +16,7 @@ OPENAI_COMPAT_URLS = {
     "openai": "https://api.openai.com/v1/chat/completions",
 }
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+OPENROUTER_HOST = "openrouter.ai"
 
 
 def _raise_for(resp: httpx.Response) -> None:
@@ -53,13 +55,16 @@ class OpenAICompatProvider:
         self.url = url or OPENAI_COMPAT_URLS[name]
         self.location = "cloud"  # a loopback URL may be a tunnel to a vendor; local needs owner trust (review #48)
 
-    def complete(self, req: ChatRequest, api_key: str) -> ChatResponse:
-        body: dict[str, Any] = {"model": req.model_id, "temperature": req.temperature,
-                                "max_tokens": max(req.max_output_tokens, self.min_output_tokens),
-                                "messages": [{"role": m.role, "content": m.content} for m in req.messages]}
+    def body(self, req: ChatRequest) -> dict[str, Any]:
+        out: dict[str, Any] = {"model": req.model_id, "temperature": req.temperature,
+                               "max_tokens": max(req.max_output_tokens, self.min_output_tokens),
+                               "messages": [{"role": m.role, "content": m.content} for m in req.messages]}
         if req.json_mode:
-            body["response_format"] = {"type": "json_object"}
-        d = _post(self.url, {"Authorization": f"Bearer {api_key}"}, body, req.timeout_s)
+            out["response_format"] = {"type": "json_object"}
+        return out
+
+    def complete(self, req: ChatRequest, api_key: str) -> ChatResponse:
+        d = _post(self.url, {"Authorization": f"Bearer {api_key}"}, self.body(req), req.timeout_s)
         usage = d.get("usage") or {}
         choice = d["choices"][0]
         return ChatResponse(text=choice["message"]["content"] or "", input_tokens=int(usage.get("prompt_tokens", 0)),
@@ -87,19 +92,29 @@ class AnthropicProvider:
 
 
 class RelayProvider(OpenAICompatProvider):
-    """OpenAI-compatible relay serving several vendors' models under their own model ids (docs/OPS.md#model-relay).
+    """OpenAI-compatible relay serving several vendors' models (docs/OPS.md#model-relay). `models` renames our model
+    ids to the relay's (OpenRouter wants "vendor/model"); unlisted ids are sent as they are. On OpenRouter every
+    request asks only for providers that do not store prompts (provider.data_collection = "deny").
     The relay sees all content sent to it. Some relays refuse very small max_tokens ("probe requests")."""
 
     min_output_tokens = 16
 
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str, models: dict[str, str] | None = None) -> None:
         if not base_url.startswith("https://"):
             raise ValueError("relay_base_url must be an https URL")
         super().__init__("relay", base_url.rstrip("/") + "/chat/completions")
+        self.models = dict(models or {})
+        self.openrouter = urlsplit(base_url).hostname == OPENROUTER_HOST
+
+    def body(self, req: ChatRequest) -> dict[str, Any]:
+        out = {**super().body(req), "model": self.models.get(req.model_id, req.model_id)}
+        if self.openrouter:
+            out["provider"] = {"data_collection": "deny"}
+        return out
 
 
-def default_providers(relay_base_url: str = "") -> dict[str, Any]:
+def default_providers(relay_base_url: str = "", relay_models: dict[str, str] | None = None) -> dict[str, Any]:
     out: dict[str, Any] = {**{n: OpenAICompatProvider(n) for n in OPENAI_COMPAT_URLS}, "anthropic": AnthropicProvider()}
     if relay_base_url:
-        out["relay"] = RelayProvider(relay_base_url)
+        out["relay"] = RelayProvider(relay_base_url, relay_models)
     return out

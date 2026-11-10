@@ -90,7 +90,8 @@ def build_services(
             doc_kinds.add(d)
     keystore = SecretStore(settings.config_dir)
     HostHttp.allow_fake_ip = settings.network_allow_fake_ip
-    providers = providers if providers is not None else default_providers(settings.relay_base_url)
+    if providers is None:
+        providers = default_providers(settings.relay_base_url, settings.relay_models)
     gateway = Gateway(settings, keystore, providers)
     svc = Services(
         settings=settings,

@@ -62,6 +62,21 @@ PhysioNet data, DICOM) never goes to the relay or any vendor; such calls use loc
 `egress_blocked`. A local model (e.g. Ollama on this PC) counts as local only when the owner lists its provider name
 in `trusted_local_providers = ["..."]` in researchos.toml; a loopback URL alone is not trusted and the relay never is.
 
+### OpenRouter as the relay
+OpenRouter is one OpenAI-compatible relay for many vendors, so it uses the same settings. Model choice is config:
+```toml
+relay_base_url = "https://openrouter.ai/api/v1"
+relay_for = ["deepseek", "zhipu", "qwen", "anthropic", "openai"]   # vendors sent through OpenRouter; drop any to keep it direct
+[relay_models]   # our model id -> OpenRouter's "vendor/model" id; see openrouter.ai/models
+"deepseek-v4" = "deepseek/deepseek-v4"
+"claude-sonnet-5-5" = "anthropic/claude-sonnet-5-5"
+```
+The ids above are examples: check each one on openrouter.ai/models before use. Key: `RESEARCHOS_RELAY_API_KEY`
+(an OpenRouter key). Prices go under provider `relay` with our model id, as above; nothing is callable until a
+verified price exists. On OpenRouter every request sends `provider.data_collection = "deny"`, so only providers that
+do not store prompts are used (OpenRouter docs, provider routing, checked 2026-11-10); some models may then have no
+provider and fail with a provider error instead of falling back to one that stores data.
+
 ## Network behind a fake-IP proxy (Clash etc.)
 If literature searches fail with "resolves to a non-public address (fake-IP proxy?)", your proxy answers DNS with
 addresses in 198.18.0.0/15. Set `network_allow_fake_ip = true` in `researchos.toml` (or env
