@@ -1,5 +1,6 @@
 import { tr, trObj } from '../i18n';
 import type { CompareResult, LocalLog } from '../logic/types';
+import type { Detected, Task } from '../logic/nullworld';
 export type { Answer, CompareResult, Guidance, GuidanceDecision, GuidanceDecisionIn, Hypothesis, HypothesisStatus, KeyAction, Plan, PlanCategory, PlanItemEdit, Passage, LocalLog as ServerLogEntry } from '../logic/types';
 export interface Health { status: string; version: string; db_ok: boolean }
 export interface ServerLog { id: string; client_id: string; created: boolean; kind: string }
@@ -20,6 +21,19 @@ export class ResearchOsClient {
     return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });
   }
   listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
+  // 零世界考试: the computer runs the exam as a task that waits for the owner's approval of its exact payload.
+  detectColumns(data: string): Promise<Detected> { return this.request('POST', '/api/v1/null-world/detect', { data }); }
+  createTask(kind: string, payload: Record<string, unknown>, idempotencyKey: string): Promise<Task> {
+    return this.request('POST', '/api/v1/tasks', { kind, payload }, { 'Idempotency-Key': idempotencyKey });
+  }
+  task(id: string): Promise<Task> { return this.request('GET', `/api/v1/tasks/${encodeURIComponent(id)}`); }
+  cancelTask(id: string): Promise<Task> { return this.request('POST', `/api/v1/tasks/${encodeURIComponent(id)}/cancel`); }
+  /** Approves exactly what was shown: the server refuses if the task changed since its hash was read. */
+  async approveTask(id: string): Promise<void> {
+    const q = new URLSearchParams({ subject_type: 'task', subject_id: id });
+    const { hash } = await this.request<{ hash: string }>('GET', `/api/v1/approvals/subject-hash?${q}`);
+    await this.request('POST', '/api/v1/approvals', { subject_type: 'task', subject_id: id, expected_hash: hash });
+  }
   private async request<T>(method: string, path: string, body?: unknown, extra: Record<string, string> = {}): Promise<T> {
     const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     const ctrl = new AbortController();
@@ -53,6 +67,9 @@ export const ERROR_ZH: Record<string, string> = trObj({
   citation_gate_open: '有数字在引用页找不到原文(需确认),请逐条确认或否认后再确认计划。',
   guidance_confirmed: '这份指导已经确认,不能再改。',
   bad_hypothesis: '假设内容不合法(请写文字并至少勾一条计划条目)。',
+  outside_roots: '这个文件不在电脑允许读取的文件夹里，电脑不会碰它。',
+  bad_input: '读不了这个表格。请确认是 CSV 或 TSV 文件，第一行是列名，并且不超过 50 MB。',
+  invalid_payload: '考试设置不完整或不合法，请重新认结构。',
   network: '电脑未连接，已用手机处理', busy: '电脑正忙,请稍后再试。',
   internal_error: '电脑出错了,请稍后再试。', http_error: '请求没有成功。',
 });

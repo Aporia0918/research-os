@@ -39,3 +39,20 @@ select{font:inherit;border:1px solid #d9deea;border-radius:14px;padding:8px}
 .verdict.warn { color: #8a5a00; }
 .tabs-inline { flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 button[role=radio][aria-checked=true]{background:#2f6fed;color:#fff}
+/* 零世界考试: frosted cards over a soft gradient, one accent per verdict */
+.exam { --ok: #1b7f3b; --bad: #b3261e; --warn: #8a5a00; }
+.exam .glass { background: rgba(255,255,255,.72); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); border: 1px solid rgba(255,255,255,.8); }
+.exam .mono { font-family: ui-monospace, Menlo, monospace; font-size: .75rem; overflow-wrap: anywhere; }
+.exam progress { width: 100%; height: 10px; accent-color: var(--accent); }
+.verdict-hero { border-left: 6px solid var(--warn); } .verdict-hero b { font-size: 1.15rem; }
+.verdict-hero.ok { border-left-color: var(--ok); } .verdict-hero.ok b { color: var(--ok); }
+.verdict-hero.bad { border-left-color: var(--bad); } .verdict-hero.bad b { color: var(--bad); }
+.verdict-hero.warn b { color: var(--warn); }
+.strip { position: relative; height: 56px; border-bottom: 1px solid #d9deea; margin: 8px 6px 0; }
+.strip > span { position: absolute; transform: translateX(-50%); }
+.strip-dot { bottom: 6px; width: 10px; height: 10px; border-radius: 50%; background: rgba(47,111,237,.45); }
+.strip-chance { bottom: 0; top: 8px; border-left: 2px dashed #9aa3b5; }
+.strip-real { bottom: 0; top: 0; width: 4px; border-radius: 2px; background: var(--warn); }
+.strip-real.ok { background: var(--ok); } .strip-real.bad { background: var(--bad); }
+.strip-axis { justify-content: space-between; }
+.facts { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }

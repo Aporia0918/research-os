@@ -4,6 +4,7 @@ import { AskScreen } from './screens/AskScreen';
 import { LogScreen } from './screens/LogScreen';
 import { GuideScreen } from './screens/GuideScreen';
 import { PlanScreen } from './screens/PlanScreen';
+import { ExamScreen } from './screens/ExamScreen';
 import { EnhancedScreen } from './screens/EnhancedScreen';
 import { loadComputerSettings } from './settings';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -14,9 +15,10 @@ import { LOCAL_VERSION_CODE, UPDATE_CHANNEL } from './update/version';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
-type Tab = 'ask' | 'log' | 'plan' | 'guide' | 'enhanced' | 'settings';
+type Tab = 'ask' | 'log' | 'plan' | 'exam' | 'guide' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: string }[] = trObj([
   { id: 'ask', label: '提问', icon: '?' }, { id: 'log', label: '记录', icon: '+' }, { id: 'plan', label: '计划', icon: '☰' },
+  { id: 'exam', label: '零世界', icon: '◎' },
   { id: 'guide', label: '指导', icon: '✎' },
   { id: 'settings', label: '设置', icon: '⚙' },
 ]);
@@ -56,6 +58,7 @@ export function App() {
         {tab === 'ask' && <AskScreen demo={demo} />}
         {tab === 'log' && <LogScreen demo={demo} />}
         {tab === 'plan' && <PlanScreen demo={demo} />}
+        {tab === 'exam' && <ExamScreen />}
         {tab === 'guide' && <GuideScreen demo={demo} />}
         {tab === 'enhanced' && enhanced && <EnhancedScreen />}
         {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} onComputer={setEnhanced} />}
