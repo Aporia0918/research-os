@@ -15,6 +15,7 @@ const FIXED: readonly (readonly [string, string, string])[] = [
   ["bad_control", "a negative control runs at the trial stage only (never on the test set)", "badControl"],
   ["bad_decision", "stage, decision and a reason (>= 3 chars) are required", "badDecision"],
   ["bad_direction", "direction must be references or cited_by", "badDirection"],
+  ["bad_input", "data must be a table file of at most 50 MB", "badTableFile"],
   ["bad_mode", "mode must be copy (default) or move", "badMode"],
   ["bad_plan", "plan needs 1-6 sub-questions, each with 1-3 queries", "badPlanSubQuestions"],
   ["bad_protocol", "factors must be 1-4 parameters of the plan's search space", "badProtocolFactors"],
