@@ -6,8 +6,8 @@ import { newId } from '../local/store';
 import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
-  EXAM_KIND, RUN_CHOICES, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip,
-  type Detected, type ExamInput, type ExamReport, type Task,
+  EXAM_KIND, POWER_KIND, RUN_CHOICES, describePower, describeVerdict, examPayload, fmtScore, phase, plannedRuns, powerPayload,
+  retake, runsDone, strip, type Detected, type ExamInput, type ExamReport, type PowerReport, type Task,
 } from '../logic/nullworld';
 
 const PATHS_KEY = 'exam.paths.v1';
@@ -49,7 +49,10 @@ export function ExamScreen() {
     setFound(d); setTask(null);
     setInput({ script: script.trim(), data: d.data, group: d.groups[0]?.column ?? '', label: d.labels[0]?.column ?? '', runs: RUN_CHOICES[0], seed: 0 });
   });
-  const start = (i: ExamInput) => act(async () => { setInput(i); setTask(await client!.createTask(EXAM_KIND, examPayload(i), newId())); });
+  const start = (i: ExamInput, power = false) => act(async () => {
+    setInput(i);
+    setTask(await client!.createTask(power ? POWER_KIND : EXAM_KIND, power ? powerPayload(i) : examPayload(i), newId()));
+  });
   const approve = () => act(async () => { await client!.approveTask(task!.id); setTask(await client!.task(task!.id)); });
   const cancel = () => act(async () => { setTask(await client!.cancelTask(task!.id)); });
 
@@ -61,6 +64,8 @@ export function ExamScreen() {
     </section>
   );
   const p = task ? phase(task) : null;
+  const power = task?.kind === POWER_KIND;
+  const total = task ? plannedRuns(task) : 0;
   return (
     <section className="exam">
       <h1>{tr('零世界考试')}</h1>
@@ -72,28 +77,32 @@ export function ExamScreen() {
         <input id="exam-data" value={data} onChange={e => setData(e.target.value)} autoCapitalize="off" placeholder="/…/features.csv" />
         <button className="ghost" disabled={busy || !script.trim() || !data.trim()} onClick={detect}>{tr('认结构')}</button>
       </div>}
-      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} busy={busy} />}
+      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} onPower={() => start(input, true)} busy={busy} />}
       {task && p === 'approve' && <div className="card" data-testid="exam-approve">
-        <b>{tr('批准电脑运行这次考试？')}</b>
-        <div>{tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', (input?.runs ?? 0) + 1, input?.runs ?? 0)}</div>
+        <b>{power ? tr('批准电脑测检出率？') : tr('批准电脑运行这次考试？')}</b>
+        <div>{power
+          ? tr('电脑会运行你的脚本 {0} 次：在零世界里植入大小不同的效应，看脚本能检出几次。不用真实标签。', total)
+          : tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', total, total - 1)}</div>
         <div className="muted mono">{String(task.payload.script)}<br />{String(task.payload.data)}</div>
         <div className="muted">{tr('分组列：{0}　标签列：{1}', String(task.payload.group), String(task.payload.label))}</div>
         <div className="row"><button className="primary" disabled={busy} onClick={approve}>{tr('批准运行')}</button>
           <button className="ghost" disabled={busy} onClick={cancel}>{tr('取消')}</button></div>
       </div>}
       {task && p === 'running' && <div className="card" role="status">
-        <b>{tr('正在考试')}</b>
-        <progress max={(input?.runs ?? 0) + 1} value={runsDone(task)} />
-        <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), (input?.runs ?? 0) + 1)}</div>
+        <b>{power ? tr('正在测检出率') : tr('正在考试')}</b>
+        <progress max={total} value={runsDone(task)} />
+        <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), total)}</div>
         <button className="ghost" disabled={busy || task.state === 'cancelling'} onClick={cancel}>{tr('停止')}</button>
       </div>}
-      {task && p === 'done' && task.result && <Result report={task.result} />}
+      {task && p === 'done' && task.result && (power ? <Power report={task.result as PowerReport} /> : <Result report={task.result as ExamReport} />)}
       {task && (p === 'failed' || p === 'cancelled') && <div className="card">
         <b>{p === 'cancelled' ? tr('考试已停止') : tr('考试没有完成')}</b>
         {p === 'failed' && <div className="muted">{describeError(new ApiError(422, task.error_code ?? 'http_error', ''))}</div>}
       </div>}
       {task && p !== 'running' && p !== 'approve' && input && <div className="row">
-        <button className="primary" disabled={busy} onClick={() => start(retake(input))}>{tr('复考（换一批零世界）')}</button>
+        {power
+          ? <button className="primary" disabled={busy} onClick={() => start(input)}>{tr('开始考试')}</button>
+          : <button className="primary" disabled={busy} onClick={() => start(retake(input))}>{tr('复考（换一批零世界）')}</button>}
         <button className="ghost" disabled={busy} onClick={() => setTask(null)}>{tr('改设置')}</button>
       </div>}
       {error && <div className="card error" role="alert">{error}</div>}
@@ -107,7 +116,9 @@ function Chips({ label, options, value, onPick }: { label: string; options: stri
   </div>;
 }
 
-function Columns({ found, input, onInput, onStart, busy }: { found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; busy: boolean }) {
+function Columns({ found, input, onInput, onStart, onPower, busy }: {
+  found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; onPower: () => void; busy: boolean;
+}) {
   const others = (picked: string[]) => found.columns.filter(c => !picked.includes(c));
   const groups = [...found.groups.map(c => c.column), ...others(found.groups.map(c => c.column))];
   const labels = [...found.labels.map(c => c.column), ...others(found.labels.map(c => c.column))].filter(c => c !== input.group);
@@ -120,7 +131,11 @@ function Columns({ found, input, onInput, onStart, busy }: { found: Detected; in
     <label>{tr('零世界数量')}</label>
     <Chips label={tr('零世界数量')} options={RUN_CHOICES.map(String)} value={String(input.runs)} onPick={r => onInput({ ...input, runs: Number(r) })} />
     <div className="muted">{tr('只打乱标签列，其他列一个数都不改。脚本要在最后打印一行分数，例如 accuracy: 0.81。')}</div>
-    <button className="primary" disabled={busy || !input.group || !input.label} onClick={onStart}>{tr('开始考试')}</button>
+    <div className="row">
+      <button className="primary" disabled={busy || !input.group || !input.label} onClick={onStart}>{tr('开始考试')}</button>
+      <button className="ghost" disabled={busy || !input.group || !input.label} onClick={onPower}>{tr('先测检出率')}</button>
+    </div>
+    <div className="muted">{tr('检出率：在没有规律的世界里植入已知大小的效应，看现在的人数能不能把它找出来。')}</div>
   </div>;
 }
 
@@ -148,5 +163,25 @@ function Result({ report }: { report: ExamReport }) {
       {report.errors.map((e, i) => <pre key={i} className="answer">{e}</pre>)}
       <div className="muted mono">{tr('种子 {0} · 数据 {1} · 脚本 {2}', report.seed, report.data_sha256.slice(0, 12), report.script_sha256.slice(0, 12))}</div>
     </div>
+  </>;
+}
+
+function Power({ report }: { report: PowerReport }) {
+  const v = describePower(report);
+  return <div className={`card verdict-hero ${v.tone}`} data-testid="exam-power">
+    <b>{v.title}</b>
+    <div className="facts">
+      {report.rows.map(r => <PowerLine key={`${r.groups}:${r.effect}`} r={r} />)}
+    </div>
+    <div className="muted">{tr('效应用标准差计：0.2 小，0.5 中，0.8 大。括号里是 95% 区间。植入的特征：{0}', report.features.join(', '))}</div>
+    {report.errors.map((e, i) => <pre key={i} className="answer">{e}</pre>)}
+  </div>;
+}
+
+const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
+function PowerLine({ r }: { r: PowerReport['rows'][number] }) {
+  return <>
+    <span>{tr('{0} 组 · 效应 {1}', r.groups, r.effect)}</span>
+    <b>{`${r.detected}/${r.runs}`} <span className="muted">({pct(r.low)}–{pct(r.high)})</span></b>
   </>;
 }
