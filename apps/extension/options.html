@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>思维账本 · 配对</title>
+  <style>
+    body { font: 14px/1.6 system-ui, sans-serif; color: #1d2421; background: #fbfcfb; max-width: 420px; margin: 32px auto; padding: 0 16px; }
+    label { display: grid; gap: 4px; margin-bottom: 12px; }
+    input { font: inherit; padding: 6px 8px; border: 1px solid #cfd8d4; border-radius: 8px; }
+    button { font: inherit; border: 0; border-radius: 8px; padding: 6px 14px; color: #fff; background: #1f6f5c; cursor: pointer; }
+    #msg { color: #5b6762; }
+  </style>
+</head>
+<body>
+  <h1>和电脑上的账本配对</h1>
+  <p>在电脑端「设置 → 设备 → 配对新设备」拿到 8 位配对码，填在下面。</p>
+  <form id="f">
+    <label>电脑上的地址<input name="server" placeholder="https://192.168.1.5:8765" required></label>
+    <label>配对码<input name="code" maxlength="9" autocapitalize="characters" required></label>
+    <button type="submit">配对</button>
+  </form>
+  <p id="msg"></p>
+  <script src="src/options.js"></script>
+</body>
+</html>

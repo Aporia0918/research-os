@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog, Dialog, DialogContent } from "@/components/ui/dialog";
 import { QueryView } from "@/components/layout/state";
+import { pairLink } from "@/lib/pairLink";
 import { formatTime, newKey, relativeTime } from "@/lib/utils";
 
 function PairingCodeView() {
@@ -25,7 +26,7 @@ function PairingCodeView() {
       if (!alive) return;
       setCode(c);
       if (c.pair_url) {
-        const url = await QRCode.toDataURL(c.pair_url, { margin: 1, width: 200 });
+        const url = await QRCode.toDataURL(pairLink(c.pair_url, c.code), { margin: 1, width: 200 });
         if (alive) setQr(url);
       }
     }).catch((e: unknown) => alive && setErr(describeError(e)));
