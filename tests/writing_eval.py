@@ -1,6 +1,7 @@
 """Scoring of the W3 logic check and the W5 reporting checklist against the two synthetic writing fixtures
 (tests/fixtures/writing/*_draft.md, answer keys next to them). Both drafts and keys were written by the developers:
-the EEG sample was used for tuning, the ECG draft was committed before any rule change (held-out, not independent).
+the EEG sample was used for tuning; the ECG draft (committed before the port) and the EMG draft (committed after
+scoring the unchanged port on the ECG draft) were both written before any rule change - held-out, not independent.
 
 A W3 row counts when every listed sentence (found by a quote) carries the expected flag code; a W5 row counts when
 the item is not `met`. False alarms: W3 flags on sentences outside every planted row, and stated W5 items not `met`."""
@@ -44,6 +45,18 @@ HELDOUT = Key(
     planted=("Sensitivity for supraventricular ectopic beats dropped",),
     stated=("sample_size", "ethics"),
 )
+HELDOUT2 = Key(
+    w3={"G1": ("claim_without_evidence", ("most practical input modality",)),
+        "G2": ("conclusion_exceeds_results", ("works reliably for all amputees",)),
+        "G3": ("contradiction", ("Shifting the electrodes by 1 cm",)),
+        "G4": ("overstrong_causal_wording", ("Muscle fatigue drives",)),
+        "G5": ("claim_without_evidence", ("exceeds the best results reported in earlier studies",)),
+        "G9": ("conclusion_exceeds_results", ("will never again need", "will become the standard controller"))},
+    w5={"G6a": "subject_wise_split", "G6b": "leakage", "G7": "power", "G8": "ethics"},
+    planted=("Accuracy fell when the electrodes were shifted",),
+    stated=("sample_size",),
+)
+DRAFTS = (("sample_eeg_draft.md", SAMPLE), ("heldout_ecg_draft.md", HELDOUT), ("heldout2_emg_draft.md", HELDOUT2))
 
 
 def _locate(paras: list[dict[str, Any]], quote: str) -> tuple[int, int]:
@@ -75,7 +88,7 @@ def score(name: str, key: Key) -> dict[str, Any]:
 
 
 def main() -> None:
-    for name, key in (("sample_eeg_draft.md", SAMPLE), ("heldout_ecg_draft.md", HELDOUT)):
+    for name, key in DRAFTS:
         r = score(name, key)
         print(f"{name}: {r['detected']}/{r['rows']} detected, {r['false_alarms']} false alarms")
         print("  missed:", [k for k, v in r["hits"].items() if not v] or "none")
