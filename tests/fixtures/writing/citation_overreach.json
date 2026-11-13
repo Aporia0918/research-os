@@ -1,0 +1,23 @@
+{
+  "_note": "SYNTHETIC fixture for the W7 citation over-reach check, written by the ResearchOS developers before running the check (not independent). Sources are invented abstracts; keys are fictional. Expected verdicts: ok / over_reach / no_support.",
+  "sources": {
+    "smith2020": "We studied 120 adults with type 2 diabetes. Daily walking was associated with lower fasting glucose after 12 weeks. These results suggest that walking may improve glycaemic control.",
+    "lee2019": "In a randomised trial of 300 patients, the beta-blocker reduced the frequency of premature ventricular contractions by 40%. Adverse events were rare.",
+    "wang2021": "本研究纳入了200名老年人。结果表明，睡眠时间较短与认知功能下降相关。",
+    "chen2018": "我们在小鼠模型中证实，该药物能够降低血压。该效应在雄性和雌性小鼠中均可观察到。",
+    "3": "A convolutional network detected atrial fibrillation from single-lead ECG with a sensitivity of 0.94. Performance was lower in patients with pacemakers.",
+    "4": "Gut microbiome composition differed between patients with Parkinson's disease and controls."
+  },
+  "items": [
+    {"sentence": "Daily walking may improve glycaemic control in adults with type 2 diabetes {{cite:smith2020}}.", "expected": "ok"},
+    {"sentence": "Daily walking lowers fasting glucose in adults with type 2 diabetes {{cite:smith2020}}.", "expected": "over_reach"},
+    {"sentence": "A beta-blocker reduced the frequency of premature ventricular contractions by 40% in a randomised trial {{cite:lee2019}}.", "expected": "ok"},
+    {"sentence": "A convolutional network has been proven to detect atrial fibrillation from single-lead ECG in all patients [3].", "expected": "over_reach"},
+    {"sentence": "Beta-blockers also improve long-term survival after heart surgery {{cite:lee2019}}.", "expected": "no_support"},
+    {"sentence": "Probiotic supplementation slows disease progression in Parkinson's disease [4].", "expected": "no_support"},
+    {"sentence": "已有研究表明，睡眠时间较短与认知功能下降相关{{cite:wang2021}}。", "expected": "ok"},
+    {"sentence": "睡眠时间较短会导致认知功能下降{{cite:wang2021}}。", "expected": "over_reach"},
+    {"sentence": "动物实验证实该药物能够降低血压{{cite:chen2018}}。", "expected": "ok"},
+    {"sentence": "该药物还能显著改善患者的肾功能{{cite:chen2018}}。", "expected": "no_support"}
+  ]
+}
