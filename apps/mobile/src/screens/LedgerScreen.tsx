@@ -16,7 +16,7 @@ const LEVELS: { id: HelpLevel; label: string }[] = [
   { id: 'approach', label: tr('思路') }, { id: 'answer', label: tr('完整答案') },
 ];
 const BOARDS: Entry['board'][] = ['学习', '科研', '生活'];
-const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 6 个要点，再按从 0 开始的序号列出作答在实质上讲到了哪些。不要判断通过与否。只回复 JSON：{"points": [], "hits": []}';
+const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 6 个要点，再按从 0 开始的序号列出作答在实质上讲到了哪些。不要判断通过与否。只回复 JSON：' + '{"points":[],"hits":[]}';
 
 async function modelAsk(): Promise<Ask | undefined> {
   const [s, key] = await Promise.all([loadModelSettings(preferencesKV), loadKey(preferencesKV)]);
