@@ -13,18 +13,22 @@ def _rx(words: str) -> re.Pattern[str]:
 
 
 # superiority over another method; with no test / CI / p-value anywhere in the draft and no sample size in its paragraph
-# it exceeds what the results can show (round 3, blind test 1 F7 class). "beats" only as a verb with an object
-# (heartbeats are no claim).
-SUPERIOR = _rx(r"outperform\w*|superior(?:ity)?|better than|surpass\w*|beat(?:s|ing)?(?= (?:the|all|every|its|their|"
-               r"previous|prior|existing|other|competing|current|conventional|standard|classical|baseline)\b)|"
+# it exceeds what the results can show (round 3, blind test 1 F7 class). "beat" only as a verb: not after a
+# determiner / number and not followed by a verb, preposition or the sentence end ("the test beats.", "ectopic beats
+# were", "fusion beats made up" are heartbeats).
+BEAT = (r"(?<!\bthe )(?<!\ball )(?<!\beach )(?<!\bof )(?<!\d )beat(?:s|ing)?(?=\s+\w)(?!\s+(?:were|was|are|is|had|have|"
+        r"made|from|of|in|on|at|with|for|per|and|or|into|that|which)\b)")
+SUPERIOR = _rx(r"outperform\w*|superior(?:ity)?|better than|surpass\w*|" + BEAT + r"|"
                r"(?:significantly|substantially|clearly|markedly|considerably|far) (?:better|higher|lower|more|less|"
                r"improved|superior)")
 REPORTING = re.compile(r"abstract|summary|result|finding|discussion|conclusion|evaluation|experiment|performance|"
                        r"摘要|结果|讨论|结论", re.IGNORECASE)  # sections that report the authors' own findings
 SAMPLE_SIZE = re.compile(r"\bn\s*=\s*\d|\b\d[\d,]*\s+(?:[a-z-]+\s+)?(?:patients|participants|subjects|volunteers|"
                          r"individuals|cases|images|recordings)\b", re.IGNORECASE)
+# "the most <adjective>" in general; frequency ("most often", "the most common") and adverbs are no superlative claim
 SUPERLATIVE = _rx(r"best|most (?:effective|accurate|reliable|robust|promising|powerful|sensitive|specific|efficient|"
-                  r"important)|the leading|the only|unmatched|unrivall?ed|unprecedented")
+                  r"important)|the most (?!often|common|frequent|likely|\w+ly\b)\w+|the leading|the only|unmatched|"
+                  r"unrivall?ed|unprecedented")
 THAN = _rx(r"than|compared (?:with|to)|relative to|versus|vs")
 # background cues in an Introduction: a known association or need, not a finding of ours or a comparison
 INTRO = re.compile(r"introduction|background|motivation|引言|背景", re.IGNORECASE)

@@ -57,7 +57,8 @@ CLAIM = _rx(r"outperform\w*|improv\w*|impair\w*|enhanc\w*|reduc\w*|increas\w*|de
             r"worse|higher|lower|essential|effective|robust|generali[sz]\w*|solv\w*|prov(?:e|es|ed|en)|"
             r"demonstrat\w*|shown|shows|reveal\w*|confirm\w*|caus\w*|leads? to|led to|drives?|driven|determin\w*|"
             r"responsible for|associated|correlat\w*|predict\w*|significant\w*|ready|detects?|mediat\w*|"
-            r"well known|it is known|perform\w* (?:equally )?well|(?:more|less) \w+ than")  # any comparison is a claim
+            r"well known|it is known|perform\w* (?:equally )?well|(?:more|less) \w+ than|establish(?:es|ed)?|"
+            r"reliabl[ey]")  # any comparison is a claim
 HEDGE = _rx(r"may|might|could|suggests?|suggested|possibly|likely|appears?|we hypothesi[sz]e|we propose|we expect|"
             r"we aim|potentially|preliminary|hypothesis")
 ANAPHOR = re.compile(r"^\s*(?:this|these|thus|hence|consequently|overall|together|taken together|accordingly|"
@@ -65,7 +66,7 @@ ANAPHOR = re.compile(r"^\s*(?:this|these|thus|hence|consequently|overall|togethe
 # A prediction stated as certain or universal: "will" followed within a few words by a certainty adverb, a universal
 # quantifier or an end state ("will soon be used in every clinic", "will no longer need"); no reported result shows
 # the future. A plan ("we will", "future work will") or "will be made available" is no prediction; "may" hedges.
-FUTURE = (r"(?<!\bwe )(?<!work )(?<!studies )(?<!research )will (?!be made )(?:\w+ ){0,6}?"
+FUTURE = (r"(?<!\bwe )(?<!\bwork )(?<!\bstudies )(?<!\bresearch )will (?!be made )(?:\w+ ){0,6}?"
           r"(?:certainly|definitely|surely|undoubtedly|inevitably|always|never|no longer|no more|every|all|any|"
           r"eliminat\w*|replac\w*|obsolete|unnecessary)|all future|(?:is|are|be) guaranteed")
 OVERREACH = _rx(FUTURE + r"|all|always|never|any|every|universally|definitively|conclusively|guarantee\w*|"
@@ -86,8 +87,10 @@ METHODS = re.compile(r"method|material|procedure|preprocess|acquisition|recordin
 PROCEDURE = re.compile(r"\b(?:was|were|is|are|been|being)\s+(?:\w+ly\s+)?\w+(?:ed|en)\s+(?:with|using|via|through|"
                        r"by(?!\s+(?:\d|about|approximately|nearly|almost|up to|a factor|more|less|half)))\b[^,;]*"
                        r"(?:,\s*\w+ing\b[^,;.]*)?", re.IGNORECASE)
-OWN = re.compile(r"^\s*(?:we|our\b[^.]{0,40}?)\s+(?:\w+\s+)?(?:achieved|reached|obtained|attained|yielded|found|"
-                 r"observed|measured|scored)\b", re.IGNORECASE)
+# a reported result ("we achieved", "our network reached", "the random forest reached ..."): its source may sit in the
+# adjacent sentence
+OWN = re.compile(r"^\s*(?:we|(?:our|the|this|these)\b[^.]{0,40}?)\s+(?:\w+\s+)?(?:achieved|reached|obtained|attained|"
+                 r"yielded|found|observed|measured|scored)\b", re.IGNORECASE)
 REFERENCE = re.compile(r"\b(?:Tables?|Fig(?:ure)?s?\.?|Supplementary (?:Table|Fig\w*))\s*S?\d")
 SIGNIFICANT = _rx(r"significant(?:ly)?")
 STATISTIC = re.compile(r"\bp\s*[<=>≤]|\bCI\b|confidence interval|credible interval|\b[tF]\(|χ2|chi-square|Wilcoxon|"
@@ -234,7 +237,7 @@ def _sentence_flags(p: dict[str, Any], s: dict[str, Any], prev: dict[str, Any] |
     hedged = bool(HEDGE.search(text))
     inherited = bool(prev and ANAPHOR.search(text) and supported(prev["support"]))
     inherited |= bool(REFERENCE.search(text))  # "results are shown in Fig. 4" points at the data
-    inherited |= bool(OWN.search(text) and _referenced(nxt))  # our result, its source in the next sentence
+    inherited |= bool(OWN.search(text) and (_referenced(prev) or _referenced(nxt)))
     sourced = any(s["support"][k] or (prev and ANAPHOR.search(text) and prev["support"][k])
                   for k in ("citations", "evidence"))
     prior = prior_comparison(text)
