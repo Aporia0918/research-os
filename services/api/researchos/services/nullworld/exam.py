@@ -92,21 +92,28 @@ def distinct_errors(results: list[runner.RunResult]) -> list[str]:
     return list(dict.fromkeys(r.error for r in results if r.error))[:5]
 
 
+def null_chance(metric: str, worlds: list[list[str]]) -> float:
+    """Chance level averaged over the null worlds' own labels. Moving whole groups changes the class balance when
+    group size goes with the label (e.g. one class has more recordings per subject), so the real labels' majority
+    rate is not what a pipeline that learned nothing scores there."""
+    return sum(chance_level(metric, w) for w in worlds) / len(worlds)
+
+
 def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
     d, execute = load(spec), executor(spec, run)
 
-    def world(kind: str, i: int) -> bytes:
+    def world(kind: str, i: int) -> list[str]:
         rng = Random(f"{spec.seed}:{kind}:{i}")
-        new = null_labels(d.labels, d.groups, d.layout.mode, rng) if kind == "null" else naive_labels(d.labels, rng)
-        return d.table.with_column(spec.label, new).to_bytes()
+        return null_labels(d.labels, d.groups, d.layout.mode, rng) if kind == "null" else naive_labels(d.labels, rng)
 
     tasks = [("null", i) for i in range(spec.runs)] + [("naive", i) for i in range(spec.runs if spec.contrast else 0)]
+    worlds = [world(*t) for t in tasks]
     with ThreadPoolExecutor(max_workers=spec.workers) as pool:
         real_f = pool.submit(execute, d.raw)
-        results = list(pool.map(lambda t: execute(world(*t)), tasks))
+        results = list(pool.map(lambda w: execute(d.table.with_column(spec.label, w).to_bytes()), worlds))
     real = real_f.result()
     nulls, naive = results[: spec.runs], results[spec.runs :]
-    chance = spec.chance if spec.chance is not None else chance_level(spec.metric, d.labels)
+    chance = spec.chance if spec.chance is not None else null_chance(spec.metric, worlds[: spec.runs] or [d.labels])
     return ExamReport(
         verdict=judge(real.score, [r.score for r in nulls], chance, spec.tolerance),
         real=real.score,
