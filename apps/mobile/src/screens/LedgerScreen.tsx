@@ -1,0 +1,102 @@
+// 思维账本 first screen: the pre-exam report on top, today's repayments, then booking a new debt. Works with no key
+// and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
+import { useEffect, useState } from 'react';
+import { tr } from '../i18n';
+import { Book, type Ask, type Entry, type HelpLevel } from '../ledger/ledger';
+import { chat } from '../model/direct';
+import { loadKey, loadModelSettings } from '../model/settings';
+import { newId } from '../local/store';
+import { preferencesKV } from '../storage/kv';
+
+const EXAM_KEY = 'mindledger.exam.v1';
+const book = new Book(preferencesKV);
+const today = () => new Date().toISOString().slice(0, 10);
+const LEVELS: { id: HelpLevel; label: string }[] = [
+  { id: 'own', label: tr('自己想的') }, { id: 'hint', label: tr('提示') },
+  { id: 'approach', label: tr('思路') }, { id: 'answer', label: tr('完整答案') },
+];
+const BOARDS: Entry['board'][] = ['学习', '科研', '生活'];
+const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 6 个要点，再按从 0 开始的序号列出作答在实质上讲到了哪些。不要判断通过与否。只回复 JSON：{"points": [], "hits": []}';
+
+async function modelAsk(): Promise<Ask | undefined> {
+  const [s, key] = await Promise.all([loadModelSettings(preferencesKV), loadKey(preferencesKV)]);
+  if (!key || !s.baseUrl) return undefined;
+  return (q, ref, attempt) => chat(s, key, [{ role: 'system', content: GRADE_SYSTEM },
+    { role: 'user', content: `问题：\n${q}\n\n参考答案：\n${ref}\n\n不看 AI 写的作答：\n${attempt}` }]);
+}
+
+type Report = Awaited<ReturnType<Book['report']>>;
+
+export function LedgerScreen() {
+  const [exam, setExam] = useState('');
+  const [report, setReport] = useState<Report | null>(null);
+  const [due, setDue] = useState<Entry[]>([]);
+  const [open, setOpen] = useState<string | null>(null);
+  const [said, setSaid] = useState('');
+  const [note, setNote] = useState('');
+  const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', level: 'answer' as HelpLevel });
+
+  async function refresh(e = exam) {
+    setDue(await book.due(today()));
+    setReport(e ? await book.report(today(), e) : null);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on open
+  useEffect(() => { void preferencesKV.get(EXAM_KEY).then(e => { setExam(e ?? ''); void refresh(e ?? ''); }); }, []);
+
+  const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
+  async function repay(id: string) {
+    const g = await book.repay(id, said, today(), exam || undefined, await modelAsk());
+    const missed = g.points.filter((_, i) => !g.hits.includes(i));
+    setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missed.join('；')));
+    setSaid(''); setOpen(null); await refresh();
+  }
+  async function add() {
+    await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
+      answer: draft.answer, ownIdea: draft.ownIdea, helpLevel: draft.level }, today(), exam || undefined);
+    setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); await refresh();
+  }
+
+  return (
+    <section>
+      <div className="card">
+        <h2>{tr('考前真实掌握度')}</h2>
+        <label>{tr('考试日期')} <input type="date" value={exam} onChange={e => pickExam(e.target.value)} /></label>
+        {report && (
+          <p data-testid="ledger-report">
+            {tr('独立掌握度 {0}（只算不靠 AI 的作答）', report.independence === null ? '—' : `${Math.round(report.independence * 100)}%`)}<br />
+            {tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}
+          </p>
+        )}
+      </div>
+      <div className="card">
+        <h2>{tr('今天要还的')}</h2>
+        {note && <p role="status">{note}</p>}
+        {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
+        {due.map(e => (
+          <div key={e.id}>
+            <button className="ghost" onClick={() => setOpen(open === e.id ? null : e.id)}>{e.question}</button>
+            {open === e.id && (
+              <>
+                <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
+                <button disabled={!said.trim()} onClick={() => void repay(e.id)}>{tr('讲完了')}</button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <h2>{tr('记一笔')}</h2>
+        <div role="group">{BOARDS.map(b => (
+          <button key={b} className={draft.board === b ? '' : 'ghost'} onClick={() => setDraft({ ...draft, board: b })}>{tr(b)}</button>
+        ))}</div>
+        <textarea value={draft.ownIdea} placeholder={tr('先写下你自己的想法（写了债会轻一档）')} onChange={x => setDraft({ ...draft, ownIdea: x.target.value })} />
+        <textarea value={draft.question} placeholder={tr('问了 AI 什么')} onChange={x => setDraft({ ...draft, question: x.target.value })} />
+        <textarea value={draft.answer} placeholder={tr('AI 的回答（可选，还账时对照）')} onChange={x => setDraft({ ...draft, answer: x.target.value })} />
+        <div role="group">{LEVELS.map(l => (
+          <button key={l.id} className={draft.level === l.id ? '' : 'ghost'} onClick={() => setDraft({ ...draft, level: l.id })}>{l.label}</button>
+        ))}</div>
+        <button disabled={!draft.question.trim()} onClick={() => void add()}>{tr('记下')}</button>
+      </div>
+    </section>
+  );
+}

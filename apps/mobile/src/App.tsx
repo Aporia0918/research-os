@@ -1,6 +1,7 @@
 import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } from './i18n';
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
+import { LedgerScreen } from './screens/LedgerScreen';
 import { LogScreen } from './screens/LogScreen';
 import { GuideScreen } from './screens/GuideScreen';
 import { PlanScreen } from './screens/PlanScreen';
@@ -15,16 +16,16 @@ import { LOCAL_VERSION_CODE, UPDATE_CHANNEL } from './update/version';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
-type Tab = 'ask' | 'log' | 'plan' | 'exam' | 'guide' | 'enhanced' | 'settings';
+type Tab = 'ledger' | 'ask' | 'log' | 'plan' | 'exam' | 'guide' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: string }[] = trObj([
-  { id: 'ask', label: '提问', icon: '?' }, { id: 'log', label: '记录', icon: '+' }, { id: 'plan', label: '计划', icon: '☰' },
+  { id: 'ledger', label: '账本', icon: '¥' }, { id: 'ask', label: '提问', icon: '?' }, { id: 'log', label: '记录', icon: '+' }, { id: 'plan', label: '计划', icon: '☰' },
   { id: 'exam', label: '零世界', icon: '◎' },
   { id: 'guide', label: '指导', icon: '✎' },
   { id: 'settings', label: '设置', icon: '⚙' },
 ]);
 
 export function App() {
-  const [tab, setTab] = useState<Tab>('ask');
+  const [tab, setTab] = useState<Tab>('ledger');
   const [demo, setDemo] = useState(false);
   useEffect(() => { void loadDemo(preferencesKV).then(setDemo); }, []);
   const [lang, setLangState] = useState<Lang>(getLang());
@@ -55,6 +56,7 @@ export function App() {
         </div>
       )}
       <main className="screen">
+        {tab === 'ledger' && <LedgerScreen />}
         {tab === 'ask' && <AskScreen demo={demo} />}
         {tab === 'log' && <LogScreen demo={demo} />}
         {tab === 'plan' && <PlanScreen demo={demo} />}
