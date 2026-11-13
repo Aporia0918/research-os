@@ -1,5 +1,9 @@
 """Grade a repayment. The model only names key points and which ones the attempt hit; rules.verdict decides.
 
+Compute follows the debt: the free deterministic grader runs first. A heavy debt always gets the model; a light or
+medium one gets it only when the free grader is unsure (neither a clear pass nor an attempt too short to pass).
+Ledger content goes only to domestic vendors called directly; with none usable the free grader's result stands.
+
 Without a configured model (or when the call fails) a deterministic grader does the same job: key points are
 the reference answer's sentences, and a point counts as hit when enough of its content-character bigrams appear.
 It is a crude fallback, not a grader of meaning: paraphrase can miss and keyword lists can pass.
@@ -21,6 +25,8 @@ from .rules import verdict
 MAX_POINTS = 6
 MAX_REFERENCE = 4000
 BIGRAM_HIT = 0.4
+CLEAR_PASS = 0.8  # free-grader hit share at or above which a light/medium repayment passes without a model
+MIN_ATTEMPT = 6  # content characters below which an attempt cannot pass, so no model is asked
 FILLER = re.compile(r"[的了是在它上要先再就这那和与及也都]")  # Chinese function words carry no content
 
 
@@ -29,7 +35,7 @@ class Grade:
     points: list[str]
     hits: list[int]
     passed: bool
-    method: str  # model | deterministic
+    method: str  # model | deterministic (free grader only: no model asked, unsure, or none usable)
 
 
 def _norm(s: str) -> str:
@@ -75,16 +81,23 @@ def _validate(text: str) -> tuple[Signals, Grade | None]:
     return Signals(), Grade(points, hits, verdict(len(hits), len(points)), "model")
 
 
+def needs_model(weight: str | None, free: Grade, attempt: str) -> bool:
+    """Only spend a model call where it can change the result: heavy debts, or an unsure free grade."""
+    if weight == "heavy":
+        return True
+    clear_pass = bool(free.points) and len(free.hits) / len(free.points) >= CLEAR_PASS
+    return not (clear_pass or len(_norm(attempt)) < MIN_ATTEMPT)
+
+
 def grade(conn: sqlite3.Connection, gw: Gateway | None, *, question: str, reference: str, attempt: str,
-          trace_id: str | None = None) -> Grade:
-    if gw is not None:
-        try:
-            g = gw.call(conn, task_type=TaskType.ROUTINE_TEXT, prompt=GRADE_REPAYMENT, validate=_validate,
-                        variables={"question": question, "reference": reference[:MAX_REFERENCE],
-                                   "attempt": attempt}, trace_id=trace_id)
-            if g.payload is not None:
-                result: Grade = g.payload
-                return result
-        except (AINotConfigured, GatewayError):
-            pass
-    return grade_deterministic(reference, attempt)
+          weight: str | None = None, trace_id: str | None = None) -> Grade:
+    free = grade_deterministic(reference, attempt)
+    if gw is None or not needs_model(weight, free, attempt):
+        return free
+    try:
+        g = gw.call(conn, task_type=TaskType.ROUTINE_TEXT, prompt=GRADE_REPAYMENT, validate=_validate,
+                    variables={"question": question, "reference": reference[:MAX_REFERENCE], "attempt": attempt},
+                    trace_id=trace_id, domestic_only=True)
+    except (AINotConfigured, GatewayError):
+        return free
+    return g.payload if isinstance(g.payload, Grade) else free
