@@ -104,14 +104,19 @@ export interface Entry {
   id: string; clientId: string; board: '学习' | '科研' | '生活'; topic: string; question: string; answer: string;
   ownIdea: string; helpLevel: HelpLevel; weight: Weight | null; passes: number; attempts: number;
   dueOn: string | null; createdOn: string;
+  held?: boolean; quiz?: boolean; // trial only: held back from repayment / passed the end-of-trial quiz
 }
 export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLevel'> &
   Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea'>>;
 
 const KEY = 'mindledger.v1';
+const DAYS = 'mindledger.days.v1';
+
+/** Stable coin flip per entry: the trial holds back half the debts from repayment, so each user is their own control. */
+const heldBack = (clientId: string): boolean => [...clientId].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 2 === 1;
 
 export class Book {
-  constructor(private kv: KV) {}
+  constructor(private kv: KV, private trial = false) {}
 
   async all(): Promise<Entry[]> { return JSON.parse((await this.kv.get(KEY)) ?? '[]') as Entry[]; }
   private async save(es: Entry[]): Promise<void> { await this.kv.set(KEY, JSON.stringify(es)); }
@@ -127,6 +132,7 @@ export class Book {
     const e: Entry = { id: `mind_${n.clientId}`, clientId: n.clientId, board: n.board, topic: (n.topic ?? '').trim(),
       question: n.question.trim(), answer: n.answer ?? '', ownIdea, helpLevel: n.helpLevel, weight: w, passes: 0,
       attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today };
+    if (this.trial && w && heldBack(n.clientId)) Object.assign(e, { held: true, dueOn: null });
     await this.save([...es, e]);
     return e;
   }
@@ -161,5 +167,37 @@ export class Book {
       .sort((a, b) => (a.dueOn! < b.dueOn! ? -1 : a.dueOn! > b.dueOn! ? 1 : WEIGHTS.indexOf(b.weight!) - WEIGHTS.indexOf(a.weight!)));
     return { exam, asOf: today, total: items.length, counts, independence, repayBeforeExam: before,
       notReachableBeforeExam: items.filter((i) => i.dueOn && i.dueOn >= exam) };
+  }
+
+  // ---- small trial (1-2 weeks, classmates): numbers only, no question or answer text ever leaves the phone ----
+  async opened(today: string): Promise<void> {
+    const days = new Set<string>(JSON.parse((await this.kv.get(DAYS)) ?? '[]'));
+    await this.kv.set(DAYS, JSON.stringify([...days.add(today)].sort()));
+  }
+
+  /** End-of-trial quiz on every debt, repaid or held back; it never changes the schedule. */
+  async quiz(id: string, attempt: string): Promise<boolean> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    if (!e || !e.weight) throw new Error('not_a_debt');
+    e.quiz = gradeFree(e.answer || e.question, attempt).passed;
+    await this.save(es);
+    return e.quiz;
+  }
+
+  /** What a participant sends back: counts only. */
+  async trialSummary(today: string) {
+    const debts = (await this.all()).filter((e) => e.weight);
+    const arm = (held: boolean) => {
+      const xs = debts.filter((e) => Boolean(e.held) === held);
+      const quizzed = xs.filter((e) => e.quiz !== undefined);
+      return { debts: xs.length, quizzed: quizzed.length, quizPassed: quizzed.filter((e) => e.quiz).length };
+    };
+    const repayable = debts.filter((e) => !e.held);
+    const days: string[] = JSON.parse((await this.kv.get(DAYS)) ?? '[]');
+    const first = days[0];
+    return { asOf: today, repaid: arm(false), heldBack: arm(true),
+      settledShare: repayable.length ? repayable.filter((e) => statusOf(e.passes, e.attempts, e.weight) === 'settled').length / repayable.length : null,
+      daysOpened: days.length, back7: Boolean(first && days.some((d) => d >= addDays(first, 7))) };
   }
 }

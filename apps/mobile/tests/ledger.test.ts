@@ -45,4 +45,20 @@ describe('思维账本 on the phone, no key', () => {
     const unsure = await book.repay(light.id, '导数大概和变化有关系吧', '2026-12-05', undefined, ask);
     expect([unsure.method, unsure.passed, calls]).toEqual(['model', true, 1]);
   });
+
+  it('trial: half the debts held back, quiz on all, counts only', async () => {
+    const book = new Book(memoryKV(), true);
+    for (let i = 0; i < 20; i++) await book.add({ clientId: `t${i}`, board: '学习', question: `题 ${i}`, answer: DERIV, helpLevel: 'answer' }, D0);
+    const all = await book.all();
+    const held = all.filter((e) => e.held);
+    expect(held.length).toBeGreaterThan(5);
+    expect(held.every((e) => e.dueOn === null) && all.filter((e) => !e.held).every((e) => e.dueOn)).toBe(true);
+    await book.opened(D0); await book.opened('2026-12-09');
+    await book.quiz(held[0].id, '导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限');
+    const s = await book.trialSummary('2026-12-09');
+    expect([s.heldBack.debts, s.heldBack.quizzed, s.heldBack.quizPassed, s.repaid.debts + s.heldBack.debts, s.back7])
+      .toEqual([held.length, 1, 1, 20, true]);
+    expect(JSON.stringify(s)).not.toContain('导数');
+  });
 });
+
