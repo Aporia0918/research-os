@@ -57,14 +57,17 @@ CLAIM = _rx(r"outperform\w*|improv\w*|impair\w*|enhanc\w*|reduc\w*|increas\w*|de
             r"worse|higher|lower|essential|effective|robust|generali[sz]\w*|solv\w*|prov(?:e|es|ed|en)|"
             r"demonstrat\w*|shown|shows|reveal\w*|confirm\w*|caus\w*|leads? to|led to|drives?|driven|determin\w*|"
             r"responsible for|associated|correlat\w*|predict\w*|significant\w*|ready|detects?|mediat\w*|"
-            r"well known|it is known|perform\w* (?:equally )?well")
+            r"well known|it is known|perform\w* (?:equally )?well|(?:more|less) \w+ than")  # any comparison is a claim
 HEDGE = _rx(r"may|might|could|suggests?|suggested|possibly|likely|appears?|we hypothesi[sz]e|we propose|we expect|"
             r"we aim|potentially|preliminary|hypothesis")
 ANAPHOR = re.compile(r"^\s*(?:this|these|thus|hence|consequently|overall|together|taken together|accordingly|"
                      r"our results|the results)\b|\btherefore\b", re.IGNORECASE)
-# certain predictions: no reported result shows the future (sample 2, F9); "will extend" / "may eliminate" are not
-FUTURE = (r"will (?:certainly|definitely|surely|undoubtedly|inevitably|always|never|eliminate|replace)|all future|"
-          r"(?:is|are|be) guaranteed")
+# A prediction stated as certain or universal: "will" followed within a few words by a certainty adverb, a universal
+# quantifier or an end state ("will soon be used in every clinic", "will no longer need"); no reported result shows
+# the future. A plan ("we will", "future work will") or "will be made available" is no prediction; "may" hedges.
+FUTURE = (r"(?<!\bwe )(?<!work )(?<!studies )(?<!research )will (?!be made )(?:\w+ ){0,6}?"
+          r"(?:certainly|definitely|surely|undoubtedly|inevitably|always|never|no longer|no more|every|all|any|"
+          r"eliminat\w*|replac\w*|obsolete|unnecessary)|all future|(?:is|are|be) guaranteed")
 OVERREACH = _rx(FUTURE + r"|all|always|never|any|every|universally|definitively|conclusively|guarantee\w*|"
                 r"solv(?:e|es|ed)|prov(?:e|es|ed|en)|clinically (?:ready|useful|applicable)|"
                 r"ready for (?:clinical )?deployment|deployment in|in general|generali[sz]es? to")
@@ -90,16 +93,18 @@ SIGNIFICANT = _rx(r"significant(?:ly)?")
 STATISTIC = re.compile(r"\bp\s*[<=>≤]|\bCI\b|confidence interval|credible interval|\b[tF]\(|χ2|chi-square|Wilcoxon|"
                        r"t-test|ANOVA|permutation|DeLong|McNemar|Mann-Whitney|Kruskal|Fisher'?s exact|bootstrap\w*|"
                        r"mixed[- ]effects", re.IGNORECASE)
-CAUSAL = _rx(r"causes?|caused|causing|leads? to|led to|drives?|driven by|determines?|determined by|"
+CAUSAL = _rx(r"causes?(?! of)|caused|causing|leads? to|led to|drives?|driven by|determines?|determined by|"
              r"(?:is|are) responsible for|results? in|mediates?")
 EXPERIMENT = _rx(r"randomi[sz]ed|randomly assigned|interventional|controlled trial|ablation|manipulat\w*")
 # Direction of a change, English and Chinese antonym pairs (Han words without \b: it sees no edge inside a run of Han
-# characters). Bare "up" / "down" are not listed ("set up", "down-sampled"), only "went up" / "up-regulated".
+# characters). Bare "up" / "down" / "gain" are not listed ("set up", "down-sampled"), only "went up" / "up-regulated".
 UP = re.compile(r"\b(?:increas\w*|higher|more|improv\w*|better|enhanc\w*|outperform\w*|superior|ris(?:e|es|en|ing)|"
-                r"rose|elevated|(?:go|goes|going|went|gone) up|up-?regulat\w*)\b|"
+                r"rose|rais(?:e|es|ed|ing)|grew|grows?|grown|climb\w*|elevated|(?:go|goes|going|went|gone) up|"
+                r"up-?regulat\w*)\b|"
                 r"增加|增大|增强|升高|上升|提高|改善|更高|更好|优于", re.IGNORECASE)
 DOWN = re.compile(r"\b(?:decreas\w*|reduc\w*|lower|less|worse|worsen\w*|impair\w*|inferior|underperform\w*|"
-                  r"fall|falls|fell|fallen|falling|declin\w*|deteriorat\w*|(?:go|goes|going|went|gone) down|"
+                  r"fall|falls|fell|fallen|falling|drops?|dropped|dropping|shr[iau]nk\w*|declin\w*|deteriorat\w*|"
+                  r"(?:go|goes|going|went|gone) down|"
                   r"down-?regulat\w*)\b|减少|减小|减弱|降低|下降|恶化|更低|更差|劣于", re.IGNORECASE)
 NEGATION = re.compile(r"\b(?:not|no|never|failed to|cannot|\w+n't)\b|未(?!来|知|经)|没有|并非", re.IGNORECASE)
 HAN_RUN = re.compile(r"[\u3400-\u9fff]+")

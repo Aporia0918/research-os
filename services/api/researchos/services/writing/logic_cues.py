@@ -13,8 +13,10 @@ def _rx(words: str) -> re.Pattern[str]:
 
 
 # superiority over another method; with no test / CI / p-value anywhere in the draft and no sample size in its paragraph
-# it exceeds what the results can show (round 3, blind test 1 F7 class)
-SUPERIOR = _rx(r"outperform\w*|superior(?:ity)?|better than|beats?|beating|surpass\w*|"
+# it exceeds what the results can show (round 3, blind test 1 F7 class). "beats" only as a verb with an object
+# (heartbeats are no claim).
+SUPERIOR = _rx(r"outperform\w*|superior(?:ity)?|better than|surpass\w*|beat(?:s|ing)?(?= (?:the|all|every|its|their|"
+               r"previous|prior|existing|other|competing|current|conventional|standard|classical|baseline)\b)|"
                r"(?:significantly|substantially|clearly|markedly|considerably|far) (?:better|higher|lower|more|less|"
                r"improved|superior)")
 REPORTING = re.compile(r"abstract|summary|result|finding|discussion|conclusion|evaluation|experiment|performance|"
