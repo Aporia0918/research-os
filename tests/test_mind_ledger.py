@@ -142,13 +142,51 @@ def mocks() -> dict[str, Any]:
 
 def test_model_names_hits_rules_decide(conn: sqlite3.Connection, svc: Services) -> None:
     configure_models(conn, svc)
-    g = judge.grade(conn, svc.gateway, question="什么是导数", reference=DERIV, attempt="随便写写")
+    g = judge.grade(conn, svc.gateway, question="什么是导数", reference=DERIV, attempt="随便写写", weight="heavy")
     assert g.method == "model" and g.hits == [0, 1] and g.passed  # 2 of 3 >= 60%, decided by rules.verdict
 
 
 def test_unconfigured_model_falls_back(conn: sqlite3.Connection, svc: Services) -> None:
     g = judge.grade(conn, svc.gateway, question="什么是导数", reference=DERIV, attempt="不记得了")
     assert g.method == "deterministic" and not g.passed
+
+
+def _calls(svc: Services) -> int:
+    return sum(len(getattr(p, "calls", ())) for p in svc.gateway.providers.values())
+
+
+GOOD = "导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限"
+
+
+@pytest.mark.parametrize(("weight", "attempt", "method", "calls"), [
+    ("light", GOOD, "deterministic", 0),        # clear pass: the free grader is enough
+    ("medium", "不会", "deterministic", 0),     # too short to pass: nothing a model could change
+    ("medium", "导数大概和变化有关系吧", "model", 1),  # unsure: worth one call
+    ("heavy", GOOD, "model", 1),                # heavy debts always get the model
+])
+def test_compute_follows_debt(conn: sqlite3.Connection, svc: Services, weight: str, attempt: str, method: str,
+                              calls: int) -> None:
+    configure_models(conn, svc)
+    g = judge.grade(conn, svc.gateway, question="什么是导数", reference=DERIV, attempt=attempt, weight=weight)
+    assert (g.method, _calls(svc)) == (method, calls)
+
+
+def test_free_grader_never_passes_what_a_marker_would_fail() -> None:
+    """On the hand-written sample, whatever the free grader settles alone matches the human label (no false pass)."""
+    cases = json.loads((Path(__file__).parent / "fixtures/mindledger/repayments.json").read_text("utf-8"))["cases"]
+    alone = [(c, judge.grade_deterministic(c["ref"], c["attempt"])) for c in cases]
+    alone = [(c, g) for c, g in alone if not judge.needs_model("medium", g, c["attempt"])]
+    assert len(alone) == 11 and all(g.passed == c["human"] for c, g in alone)
+
+
+def test_ledger_content_stays_in_china(conn: sqlite3.Connection, svc: Services) -> None:
+    configure_models(conn, svc, providers=("anthropic", "openai"))  # only overseas vendors usable
+    g = judge.grade(conn, svc.gateway, question="什么是导数", reference=DERIV, attempt="随便写写", weight="heavy")
+    assert g.method == "deterministic" and _calls(svc) == 0
+    assert svc.gateway.domestic("deepseek") and not svc.gateway.domestic("anthropic")
+    svc.settings.relay_for = ["deepseek"]
+    svc.gateway.providers["relay"] = svc.gateway.providers["deepseek"]
+    assert not svc.gateway.domestic("deepseek")  # a domestic model reached through the relay leaves China
 
 
 # ---- HTTP --------------------------------------------------------------------------------------------------------

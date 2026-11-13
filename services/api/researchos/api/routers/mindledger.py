@@ -59,7 +59,7 @@ def repay(entry_id: str, data: AttemptIn, request: Request, p: Principal = Depen
     e = store.get(conn, p.user_id, entry_id)
     gw = services(request).gateway if data.use_model else None
     g = judge.grade(conn, gw, question=e["question"], reference=e["answer"] or e["question"], attempt=data.text,
-                    trace_id=cid(request))
+                    weight=e["weight"], trace_id=cid(request))
 
     def run() -> tuple[int, Any]:
         return 200, store.record_attempt(conn, p.user_id, p.actor, entry_id, data.text, g, date.today(), data.exam)
