@@ -166,6 +166,21 @@ def test_exam_with_a_fake_runner_is_deterministic_and_keeps_groups(demo: Path) -
     assert sorted(again) == sorted(seen)
 
 
+def test_chance_comes_from_the_null_worlds_when_group_size_goes_with_the_label(tmp_path: Path) -> None:
+    # 20 'a' subjects with 3 rows each, 60 'b' subjects with 1 row: balanced rows, but whole-subject shuffles are not
+    rows = [f"a{i},a" for i in range(20) for _ in range(3)] + [f"b{i},b" for i in range(60)]
+    (tmp_path / "d.csv").write_text("subject,y\n" + "\n".join(rows) + "\n")
+    (tmp_path / "s.py").write_text("")
+    real = (tmp_path / "d.csv").read_bytes()
+
+    def majority(data: bytes) -> RunResult:  # learned nothing: always predicts the commonest class
+        return RunResult(0.9 if data == real else chance_level("accuracy", Table.parse(data).column("y")))
+
+    r = run_exam(ExamSpec(tmp_path / "s.py", tmp_path / "d.csv", "subject", "y", runs=MIN_RUNS, workers=1), majority)
+    assert chance_level("accuracy", Table.parse(real).column("y")) == 0.5
+    assert r.verdict.chance > 0.6 and r.verdict.outcome == "pass"
+
+
 def test_exam_rejects_data_outside_the_project(demo: Path, tmp_path_factory: pytest.TempPathFactory) -> None:
     other = tmp_path_factory.mktemp("elsewhere") / "x.csv"
     shutil.copy(demo / "ecg_features.csv", other)
