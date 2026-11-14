@@ -50,7 +50,7 @@ export interface Grade { points: string[]; hits: number[]; passed: boolean; meth
 
 const norm = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, '').replace(FILLER, '');
 
-function bigrams(s: string): Set<string> {
+export function bigrams(s: string): Set<string> {
   const t = norm(s);
   const out = new Set<string>();
   for (let i = 0; i < t.length - 1; i++) out.add(t.slice(i, i + 2));
