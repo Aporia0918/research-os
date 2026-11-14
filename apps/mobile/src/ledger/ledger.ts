@@ -105,12 +105,27 @@ export interface Entry {
   ownIdea: string; helpLevel: HelpLevel; weight: Weight | null; passes: number; attempts: number;
   dueOn: string | null; createdOn: string;
   held?: boolean; quiz?: boolean; // trial only: held back from repayment / passed the end-of-trial quiz
+  serverId?: string; // set once the computer has the entry (multi-device)
+  fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
 }
+
+/** The computer's 思维账本 API, as the phone needs it. Kept as an interface so the book never touches the network. */
+export interface LedgerRemote {
+  entry(body: { client_id: string; question: string; help_level: HelpLevel; answer: string; own_idea: string; topic: string; source: 'app' },
+    key: string): Promise<{ id: string }>;
+  attempt(serverId: string, text: string, key: string): Promise<unknown>;
+  due(): Promise<{ id: string; client_id: string; topic: string; question: string; answer: string; own_idea: string;
+    help_level: HelpLevel; due_on: string | null; created_on: string }[]>;
+}
+export interface SyncResult { sent: number; pulled: number; stopped: boolean }
+interface Pending { clientId: string; text: string; key: string }
 export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLevel'> &
   Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea'>>;
 
 const KEY = 'mindledger.v1';
 const DAYS = 'mindledger.days.v1';
+const OUTBOX = 'mindledger.outbox.v1'; // repayments the computer has not seen yet, oldest first
+const DRAFT = 'mindledger.draft.v1.'; // + entry id: what the user had said when they were interrupted
 const TRIAL = 'mindledger.trial.v1'; // the day the two-week trial started; absent = no trial
 export const TRIAL_DAYS = 14;
 
@@ -154,6 +169,8 @@ export class Book {
     e.passes += g.passed ? 1 : 0;
     e.dueOn = g.passed ? nextDue(e.weight, e.passes, today, exam) : frontLoad(addDays(today, 1), today, exam);
     await this.save(es);
+    await this.queue({ clientId: e.clientId, text: attempt, key: `attempt-${e.clientId}-${e.attempts}` });
+    await this.kv.set(DRAFT + id, '');
     return { ...g, nextDue: e.dueOn };
   }
 
@@ -183,6 +200,49 @@ export class Book {
       ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
       ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), LEVEL[e.helpLevel], e.ownIdea.trim() ? '先想过' : '没先想',
         STATUS[statusOf(e.passes, e.attempts, e.weight)]].join(' · '))].join('\n');
+  }
+
+  // ---- several devices: borrow on the computer, repay on the phone, pick up where you stopped ----
+  async saveDraft(id: string, text: string): Promise<void> { await this.kv.set(DRAFT + id, text); }
+  async draftOf(id: string): Promise<string> { return (await this.kv.get(DRAFT + id)) ?? ''; }
+  private async outbox(): Promise<Pending[]> { return JSON.parse((await this.kv.get(OUTBOX)) ?? '[]') as Pending[]; }
+  private async queue(p: Pending): Promise<void> { await this.kv.set(OUTBOX, JSON.stringify([...(await this.outbox()), p])); }
+
+  /**
+   * Offline first: everything is booked and graded on the phone. When the computer answers, send what it has not seen
+   * (entries by client id, repayments by a fixed key, so a retry never counts twice) and take in debts borrowed there.
+   * Stops at the first failure and keeps the rest for next time.
+   */
+  async sync(remote: LedgerRemote, today: string): Promise<SyncResult> {
+    const es = await this.all();
+    let sent = 0, pulled = 0;
+    try {
+      for (const e of es.filter((x) => !x.serverId)) {
+        e.serverId = (await remote.entry({ client_id: e.clientId, question: e.question, help_level: e.helpLevel, answer: e.answer,
+          own_idea: e.ownIdea, topic: e.topic, source: 'app' }, `entry-${e.clientId}`)).id;
+        sent += 1;
+        await this.save(es);
+      }
+      const box = await this.outbox();
+      while (box.length) {
+        const p = box[0];
+        const e = es.find((x) => x.clientId === p.clientId);
+        if (e?.serverId) { await remote.attempt(e.serverId, p.text, p.key); sent += 1; }
+        box.shift();
+        await this.kv.set(OUTBOX, JSON.stringify(box));
+      }
+      for (const d of await remote.due()) {
+        if (es.some((x) => x.clientId === d.client_id)) continue;
+        es.push({ id: `mind_${d.client_id}`, clientId: d.client_id, board: '学习', topic: d.topic, question: d.question, answer: d.answer,
+          ownIdea: d.own_idea, helpLevel: d.help_level, weight: weightOf(d.help_level, Boolean(d.own_idea.trim())), passes: 0, attempts: 0,
+          dueOn: d.due_on ?? today, createdOn: d.created_on, serverId: d.id, fromComputer: true });
+        pulled += 1;
+      }
+      await this.save(es);
+      return { sent, pulled, stopped: false };
+    } catch {
+      return { sent, pulled, stopped: true };
+    }
   }
 
   // ---- small trial (1-2 weeks, classmates): numbers only, no question or answer text ever leaves the phone ----

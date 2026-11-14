@@ -2,7 +2,9 @@
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
-import { type Ask, type Book, type Entry, type HelpLevel } from '../ledger/ledger';
+import { type Ask, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
+import { ResearchOsClient } from '../api/computer';
+import { loadComputerSettings } from '../settings';
 import { book, copyText, today } from '../ledger/book';
 import { chat } from '../model/direct';
 import { loadKey, loadModelSettings } from '../model/settings';
@@ -26,6 +28,14 @@ async function modelAsk(): Promise<Ask | undefined> {
 
 type Report = Awaited<ReturnType<Book['report']>>;
 
+/** The paired computer as the book sees it; null when computer features are off. */
+async function remote(): Promise<LedgerRemote | null> {
+  const s = await loadComputerSettings(preferencesKV);
+  if (!s.enabled) return null;
+  const c = new ResearchOsClient(s.url, undefined, 5000);
+  return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue() };
+}
+
 export function LedgerScreen() {
   const [exam, setExam] = useState('');
   const [report, setReport] = useState<Report | null>(null);
@@ -45,6 +55,12 @@ export function LedgerScreen() {
   useEffect(() => {
     void book.trialStart().then(async s => { if (s) await book.opened(today()); });
     void preferencesKV.get(EXAM_KEY).then(e => { setExam(e ?? ''); void refresh(e ?? ''); });
+    void remote().then(async r => {
+      if (!r) return;
+      const s = await book.sync(r, today());
+      if (s.pulled) setNote(tr('电脑上记的 {0} 笔已经到手机上，可以接着还。', s.pulled));
+      if (s.sent || s.pulled) await refresh();
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on open
   }, []);
 
@@ -54,6 +70,11 @@ export function LedgerScreen() {
     const missed = g.points.filter((_, i) => !g.hits.includes(i));
     setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missed.join('；')));
     setSaid(''); setOpen(null); await refresh();
+  }
+  /** Opening a debt brings back whatever was said before an interruption (a call, the app closed). */
+  async function pick(id: string) {
+    if (open === id) { setOpen(null); return; }
+    setSaid(await book.draftOf(id)); setOpen(id);
   }
   async function answerQuiz(id: string) {
     const ok = await book.quiz(id, said);
@@ -102,10 +123,10 @@ export function LedgerScreen() {
         {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
         {due.map(e => (
           <div key={e.id}>
-            <button className="ghost" onClick={() => setOpen(open === e.id ? null : e.id)}>{e.question}</button>
+            <button className="ghost" onClick={() => void pick(e.id)}>{e.question}{e.fromComputer ? tr('（电脑上记的）') : ''}</button>
             {open === e.id && (
               <>
-                <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
+                <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => { setSaid(x.target.value); void book.saveDraft(e.id, x.target.value); }} />
                 <button disabled={!said.trim()} onClick={() => void repay(e.id)}>{tr('讲完了')}</button>
               </>
             )}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fixture from './fixtures/ledger-repayments.json';
-import { Book, gradeFree, needsModel, nextDue, weightOf } from '../src/ledger/ledger';
+import { Book, gradeFree, needsModel, nextDue, weightOf, type LedgerRemote } from '../src/ledger/ledger';
 import { memoryKV } from '../src/storage/kv';
 
 const DERIV = '导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。';
@@ -89,5 +89,28 @@ describe('思维账本 on the phone, no key', () => {
     expect(all[3]).toBe('2026-12-02 · 学习 · 链式法则 · 自己想的 · 先想过 · 自己想的');
     const research = (await book.processRecord('2026-12-05', undefined, '科研')).split('\n');
     expect(research).toEqual(['思维账本过程记录 · 2026-12-05 · 科研', all[2]]);
+  });
+
+  it('several devices: offline first, replays without double counting, takes in debts borrowed on the computer', async () => {
+    const book = new Book(memoryKV());
+    const e = await book.add({ clientId: 'm1', board: '学习', question: '什么是导数', answer: DERIV, helpLevel: 'answer' }, D0);
+    await book.saveDraft(e.id, '导数是瞬时变化率');
+    expect(await book.draftOf(e.id)).toBe('导数是瞬时变化率'); // an interruption keeps what was said
+    await book.repay(e.id, '导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限', '2026-12-02');
+    expect(await book.draftOf(e.id)).toBe('');
+    const seen: string[] = [];
+    let up = false;
+    const computer: LedgerRemote = {
+      async entry(b, key) { if (!up) throw new Error('offline'); seen.push(key); return { id: `srv_${b.client_id}` }; },
+      async attempt(id, _t, key) { seen.push(`${id}:${key}`); },
+      async due() { return [{ id: 'srv_x', client_id: 'ext1', topic: '', question: '电脑上问的链式法则', answer: '外导乘内导', own_idea: '',
+        help_level: 'answer', due_on: '2026-12-02', created_on: D0 }]; },
+    };
+    expect(await book.sync(computer, '2026-12-02')).toEqual({ sent: 0, pulled: 0, stopped: true }); // no computer: nothing lost
+    up = true;
+    expect(await book.sync(computer, '2026-12-02')).toEqual({ sent: 2, pulled: 1, stopped: false });
+    expect(seen).toEqual(['entry-m1', 'srv_m1:attempt-m1-1']);
+    expect(await book.sync(computer, '2026-12-02')).toEqual({ sent: 0, pulled: 0, stopped: false }); // nothing sent twice
+    expect((await book.due('2026-12-02')).map((x) => [x.question, x.fromComputer])).toEqual([['电脑上问的链式法则', true]]);
   });
 });

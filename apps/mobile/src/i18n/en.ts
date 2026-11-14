@@ -451,4 +451,6 @@ export const EN: Record<string, string> = {
   "两周试用": "Two-week trial",
   "开始后，新记的债随机一半不排还账，用来和排了还账的那一半比；两周后在账本页做一次小测。交回的只有数字，没有题目和回答。": "Once started, a random half of new debts are not scheduled for repayment, to compare with the half that are. After two weeks you take one short quiz on the Ledger page. You hand back numbers only, no questions or answers.",
   "开始两周试用": "Start two-week trial",
+  "电脑上记的 {0} 笔已经到手机上，可以接着还。": "{0} debts booked on the computer are now on the phone, ready to repay.",
+  "（电脑上记的）": " (booked on the computer)",
 };
