@@ -2,10 +2,7 @@ import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } fr
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
-import { LogScreen } from './screens/LogScreen';
-import { GuideScreen } from './screens/GuideScreen';
-import { PlanScreen } from './screens/PlanScreen';
-import { ExamScreen } from './screens/ExamScreen';
+import { ResearchScreen } from './screens/ResearchScreen';
 import { EnhancedScreen } from './screens/EnhancedScreen';
 import { loadComputerSettings } from './settings';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -16,12 +13,11 @@ import { LOCAL_VERSION_CODE, UPDATE_CHANNEL } from './update/version';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
-type Tab = 'ledger' | 'ask' | 'log' | 'plan' | 'exam' | 'guide' | 'enhanced' | 'settings';
+/** One main line on the surface: borrow (提问), repay and read the report (账本). Research tools sit in one tab. */
+type Tab = 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: string }[] = trObj([
-  { id: 'ledger', label: '账本', icon: '¥' }, { id: 'ask', label: '提问', icon: '?' }, { id: 'log', label: '记录', icon: '+' }, { id: 'plan', label: '计划', icon: '☰' },
-  { id: 'exam', label: '零世界', icon: '◎' },
-  { id: 'guide', label: '指导', icon: '✎' },
-  { id: 'settings', label: '设置', icon: '⚙' },
+  { id: 'ledger', label: '账本', icon: '¥' }, { id: 'ask', label: '提问', icon: '?' },
+  { id: 'research', label: '科研', icon: '◎' }, { id: 'settings', label: '设置', icon: '⚙' },
 ]);
 
 export function App() {
@@ -58,10 +54,7 @@ export function App() {
       <main className="screen">
         {tab === 'ledger' && <LedgerScreen />}
         {tab === 'ask' && <AskScreen demo={demo} />}
-        {tab === 'log' && <LogScreen demo={demo} />}
-        {tab === 'plan' && <PlanScreen demo={demo} />}
-        {tab === 'exam' && <ExamScreen />}
-        {tab === 'guide' && <GuideScreen demo={demo} />}
+        {tab === 'research' && <ResearchScreen demo={demo} />}
         {tab === 'enhanced' && enhanced && <EnhancedScreen />}
         {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} onComputer={setEnhanced} />}
       </main>

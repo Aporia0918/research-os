@@ -60,5 +60,34 @@ describe('思维账本 on the phone, no key', () => {
       .toEqual([held.length, 1, 1, 20, true]);
     expect(JSON.stringify(s)).not.toContain('导数');
   });
-});
 
+  it('trial switch: persisted start, half held back, quiz opens after two weeks or on request', async () => {
+    const kv = memoryKV();
+    const book = new Book(kv);
+    await book.add({ clientId: 'pre', board: '学习', question: '试用前', answer: DERIV, helpLevel: 'answer' }, '2026-11-30');
+    expect(await book.quizDue('2026-12-20', true)).toEqual([]); // no trial, no quiz
+    await book.startTrial(D0); await book.startTrial('2026-12-03');
+    expect(await new Book(kv).trialStart()).toBe(D0); // survives a restart, first start wins
+    for (let i = 0; i < 20; i++) await book.add({ clientId: `s${i}`, board: '学习', question: `题 ${i}`, answer: DERIV, helpLevel: 'answer' }, D0);
+    expect((await book.all()).filter((e) => e.held).length).toBeGreaterThan(5);
+    expect(await book.quizDue('2026-12-14')).toEqual([]);
+    expect((await book.quizDue('2026-12-14', true)).length).toBe(20); // ending early opens it, pre-trial debt left out
+    const due = await book.quizDue('2026-12-15');
+    await book.quiz(due[0].id, '不会');
+    expect((await book.quizDue('2026-12-15')).length).toBe(19);
+  });
+
+  it('process record stays on the phone: one pass is half explained, own ideas count as independent', async () => {
+    const book = new Book(memoryKV());
+    const e = await book.add({ clientId: 'p1', board: '科研', question: '这个 p 值为什么不能直接比较', answer: DERIV, helpLevel: 'answer', ownIdea: '样本量不同' }, D0);
+    await book.add({ clientId: 'p2', board: '学习', question: '链式法则', helpLevel: 'own', ownIdea: '外导乘内导' }, '2026-12-02');
+    await book.repay(e.id, '导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限', '2026-12-04');
+    const all = (await book.processRecord('2026-12-05', '2026-12-20')).split('\n');
+    expect(all[0]).toBe('思维账本过程记录 · 2026-12-05');
+    expect(all[1]).toBe('独立掌握度 50%，共 2 笔');
+    expect(all[2]).toBe('2026-12-01 · 科研 · 这个 p 值为什么不能直接比较 · 完整答案 · 先想过 · 讲到一半');
+    expect(all[3]).toBe('2026-12-02 · 学习 · 链式法则 · 自己想的 · 先想过 · 自己想的');
+    const research = (await book.processRecord('2026-12-05', undefined, '科研')).split('\n');
+    expect(research).toEqual(['思维账本过程记录 · 2026-12-05 · 科研', all[2]]);
+  });
+});

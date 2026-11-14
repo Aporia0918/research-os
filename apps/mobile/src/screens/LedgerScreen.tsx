@@ -2,15 +2,14 @@
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
-import { Book, type Ask, type Entry, type HelpLevel } from '../ledger/ledger';
+import { type Ask, type Book, type Entry, type HelpLevel } from '../ledger/ledger';
+import { book, copyText, today } from '../ledger/book';
 import { chat } from '../model/direct';
 import { loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
 
 const EXAM_KEY = 'mindledger.exam.v1';
-const book = new Book(preferencesKV);
-const today = () => new Date().toISOString().slice(0, 10);
 const LEVELS: { id: HelpLevel; label: string }[] = [
   { id: 'own', label: tr('自己想的') }, { id: 'hint', label: tr('提示') },
   { id: 'approach', label: tr('思路') }, { id: 'answer', label: tr('完整答案') },
@@ -34,14 +33,20 @@ export function LedgerScreen() {
   const [open, setOpen] = useState<string | null>(null);
   const [said, setSaid] = useState('');
   const [note, setNote] = useState('');
+  const [quiz, setQuiz] = useState<Entry[]>([]);
+  const [endNow, setEndNow] = useState(false);
   const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', level: 'answer' as HelpLevel });
 
-  async function refresh(e = exam) {
+  async function refresh(e = exam, end = endNow) {
     setDue(await book.due(today()));
+    setQuiz(await book.quizDue(today(), end));
     setReport(e ? await book.report(today(), e) : null);
   }
+  useEffect(() => {
+    void book.trialStart().then(async s => { if (s) await book.opened(today()); });
+    void preferencesKV.get(EXAM_KEY).then(e => { setExam(e ?? ''); void refresh(e ?? ''); });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on open
-  useEffect(() => { void preferencesKV.get(EXAM_KEY).then(e => { setExam(e ?? ''); void refresh(e ?? ''); }); }, []);
+  }, []);
 
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
   async function repay(id: string) {
@@ -50,6 +55,12 @@ export function LedgerScreen() {
     setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missed.join('；')));
     setSaid(''); setOpen(null); await refresh();
   }
+  async function answerQuiz(id: string) {
+    const ok = await book.quiz(id, said);
+    setNote(ok ? tr('讲顺了。') : tr('记下了，这一笔不影响你的账。'));
+    setSaid(''); setOpen(null); await refresh();
+  }
+  async function copy(text: string, done: string) { await copyText(text); setNote(done); }
   async function add() {
     await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
       answer: draft.answer, ownIdea: draft.ownIdea, helpLevel: draft.level }, today(), exam || undefined);
@@ -67,7 +78,24 @@ export function LedgerScreen() {
             {tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}
           </p>
         )}
+        <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
+          {tr('复制过程记录')}
+        </button>
       </div>
+      {quiz.length > 0 && (
+        <div className="card" data-testid="trial-quiz">
+          <h2>{tr('试用结束小测（还剩 {0} 笔）', quiz.length)}</h2>
+          <p className="muted">{tr('每笔都不看答案讲一遍，不管之前排没排过还账。')}</p>
+          <button className="ghost" onClick={() => setOpen(open === quiz[0].id ? null : quiz[0].id)}>{quiz[0].question}</button>
+          {open === quiz[0].id && (
+            <>
+              <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
+              <button disabled={!said.trim()} onClick={() => void answerQuiz(quiz[0].id)}>{tr('讲完了')}</button>
+            </>
+          )}
+        </div>
+      )}
+      <TrialCard onEnd={() => { setEndNow(true); void refresh(exam, true); }} onCopy={copy} />
       <div className="card">
         <h2>{tr('今天要还的')}</h2>
         {note && <p role="status">{note}</p>}
@@ -98,5 +126,21 @@ export function LedgerScreen() {
         <button disabled={!draft.question.trim()} onClick={() => void add()}>{tr('记下')}</button>
       </div>
     </section>
+  );
+}
+
+/** Two-week classmate trial: start it, end it early, and copy the counts-only result. Shown only once a trial has started. */
+function TrialCard({ onEnd, onCopy }: { onEnd: () => void; onCopy: (t: string, done: string) => Promise<void> }) {
+  const [start, setStart] = useState<string | null>(null);
+  useEffect(() => { void book.trialStart().then(setStart); }, []);
+  if (!start) return null;
+  return (
+    <div className="card" data-testid="trial-card">
+      <p className="muted">{tr('两周试用从 {0} 开始。', start)}</p>
+      <button className="ghost" onClick={onEnd}>{tr('现在做结束小测')}</button>
+      <button className="ghost" onClick={() => void book.trialSummary(today()).then(s => onCopy(JSON.stringify(s), tr('试用结果已复制，只有数字，没有题目和回答。')))}>
+        {tr('复制试用结果')}
+      </button>
+    </div>
   );
 }

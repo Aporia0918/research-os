@@ -5,6 +5,7 @@ import { loadComputerSettings, saveComputerSettings, DEFAULT_COMPUTER_URL, type 
 import { ResearchOsClient, describeError } from '../api/computer';
 import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
+import { book, today } from '../ledger/book';
 import { DEFAULT_MODEL_SETTINGS, clearKey, hasKey, loadKey, loadModelSettings, saveKey, saveModelSettings, type KeyHeader, type ModelSettings } from '../model/settings';
 import { chat, describeModelError } from '../model/direct';
 
@@ -18,6 +19,9 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
     catch (e) { setStatus(describeError(e)); }
   }
   const [status, setStatus] = useState('');
+  const [trial, setTrial] = useState<string | null>(null);
+  useEffect(() => { void book.trialStart().then(setTrial); }, []);
+  async function joinTrial() { await book.startTrial(today()); setTrial(await book.trialStart()); }
   const [ms, setMs] = useState<ModelSettings>(DEFAULT_MODEL_SETTINGS);
   const [key, setKey] = useState('');
   const [keyOnPhone, setKeyOnPhone] = useState(false);
@@ -77,6 +81,12 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
         <button className="primary" onClick={saveModel}>{tr('保存在本机')}</button>
         <button className="ghost" disabled={!keyOnPhone} onClick={testModel}>{tr('测试模型连接')}</button>
         <button className="ghost" disabled={!keyOnPhone} onClick={removeKey}>{tr('删除本机密钥')}</button>
+      </div>
+      <div className="card" data-testid="trial-settings">
+        <div><b>{tr('两周试用')}</b></div>
+        <div className="muted">{tr('开始后，新记的债随机一半不排还账，用来和排了还账的那一半比；两周后在账本页做一次小测。交回的只有数字，没有题目和回答。')}</div>
+        {trial ? <div className="muted">{tr('两周试用从 {0} 开始。', trial)}</div>
+          : <button className="ghost" onClick={() => void joinTrial()}>{tr('开始两周试用')}</button>}
       </div>
       <UpdateCard />
       {status && <div className="card" role="status">{status}</div>}

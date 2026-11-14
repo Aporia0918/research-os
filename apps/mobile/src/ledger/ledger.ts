@@ -111,6 +111,8 @@ export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLeve
 
 const KEY = 'mindledger.v1';
 const DAYS = 'mindledger.days.v1';
+const TRIAL = 'mindledger.trial.v1'; // the day the two-week trial started; absent = no trial
+export const TRIAL_DAYS = 14;
 
 /** Stable coin flip per entry: the trial holds back half the debts from repayment, so each user is their own control. */
 const heldBack = (clientId: string): boolean => [...clientId].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 2 === 1;
@@ -132,7 +134,7 @@ export class Book {
     const e: Entry = { id: `mind_${n.clientId}`, clientId: n.clientId, board: n.board, topic: (n.topic ?? '').trim(),
       question: n.question.trim(), answer: n.answer ?? '', ownIdea, helpLevel: n.helpLevel, weight: w, passes: 0,
       attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today };
-    if (this.trial && w && heldBack(n.clientId)) Object.assign(e, { held: true, dueOn: null });
+    if (w && heldBack(n.clientId) && (this.trial || (await this.trialStart()))) Object.assign(e, { held: true, dueOn: null });
     await this.save([...es, e]);
     return e;
   }
@@ -169,7 +171,30 @@ export class Book {
       notReachableBeforeExam: items.filter((i) => i.dueOn && i.dueOn >= exam) };
   }
 
+  /** 过程记录: the user's own copy of when each debt was borrowed, how much help it took and whether they explained it later. */
+  async processRecord(today: string, exam?: string, board?: Entry['board']): Promise<string> {
+    const LEVEL: Record<HelpLevel, string> = { own: '自己想的', hint: '提示', approach: '思路', answer: '完整答案' };
+    const STATUS: Record<Status, string> = { own: '自己想的', settled: '已讲清', shaky: '讲到一半', untested: '还没讲' };
+    const es = (await this.all()).filter((e) => !board || e.board === board)
+      .sort((a, b) => (a.createdOn < b.createdOn ? -1 : a.createdOn > b.createdOn ? 1 : 0));
+    const head = exam ? await this.report(today, exam, board) : null;
+    const pct = head?.independence == null ? '—' : `${Math.round(head.independence * 100)}%`;
+    return [`思维账本过程记录 · ${today}${board ? ` · ${board}` : ''}`,
+      ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
+      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), LEVEL[e.helpLevel], e.ownIdea.trim() ? '先想过' : '没先想',
+        STATUS[statusOf(e.passes, e.attempts, e.weight)]].join(' · '))].join('\n');
+  }
+
   // ---- small trial (1-2 weeks, classmates): numbers only, no question or answer text ever leaves the phone ----
+  async trialStart(): Promise<string | null> { return this.kv.get(TRIAL); }
+  async startTrial(today: string): Promise<void> { if (!(await this.trialStart())) await this.kv.set(TRIAL, today); }
+  /** The end-of-trial quiz is open once the two weeks are up (or the user ends early); it lists every debt not yet quizzed. */
+  async quizDue(today: string, endNow = false): Promise<Entry[]> {
+    const start = await this.trialStart();
+    if (!start || !(endNow || today >= addDays(start, TRIAL_DAYS))) return [];
+    return (await this.all()).filter((e) => e.weight && e.createdOn >= start && e.quiz === undefined);
+  }
+
   async opened(today: string): Promise<void> {
     const days = new Set<string>(JSON.parse((await this.kv.get(DAYS)) ?? '[]'));
     await this.kv.set(DAYS, JSON.stringify([...days.add(today)].sort()));
