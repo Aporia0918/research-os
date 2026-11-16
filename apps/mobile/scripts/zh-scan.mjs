@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ALLOW = ['CSV', 'TSV', 'accuracy', 'PdfError', 'version.json', 'MB', 'UpdateError', 'SHA-256', 'mem:', 'UpdateInstaller', 'Research OS', 'EEGNet', 'EEG', 'PDF', 'App', 'Hz', 'Adam', 'epoch', 'extra_allowed_hosts', 'http://', 'https://', 'Methods / Materials and Methods / Experimental setup / Dataset', 'Android', 'p.', 'HTTP', 'ERP', 'OK', 'English', 'Base URL', 'Authorization: Bearer', 'x-api-key', 'Bearer ', 'ModelError', 'NFKC', 'this item has no number that needs your confirmation', 'only a key action needs approval',
+const ALLOW = ['AI', 'JSON', 'CSV', 'TSV', 'accuracy', 'PdfError', 'version.json', 'MB', 'UpdateError', 'SHA-256', 'mem:', 'UpdateInstaller', 'Research OS', 'EEGNet', 'EEG', 'PDF', 'App', 'Hz', 'Adam', 'epoch', 'extra_allowed_hosts', 'http://', 'https://', 'Methods / Materials and Methods / Experimental setup / Dataset', 'Android', 'p.', 'HTTP', 'ERP', 'OK', 'English', 'Base URL', 'Authorization: Bearer', 'x-api-key', 'Bearer ', 'ModelError', 'NFKC', 'this item has no number that needs your confirmation', 'only a key action needs approval',
   // Backend port (src/rules/*): parity reasons/errors compared verbatim with the Python golden tests,
   // never shown raw in the UI (UI uses Chinese labels / tr()).
   'rule mode cannot check paraphrases; this does not mean the claim has no support',

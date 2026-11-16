@@ -20,6 +20,14 @@ export class ResearchOsClient {
   compare(logId: string, versionId: string, idempotencyKey: string, useModel = false): Promise<CompareResult> {
     return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });
   }
+  // 思维账本: entries by client id and repayments by a fixed key, so a replay after a dropped connection never counts twice.
+  ledgerEntry(body: Record<string, unknown>, idempotencyKey: string): Promise<{ id: string }> {
+    return this.request('POST', '/api/v1/mind-ledger/entries', body, { 'Idempotency-Key': idempotencyKey });
+  }
+  ledgerAttempt(entryId: string, text: string, idempotencyKey: string): Promise<unknown> {
+    return this.request('POST', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}/attempts`, { text, use_model: false }, { 'Idempotency-Key': idempotencyKey });
+  }
+  ledgerDue<T>(): Promise<T> { return this.request('GET', '/api/v1/mind-ledger/due'); }
   listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
   // 零世界考试: the computer runs the exam as a task that waits for the owner's approval of its exact payload.
   detectColumns(data: string): Promise<Detected> { return this.request('POST', '/api/v1/null-world/detect', { data }); }

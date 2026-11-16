@@ -1,0 +1,298 @@
+{
+ "note": "Hand-written sample repayments (author-written, not from real users): each case is a reference answer and a no-AI attempt, labelled with the result a human marker would give. Used only to count how often the free grader is unsure. `py` = what the Python free grader gives (services/api/researchos/services/mindledger/judge.py); the phone port must match it.",
+ "cases": [
+  {
+   "board": "学习",
+   "ref": "导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。",
+   "attempt": "导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限",
+   "human": true,
+   "py": {
+    "points": 3,
+    "hits": [
+     0,
+     1,
+     2
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。",
+   "attempt": "就是变化快慢，画出来是那条切线有多陡，算的时候是平均变化率让间隔趋于零",
+   "human": true,
+   "py": {
+    "points": 3,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。",
+   "attempt": "不会",
+   "human": false,
+   "py": {
+    "points": 3,
+    "hits": [],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "分部积分公式是 ∫u dv = uv − ∫v du。选 u 时优先选求导后变简单的函数，比如多项式。",
+   "attempt": "∫u dv = uv − ∫v du，u 选求导后变简单的，比如多项式",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0,
+     1
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "分部积分公式是 ∫u dv = uv − ∫v du。选 u 时优先选求导后变简单的函数，比如多项式。",
+   "attempt": "把乘积拆开，一个求导一个积分，然后减去一个新积分",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "欧姆定律说明导体中的电流与两端电压成正比，与电阻成反比，即 I = U / R。",
+   "attempt": "电流和电压成正比和电阻成反比，I = U / R",
+   "human": true,
+   "py": {
+    "points": 1,
+    "hits": [
+     0
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "欧姆定律说明导体中的电流与两端电压成正比，与电阻成反比，即 I = U / R。",
+   "attempt": "电阻越大电流越小",
+   "human": false,
+   "py": {
+    "points": 1,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "细胞膜由磷脂双分子层构成，蛋白质镶嵌或贯穿其中。它具有选择透过性。",
+   "attempt": "两层磷脂，中间夹着蛋白质，能选择让什么东西进出",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "细胞膜由磷脂双分子层构成，蛋白质镶嵌或贯穿其中。它具有选择透过性。",
+   "attempt": "细胞膜是磷脂双分子层构成的，有蛋白质镶嵌，具有选择透过性",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0,
+     1
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "现在完成时表示过去发生的动作对现在造成的影响。结构是 have 或 has 加过去分词。",
+   "attempt": "have/has + 过去分词，说过去的事对现在有影响",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     1
+    ],
+    "model": true
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "现在完成时表示过去发生的动作对现在造成的影响。结构是 have 或 has 加过去分词。",
+   "attempt": "表示过去",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": false
+   }
+  },
+  {
+   "board": "学习",
+   "ref": "特征值满足 Av = λv，v 是非零向量。求法是解 det(A − λI) = 0。",
+   "attempt": "解 det(A − λI) = 0 得到 λ，Av = λv 且 v 非零",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     1
+    ],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "打乱标签后模型准确率仍远高于随机水平，说明存在信息泄漏。常见原因是标准化或特征选择在划分前对全部数据做了拟合。",
+   "attempt": "标签打乱后还高说明泄漏了，原因是标准化或特征选择在划分之前用了全部数据",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     1
+    ],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "打乱标签后模型准确率仍远高于随机水平，说明存在信息泄漏。常见原因是标准化或特征选择在划分前对全部数据做了拟合。",
+   "attempt": "说明模型学到了不该学的东西，可能测试集的信息提前漏进训练了",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "打乱标签后模型准确率仍远高于随机水平，说明存在信息泄漏。常见原因是标准化或特征选择在划分前对全部数据做了拟合。",
+   "attempt": "模型很好",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": false
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "按受试者划分训练集和测试集，同一受试者的数据不能同时出现在两边。否则模型会记住个体特征，测试分数虚高。",
+   "attempt": "要按人分，同一个人的数据不能两边都有，不然会记住这个人，分数虚高",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "按受试者划分训练集和测试集，同一受试者的数据不能同时出现在两边。否则模型会记住个体特征，测试分数虚高。",
+   "attempt": "随机划分就行",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": false
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "该研究用对照组排除了安慰剂效应。样本量只有 24 人，结论的外推需要谨慎。",
+   "attempt": "有对照组排除安慰剂，但只有 24 个人，不能随便推广",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0
+    ],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "该研究用对照组排除了安慰剂效应。样本量只有 24 人，结论的外推需要谨慎。",
+   "attempt": "这篇文章证明了药有效",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "P 值小于 0.05 只说明在零假设成立时观察到这么极端结果的概率小。它不等于效应大，也不是零假设为真的概率。",
+   "attempt": "p<0.05 是零假设下出现这么极端结果的概率小，不代表效应大，也不是零假设为真的概率",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0,
+     1
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "P 值小于 0.05 只说明在零假设成立时观察到这么极端结果的概率小。它不等于效应大，也不是零假设为真的概率。",
+   "attempt": "说明结果显著，效应很强",
+   "human": false,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "科研",
+   "ref": "交叉验证把数据分成 k 份，轮流用一份做验证、其余训练，最后取平均。它能更稳地估计泛化表现。",
+   "attempt": "分成k份轮流当验证集，其余训练，取平均，估计泛化更稳",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0,
+     1
+    ],
+    "model": false
+   }
+  },
+  {
+   "board": "生活",
+   "ref": "复利是利息也计入本金继续生息。时间越长，复利和单利的差距越大。",
+   "attempt": "利滚利，时间越久差得越多",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [],
+    "model": true
+   }
+  },
+  {
+   "board": "生活",
+   "ref": "复利是利息也计入本金继续生息。时间越长，复利和单利的差距越大。",
+   "attempt": "复利就是利息计入本金继续生息，时间越长和单利差距越大",
+   "human": true,
+   "py": {
+    "points": 2,
+    "hits": [
+     0,
+     1
+    ],
+    "model": false
+   }
+  }
+ ]
+}
