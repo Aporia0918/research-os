@@ -7,6 +7,7 @@ import runpy
 import shutil
 import sys
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 from random import Random
 
@@ -15,6 +16,7 @@ import pytest
 from researchos.services.nullworld import ExamSpec, Table, TableError, detect, run_exam
 from researchos.services.nullworld.__main__ import main
 from researchos.services.nullworld.runner import Job, RunResult, parse_score, run
+from researchos.services.nullworld.screen import Suspect, label_copies
 from researchos.services.nullworld.verdict import MIN_RUNS, chance_level, judge, p_value, quantile
 from researchos.services.nullworld.worlds import layout, naive_labels, null_labels
 
@@ -146,6 +148,47 @@ def test_run_reports_failures(tmp_path: Path) -> None:
     assert slow.score is None and "timed out" in (slow.error or "")
 
 
+# ---------- label-copy screen ----------
+
+
+def _table(rows: list[str]) -> Table:
+    return Table.parse(("subject,f,y\n" + "\n".join(rows) + "\n").encode())
+
+
+def test_screen_names_a_second_copy_of_the_label_under_another_name() -> None:
+    t = _table([f"s{i},{'pos' if i % 2 else 'neg'},{i % 2}" for i in range(12)])
+    assert label_copies(t, "subject", "y") == [Suspect("f", "same_as_label")]
+    assert label_copies(t, "subject", "y", allow=("f",)) == []
+
+
+def test_screen_flags_a_decimal_column_that_separates_the_classes_with_a_wide_gap() -> None:
+    noisy_copy = _table([f"s{i},{(i % 2) + 0.01 * (i % 3):.2f},{i % 2}" for i in range(12)])
+    (s,) = label_copies(noisy_copy, "subject", "y")
+    assert s.column == "f" and s.reason == "separates_label" and s.gap_sd is not None and s.gap_sd > 20
+
+
+def test_screen_leaves_real_overlapping_signal_and_the_group_column_alone() -> None:
+    # a strong feature whose classes still overlap, and a subject id that maps onto the label (one label per subject)
+    rows = [f"s{i},{(i % 2) * 1.5 + (i % 5) * 0.4:.2f},{i % 2}" for i in range(20)]
+    assert label_copies(_table(rows), "subject", "y") == []
+
+
+def test_demo_target_leak_is_failed_by_the_screen_not_by_the_null_worlds(tmp_path: Path) -> None:
+    runpy.run_path(str(DEMO / "make_data.py"))["write_demo"](tmp_path / "d.csv", signal=0.0, morph_is_label=True)
+    (tmp_path / "s.py").write_text("")
+    real = (tmp_path / "d.csv").read_bytes()
+    spec = ExamSpec(tmp_path / "s.py", tmp_path / "d.csv", "subject", "af", runs=MIN_RUNS, workers=1)
+
+    def copied(data: bytes) -> RunResult:  # reads morph: perfect on the real labels, chance once they are shuffled
+        return RunResult(1.0 if data == real else 0.5)
+
+    r = run_exam(spec, copied)
+    assert r.verdict.outcome == "fail" and r.verdict.reason == "feature_copies_label"
+    assert [s.column for s in r.suspects] == ["morph"] and r.verdict.p is not None
+    confirmed = run_exam(replace(spec, allow=("morph",)), copied)
+    assert confirmed.verdict.outcome == "pass" and confirmed.suspects == []
+
+
 # ---------- exam ----------
 
 
@@ -206,13 +249,13 @@ def test_cli_detect(demo: Path, capsys: pytest.CaptureFixture[str]) -> None:
 # ---------- blind test ----------
 
 
-def test_blind_test_catches_structure_leaks_and_admits_target_leaks() -> None:
+def test_blind_test_catches_structure_leaks_and_target_leaks() -> None:
     blind = runpy.run_path(str(DEMO / "blind.py"))
     rows = blind["run_blind"](datasets=1, workers=2)
     by = {x["case"]: x["verdict"] for x in rows}
     assert by["leak_signal"] == by["leak_nosignal"] == "fail"
     assert by["clean_signal"] == "pass" and by["clean_nosignal"] != "pass"
-    assert by["target_leak"] == "pass"  # the documented limit: a feature that copies the label is invisible
+    assert by["target_leak"] == "fail"  # the null worlds pass it; the label-copy screen does not
     s = blind["score"](rows)
     assert s["leaks_caught"]["hits"] == 2 and s["leaks_caught_by_naive_shuffle"]["hits"] == 0
     assert s["false_alarms_on_clean"]["hits"] == 0

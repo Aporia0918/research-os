@@ -28,12 +28,19 @@ def _exam_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--python", default=sys.executable)
     p.add_argument("--timeout", type=float, default=600.0)
     p.add_argument("--workers", type=int)
+    p.add_argument(
+        "--allow",
+        type=lambda s: tuple(x for x in s.split(",") if x),
+        default=(),
+        help="columns you confirmed are real measurements, not derived from the label",
+    )
 
 
 def _spec(a: argparse.Namespace) -> ExamSpec:
     extra = {"workers": a.workers} if a.workers else {}
     return ExamSpec(a.script, a.data, a.group, a.label, a.metric, a.runs, getattr(a, "contrast", False), a.seed,
-                    a.chance, project=a.project, python=a.python, timeout_s=a.timeout, **extra)  # fmt: skip
+                    a.chance, project=a.project, python=a.python, timeout_s=a.timeout,
+                    allow=a.allow, **extra)  # fmt: skip
 
 
 def main(argv: list[str] | None = None) -> int:

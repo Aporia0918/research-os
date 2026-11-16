@@ -36,12 +36,17 @@ truth, and scores the verdicts. Six cases, ten synthetic datasets each, 19 null 
 | strong real signal passed | 10/10 | 0.72–1.00 |
 | weak real signal passed | 2/10 | 0.06–0.51 |
 | no signal passed | 0/10 | 0.00–0.28 |
-| target leak (a feature copies the label) caught | 0/10 | 0.00–0.28 |
+| target leak (a feature copies the label) caught | 10/10 | 0.72–1.00 |
 
 What this does and does not show:
 - The data are synthetic and the leak is strong; real studies are messier, so these are upper bounds.
 - A weak effect usually comes back *unsure*, not *pass*: the exam is conservative, and 19 worlds have little power.
   `python -m researchos.services.nullworld power` measures that power for a given dataset.
 - A feature that already holds the answer (target leakage) moves with the real labels, so no label shuffle can
-  reveal it. The exam passes it. It catches leakage through **structure** (the same subject on both sides of the
-  split), not leakage through **features**.
+  reveal it: the null worlds alone pass it (0/10 before the screen). The exam now also screens the table
+  (`screen.py`): a column whose values map one-to-one onto the classes, or a decimal column whose classes do not
+  overlap and sit at least 3 within-class SDs apart, fails the exam with the reason `feature_copies_label` and is
+  named in `suspects`. On the bundled real datasets (breast_cancer, wine, digits) it names nothing.
+- The screen cannot tell a copied label from a real measurement that separates the classes that cleanly. On 100
+  synthetic datasets with an AF effect of 10 within-class SDs on `rr` it named `rr` every time; with an effect of 5 SDs (the `clean_signal` case) it never did.
+  When the column is a genuine measurement, say so with `--allow rr` and the exam leaves it alone.
