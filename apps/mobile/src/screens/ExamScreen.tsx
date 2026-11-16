@@ -6,12 +6,14 @@ import { newId } from '../local/store';
 import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
-  EXAM_KIND, RUN_CHOICES, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip,
+  EXAM_KIND, RUN_CHOICES, analysisKey, debtLine, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip,
   type Detected, type ExamInput, type ExamReport, type Task,
 } from '../logic/nullworld';
+import { book, today } from '../ledger/book';
 
 const PATHS_KEY = 'exam.paths.v1';
 const POLL_MS = 1500;
+const fileName = (path: string): string => path.trim().split(/[\\/]/).pop() || path.trim();
 
 export function ExamScreen() {
   const [client, setClient] = useState<ResearchOsClient | null | undefined>(undefined);
@@ -22,6 +24,8 @@ export function ExamScreen() {
   const [task, setTask] = useState<Task | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [aiWritten, setAiWritten] = useState(true); // the script came from AI: its result is a 结论债 until it passes
+  const booked = useRef(new Set<string>()); // tasks already entered in the ledger, so a re-render never books twice
 
   useEffect(() => {
     void loadComputerSettings(preferencesKV).then(s => setClient(s.enabled ? new ResearchOsClient(s.url, undefined, 5000) : null));
@@ -38,6 +42,14 @@ export function ExamScreen() {
     ), POLL_MS);
     return () => clearTimeout(t);
   }, [client, task]);
+
+  useEffect(() => { // a finished exam of an AI-written analysis books or settles its 结论债
+    if (!task || !input || !aiWritten || !task.result || phase(task) !== 'done' || booked.current.has(task.id)) return;
+    booked.current.add(task.id);
+    void book.checkup({ key: analysisKey(input), outcome: task.result.verdict.outcome,
+      question: tr('{0} 在 {1} 上跑出的结论', fileName(input.script), fileName(input.data)) }, today())
+      .catch(e => { if (live.current) setError(describeError(e)); });
+  }, [task, input, aiWritten]);
 
   async function act(f: () => Promise<void>) {
     setError(''); setBusy(true);
@@ -72,7 +84,8 @@ export function ExamScreen() {
         <input id="exam-data" value={data} onChange={e => setData(e.target.value)} autoCapitalize="off" placeholder="/…/features.csv" />
         <button className="ghost" disabled={busy || !script.trim() || !data.trim()} onClick={detect}>{tr('认结构')}</button>
       </div>}
-      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} busy={busy} />}
+      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} busy={busy}
+        aiWritten={aiWritten} onAiWritten={setAiWritten} />}
       {task && p === 'approve' && <div className="card" data-testid="exam-approve">
         <b>{tr('批准电脑运行这次考试？')}</b>
         <div>{tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', (input?.runs ?? 0) + 1, input?.runs ?? 0)}</div>
@@ -87,7 +100,7 @@ export function ExamScreen() {
         <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), (input?.runs ?? 0) + 1)}</div>
         <button className="ghost" disabled={busy || task.state === 'cancelling'} onClick={cancel}>{tr('停止')}</button>
       </div>}
-      {task && p === 'done' && task.result && <Result report={task.result} />}
+      {task && p === 'done' && task.result && <Result report={task.result} debt={aiWritten} />}
       {task && (p === 'failed' || p === 'cancelled') && <div className="card">
         <b>{p === 'cancelled' ? tr('考试已停止') : tr('考试没有完成')}</b>
         {p === 'failed' && <div className="muted">{describeError(new ApiError(422, task.error_code ?? 'http_error', ''))}</div>}
@@ -107,7 +120,10 @@ function Chips({ label, options, value, onPick }: { label: string; options: stri
   </div>;
 }
 
-function Columns({ found, input, onInput, onStart, busy }: { found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; busy: boolean }) {
+function Columns({ found, input, onInput, onStart, busy, aiWritten, onAiWritten }: {
+  found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; busy: boolean;
+  aiWritten: boolean; onAiWritten: (v: boolean) => void;
+}) {
   const others = (picked: string[]) => found.columns.filter(c => !picked.includes(c));
   const groups = [...found.groups.map(c => c.column), ...others(found.groups.map(c => c.column))];
   const labels = [...found.labels.map(c => c.column), ...others(found.labels.map(c => c.column))].filter(c => c !== input.group);
@@ -120,15 +136,22 @@ function Columns({ found, input, onInput, onStart, busy }: { found: Detected; in
     <label>{tr('零世界数量')}</label>
     <Chips label={tr('零世界数量')} options={RUN_CHOICES.map(String)} value={String(input.runs)} onPick={r => onInput({ ...input, runs: Number(r) })} />
     <div className="muted">{tr('只打乱标签列，其他列一个数都不改。脚本要在最后打印一行分数，例如 accuracy: 0.81。')}</div>
+    <label className="row"><input type="checkbox" checked={aiWritten} onChange={e => onAiWritten(e.target.checked)} />
+      {tr('这份分析有 AI 帮写（考完记进账本，考过才算还清）')}</label>
     <button className="primary" disabled={busy || !input.group || !input.label} onClick={onStart}>{tr('开始考试')}</button>
   </div>;
 }
 
-function Result({ report }: { report: ExamReport }) {
+function Result({ report, debt }: { report: ExamReport; debt: boolean }) {
   const v = describeVerdict(report.verdict);
   const s = strip(report);
+  const suspects = report.suspects ?? [];
   return <>
-    <div className={`card verdict-hero ${v.tone}`} data-testid="exam-verdict"><b>{v.title}</b><div>{v.body}</div></div>
+    <div className={`card verdict-hero ${v.tone}`} data-testid="exam-verdict"><b>{v.title}</b><div>{v.body}</div>
+      {suspects.length > 0 && <ul data-testid="exam-suspects">{suspects.map(x => <li key={x.column}><b className="mono">{x.column}</b>{'　'}
+        {x.reason === 'same_as_label' ? tr('和标签一一对应') : tr('单独就能把各类分开（间隔 {0} 个标准差）', x.gap_sd ?? '∞')}</li>)}</ul>}
+      {debt && <div className={report.verdict.outcome === 'fail' ? 'red-mark' : 'muted'} data-testid="exam-debt">{debtLine(report.verdict.outcome)}</div>}
+    </div>
     <div className="card">
       <div className="strip" role="img" aria-label={tr('零世界分数分布，真分数用竖线标出')}>
         <span className="strip-chance" style={{ left: `${s.chance}%` }} />

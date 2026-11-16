@@ -161,3 +161,43 @@ describe('讲不出来那一笔标红，排在考前清单第一行（演示第�
   });
 });
 
+describe('结论体检崩分记结论债（演示第二段）', () => {
+  const crash = { key: '/p/train.py|/p/f.csv|af', question: 'train.py 在 f.csv 上跑出的结论', outcome: 'fail' as const };
+
+  it('a crash books a red 结论债 on 科研 that leads the list before the group meeting', async () => {
+    const book = new Book(memoryKV());
+    await book.add({ clientId: 'k1', board: '学习', question: '什么是导数', answer: DERIV, helpLevel: 'answer' }, D0);
+    const e = await book.checkup(crash, D0);
+    expect(e).toMatchObject({ board: '科研', kind: 'conclusion', red: true, dueOn: D0, attempts: 1 });
+    const r = await book.report(D0, '2026-12-04');
+    expect(r.repayBeforeExam[0].id).toBe(e.id);
+    expect(await book.processRecord(D0)).toContain('AI 写的分析 · 崩分，改好再考');
+  });
+
+  it('only a null-world pass repays it, on the same debt; explaining does not', async () => {
+    const book = new Book(memoryKV());
+    const e = await book.checkup(crash, D0);
+    await expect(book.repay(e.id, '我讲一遍', D0)).rejects.toThrow('repay_by_exam');
+    await expect(book.checkNow(e.id, '', D0)).rejects.toThrow('repay_by_exam');
+    await book.checkup({ ...crash, outcome: 'unsure' }, D0);
+    expect((await book.all())[0]).toMatchObject({ red: false, dueOn: D0 });
+    await book.checkup({ ...crash, outcome: 'pass' }, '2026-12-02');
+    const all = await book.all();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ red: false, dueOn: null, attempts: 3 });
+    expect((await book.report(D0, '2026-12-04')).counts.settled).toBe(1);
+    expect(await book.due('2026-12-02')).toEqual([]);
+  });
+
+  it('stays on the phone: never sent to the computer and kept out of the trial quiz', async () => {
+    const book = new Book(memoryKV());
+    await book.checkup(crash, D0);
+    const sent: string[] = [];
+    const remote: LedgerRemote = { entry: async (b) => { sent.push(b.client_id); return { id: 's' }; }, attempt: async () => ({}), due: async () => [] };
+    await book.sync(remote, D0);
+    expect(sent).toEqual([]);
+    await book.startTrial(D0);
+    expect(await book.quizDue(D0, true)).toEqual([]);
+  });
+});
+

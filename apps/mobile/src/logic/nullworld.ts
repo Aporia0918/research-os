@@ -5,10 +5,13 @@ import { tr, trObj } from '../i18n';
 export interface Candidate { column: string; score: number; reason: string }
 export interface Detected { data: string; rows: number; columns: string[]; groups: Candidate[]; labels: Candidate[]; features: string[] }
 export interface Verdict { outcome: 'pass' | 'fail' | 'unsure'; reason: string; chance: number; p: number | null; null_mean: number | null; null_low: number | null }
+/** A feature column that already holds the label (target leakage the null worlds cannot see). */
+export interface Suspect { column: string; reason: 'same_as_label' | 'separates_label'; gap_sd: number | null }
 export interface ExamReport {
   verdict: Verdict; real: number | null; nulls: (number | null)[]; naive: (number | null)[];
   layout: { mode: 'between' | 'within'; groups: number; fixed_groups: number };
   seed: number; data_sha256: string; script_sha256: string; errors: string[];
+  suspects?: Suspect[]; // absent from computers that predate the label-copy screen
 }
 export interface Task {
   id: string; kind: string; state: string; stage: string | null; progress: Record<string, unknown>;
@@ -38,6 +41,7 @@ export function runsDone(t: Task): number { const n = t.progress?.runs_done; ret
 
 const WORDS: Record<string, { title: string; body: string }> = trObj({
   real_beats_null: { title: '通过：真分数明显高于零世界', body: '标签被打乱、但分组结构不变时，分数掉回了机会水平；真数据上的分数比这些零世界都高。' },
+  feature_copies_label: { title: '没通过：有一列已经藏着答案', body: '下面这一列单独就能把标签分开。常见原因是它由标签算出来，比如确诊后才测的量。去掉这一列再考。' },
   null_above_chance: { title: '没通过：零世界也拿了高分', body: '标签里已经没有任何信号，脚本照样考出高分。高分来自数据结构（比如同一个人的数据同时出现在训练和测试里），不是来自要找的规律。' },
   null_near_threshold: { title: '说不准：零世界分数贴着机会线', body: '零世界的平均分略高于机会水平，可能有轻微泄漏。建议检查划分方式后复考。' },
   real_not_above_null: { title: '说不准：真分数没有明显高于零世界', body: '真数据上的分数落在零世界的范围里，还不能说找到了规律。可以多考几次，或检查特征。' },
@@ -57,6 +61,16 @@ export function strip(r: ExamReport): { nulls: number[]; real: number | null; ch
   const lo = Math.min(...all), hi = Math.max(...all), pad = Math.max((hi - lo) * 0.08, 0.01);
   const min = lo - pad, max = hi + pad, at = (x: number) => ((x - min) / (max - min)) * 100;
   return { nulls: nulls.map(at), real: r.real === null ? null : at(r.real), chance: at(r.verdict.chance), min, max };
+}
+
+/** Which analysis an exam examined: the same script, data and label column land on the same 结论债. */
+export const analysisKey = (i: ExamInput): string => [i.script.trim(), i.data.trim(), i.label].join('|');
+
+/** One line on the 结论债 under the verdict; the fail line is the one the plan quotes for 崩分. */
+export function debtLine(outcome: Verdict['outcome']): string {
+  if (outcome === 'pass') return tr('结论债已还清：这条结论在零世界考过了。');
+  if (outcome === 'fail') return tr('这个高分还站不住，改好再考一次就还清。');
+  return tr('结论债还欠着：结果说不准，改好或多跑几个零世界再考。');
 }
 
 export function fmtScore(x: number | null): string { return x === null ? '—' : x.toFixed(3); }

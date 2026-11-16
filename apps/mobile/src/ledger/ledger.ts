@@ -121,7 +121,12 @@ export interface Entry {
   serverId?: string; // set once the computer has the entry (multi-device)
   fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
   red?: boolean; // 讲不出来: the last try fell short or the user said so; no score, it just goes first on the pre-exam list
+  kind?: 'conclusion'; // 结论债: a result an AI-written analysis produced; repaid by passing the null-world exam, not by explaining
 }
+
+export type ExamOutcome = 'pass' | 'fail' | 'unsure';
+/** One exam of one analysis: `key` names the analysis (script, data, label), so a retake lands on the same debt. */
+export interface Checkup { key: string; question: string; outcome: ExamOutcome }
 
 /** The computer's 思维账本 API, as the phone needs it. Kept as an interface so the book never touches the network. */
 export interface LedgerRemote {
@@ -176,6 +181,7 @@ export class Book {
     const es = await this.all();
     const e = es.find((x) => x.id === id);
     if (!e || !e.weight || !e.dueOn) throw new Error('nothing_to_repay');
+    if (e.kind) throw new Error('repay_by_exam');
     const g = await grade(e, attempt, ask);
     e.attempts += 1;
     e.passes += g.passed ? 1 : 0;
@@ -195,11 +201,33 @@ export class Book {
     const es = await this.all();
     const e = es.find((x) => x.id === id);
     if (!e || !e.weight || !e.dueOn) throw new Error('nothing_to_repay');
+    if (e.kind) throw new Error('repay_by_exam');
     const g = attempt.trim() ? await grade(e, attempt, ask) : null;
     if (g?.passed) return g;
     Object.assign(e, { red: true, attempts: e.attempts + 1, dueOn: frontLoad(addDays(today, 1), today, exam) });
     await this.save(es);
     return g;
+  }
+
+  /**
+   * 结论体检 → 结论债. The first exam of an AI-written analysis books the debt on the 科研 board; a null-world pass settles
+   * it, a fail (崩分: the high score holds even where the labels mean nothing) marks it red and keeps it owed today, and
+   * an unsure verdict keeps it owed. A retake of the same analysis lands on the same debt.
+   */
+  async checkup(c: Checkup, today: string): Promise<Entry> {
+    const es = await this.all();
+    const clientId = `concl-${c.key}`;
+    let e = es.find((x) => x.clientId === clientId);
+    if (!e) {
+      e = { id: `mind_${clientId}`, clientId, board: '科研', topic: '结论债', question: c.question.trim(), answer: '', ownIdea: '',
+        helpLevel: 'answer', weight: 'heavy', passes: 0, attempts: 0, dueOn: today, createdOn: today, kind: 'conclusion' };
+      es.push(e);
+    }
+    const passed = c.outcome === 'pass';
+    Object.assign(e, { attempts: e.attempts + 1, passes: passed ? STEPS.heavy.length : 0, red: c.outcome === 'fail',
+      dueOn: passed ? null : today });
+    await this.save(es);
+    return e;
   }
 
   /** 考前真实掌握度报告: independence from no-AI attempts only, and what to repay before the exam, in order. */
@@ -219,14 +247,17 @@ export class Book {
   async processRecord(today: string, exam?: string, board?: Entry['board']): Promise<string> {
     const LEVEL: Record<HelpLevel, string> = { own: '自己想的', hint: '提示', approach: '思路', answer: '完整答案' };
     const STATUS: Record<Status, string> = { own: '自己想的', settled: '已讲清', shaky: '讲到一半', untested: '还没讲' };
+    const state = (e: Entry): string => e.kind
+      ? (e.red ? '崩分，改好再考' : statusOf(e.passes, e.attempts, e.weight) === 'settled' ? '零世界考过' : '还没考过')
+      : e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)];
     const es = (await this.all()).filter((e) => !board || e.board === board)
       .sort((a, b) => (a.createdOn < b.createdOn ? -1 : a.createdOn > b.createdOn ? 1 : 0));
     const head = exam ? await this.report(today, exam, board) : null;
     const pct = head?.independence == null ? '—' : `${Math.round(head.independence * 100)}%`;
     return [`思维账本过程记录 · ${today}${board ? ` · ${board}` : ''}`,
       ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
-      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), LEVEL[e.helpLevel], e.ownIdea.trim() ? '先想过' : '没先想',
-        e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)]].join(' · '))].join('\n');
+      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), e.kind ? 'AI 写的分析' : LEVEL[e.helpLevel],
+        ...(e.kind ? [] : [e.ownIdea.trim() ? '先想过' : '没先想']), state(e)].join(' · '))].join('\n');
   }
 
   // ---- several devices: borrow on the computer, repay on the phone, pick up where you stopped ----
@@ -244,7 +275,7 @@ export class Book {
     const es = await this.all();
     let sent = 0, pulled = 0;
     try {
-      for (const e of es.filter((x) => !x.serverId)) {
+      for (const e of es.filter((x) => !x.serverId && !x.kind)) { // 结论债 stays on the phone until the computer keeps them
         e.serverId = (await remote.entry({ client_id: e.clientId, question: e.question, help_level: e.helpLevel, answer: e.answer,
           own_idea: e.ownIdea, topic: e.topic, source: 'app' }, `entry-${e.clientId}`)).id;
         sent += 1;
@@ -279,7 +310,7 @@ export class Book {
   async quizDue(today: string, endNow = false): Promise<Entry[]> {
     const start = await this.trialStart();
     if (!start || !(endNow || today >= addDays(start, TRIAL_DAYS))) return [];
-    return (await this.all()).filter((e) => e.weight && e.createdOn >= start && e.quiz === undefined);
+    return (await this.all()).filter((e) => e.weight && !e.kind && e.createdOn >= start && e.quiz === undefined);
   }
 
   async opened(today: string): Promise<void> {
@@ -299,7 +330,7 @@ export class Book {
 
   /** What a participant sends back: counts only. */
   async trialSummary(today: string) {
-    const debts = (await this.all()).filter((e) => e.weight);
+    const debts = (await this.all()).filter((e) => e.weight && !e.kind);
     const arm = (held: boolean) => {
       const xs = debts.filter((e) => Boolean(e.held) === held);
       const quizzed = xs.filter((e) => e.quiz !== undefined);
