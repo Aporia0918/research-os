@@ -519,4 +519,6 @@ export const EN: Record<string, string> = {
   "这次的 {0} 笔没记。": "The {0} debts from this answer were not booked.",
   "这次是你自己读原文，不记账。": "You read the original text yourself this time, so nothing is booked.",
   "这次回答没标出页码，没有记账。": "This answer cites no page, so nothing was booked.",
+  "你确认是真实测量、不查抄标签的列：{0}": "Columns you confirmed are real measurements, not checked for copying the label: {0}",
+  "这列是真实测量，重考": "This column is a real measurement: retake",
 };

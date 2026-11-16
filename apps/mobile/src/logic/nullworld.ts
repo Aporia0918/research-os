@@ -17,17 +17,26 @@ export interface Task {
   id: string; kind: string; state: string; stage: string | null; progress: Record<string, unknown>;
   payload: Record<string, unknown>; result: ExamReport | null; error_code: string | null;
 }
-export interface ExamInput { script: string; data: string; group: string; label: string; runs: number; seed: number }
+export interface ExamInput {
+  script: string; data: string; group: string; label: string; runs: number; seed: number;
+  allow?: string[]; // columns the owner vouched for as real measurements: the label-copy screen leaves them alone
+}
 
 export const EXAM_KIND = 'nullworld.exam';
 export const RUN_CHOICES = [19, 49, 99] as const;
 
 export function examPayload(i: ExamInput): Record<string, unknown> {
-  return { script: i.script.trim(), data: i.data.trim(), group: i.group, label: i.label, runs: i.runs, seed: i.seed };
+  return { script: i.script.trim(), data: i.data.trim(), group: i.group, label: i.label, runs: i.runs, seed: i.seed,
+    ...(i.allow?.length ? { allow: i.allow } : {}) };
 }
 
 /** A retake is the same exam on fresh null worlds: only the seed changes, so the two reports can be compared. */
 export function retake(i: ExamInput): ExamInput { return { ...i, seed: i.seed + 1 }; }
+
+/** 这列是真实测量: a retake that leaves one more column to the owner's word. The approval card names every such column. */
+export function vouch(i: ExamInput, column: string): ExamInput {
+  return { ...retake(i), allow: [...new Set([...(i.allow ?? []), column])] };
+}
 
 export type Phase = 'approve' | 'running' | 'done' | 'failed' | 'cancelled';
 export function phase(t: Task): Phase {

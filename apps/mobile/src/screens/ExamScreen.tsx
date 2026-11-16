@@ -6,7 +6,7 @@ import { newId } from '../local/store';
 import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
-  EXAM_KIND, RUN_CHOICES, analysisKey, debtLine, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip,
+  EXAM_KIND, RUN_CHOICES, analysisKey, debtLine, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip, vouch,
   type Detected, type ExamInput, type ExamReport, type Task,
 } from '../logic/nullworld';
 import { book, today } from '../ledger/book';
@@ -91,6 +91,7 @@ export function ExamScreen() {
         <div>{tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', (input?.runs ?? 0) + 1, input?.runs ?? 0)}</div>
         <div className="muted mono">{String(task.payload.script)}<br />{String(task.payload.data)}</div>
         <div className="muted">{tr('分组列：{0}　标签列：{1}', String(task.payload.group), String(task.payload.label))}</div>
+        {Array.isArray(task.payload.allow) && <div data-testid="exam-allow">{tr('你确认是真实测量、不查抄标签的列：{0}', task.payload.allow.join('、'))}</div>}
         <div className="row"><button className="primary" disabled={busy} onClick={approve}>{tr('批准运行')}</button>
           <button className="ghost" disabled={busy} onClick={cancel}>{tr('取消')}</button></div>
       </div>}
@@ -100,7 +101,8 @@ export function ExamScreen() {
         <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), (input?.runs ?? 0) + 1)}</div>
         <button className="ghost" disabled={busy || task.state === 'cancelling'} onClick={cancel}>{tr('停止')}</button>
       </div>}
-      {task && p === 'done' && task.result && <Result report={task.result} debt={aiWritten} />}
+      {task && p === 'done' && task.result && <Result report={task.result} debt={aiWritten} busy={busy}
+        onVouch={input ? (c => start(vouch(input, c))) : undefined} />}
       {task && (p === 'failed' || p === 'cancelled') && <div className="card">
         <b>{p === 'cancelled' ? tr('考试已停止') : tr('考试没有完成')}</b>
         {p === 'failed' && <div className="muted">{describeError(new ApiError(422, task.error_code ?? 'http_error', ''))}</div>}
@@ -142,14 +144,15 @@ function Columns({ found, input, onInput, onStart, busy, aiWritten, onAiWritten 
   </div>;
 }
 
-function Result({ report, debt }: { report: ExamReport; debt: boolean }) {
+function Result({ report, debt, busy, onVouch }: { report: ExamReport; debt: boolean; busy: boolean; onVouch?: (column: string) => void }) {
   const v = describeVerdict(report.verdict);
   const s = strip(report);
   const suspects = report.suspects ?? [];
   return <>
     <div className={`card verdict-hero ${v.tone}`} data-testid="exam-verdict"><b>{v.title}</b><div>{v.body}</div>
       {suspects.length > 0 && <ul data-testid="exam-suspects">{suspects.map(x => <li key={x.column}><b className="mono">{x.column}</b>{'　'}
-        {x.reason === 'same_as_label' ? tr('和标签一一对应') : tr('单独就能把各类分开（间隔 {0} 个标准差）', x.gap_sd ?? '∞')}</li>)}</ul>}
+        {x.reason === 'same_as_label' ? tr('和标签一一对应') : tr('单独就能把各类分开（间隔 {0} 个标准差）', x.gap_sd ?? '∞')}
+        {onVouch && <button className="ghost" disabled={busy} onClick={() => onVouch(x.column)}>{tr('这列是真实测量，重考')}</button>}</li>)}</ul>}
       {debt && <div className={report.verdict.outcome === 'fail' ? 'red-mark' : 'muted'} data-testid="exam-debt">{debtLine(report.verdict.outcome)}</div>}
     </div>
     <div className="card">
