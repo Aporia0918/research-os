@@ -2,6 +2,7 @@
 // (rules.py + the free grader in judge.py + store.py); tests/ledger.test.ts pins parity with the Python grader.
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
+import { backs, opposing, type Source } from '../rules/recall';
 
 export type HelpLevel = 'own' | 'hint' | 'approach' | 'answer'; // 先自己说 / 提示 / 思路 / 完整答案
 export type Weight = 'light' | 'medium' | 'heavy';
@@ -122,6 +123,17 @@ export interface Entry {
   fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
   red?: boolean; // 讲不出来: the last try fell short or the user said so; no score, it just goes first on the pre-exam list
   kind?: 'conclusion'; // 结论债: a result an AI-written analysis produced; repaid by passing the null-world exam, not by explaining
+  ai?: string; // which AI gave the answer, as the user named it
+  recalls?: Recall[]; // 知识召回: imported texts that said the opposite of the answer, newest last
+}
+
+/**
+ * 召回单: an imported text says the opposite of a sentence of the AI's answer. Open until the user looks; accepting puts
+ * the source sentence in place of the claim and reopens the debt, dismissing needs a sentence of an imported text that
+ * backs the claim. Either way the same source sentence never recalls this entry again.
+ */
+export interface Recall {
+  claim: string; quote: string; page: number; paper: string; on: string; state: 'open' | 'accepted' | 'dismissed'; evidence?: string;
 }
 
 export type ExamOutcome = 'pass' | 'fail' | 'unsure';
@@ -139,7 +151,7 @@ export interface LedgerRemote {
 export interface SyncResult { sent: number; pulled: number; stopped: boolean }
 interface Pending { clientId: string; text: string; key: string }
 export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLevel'> &
-  Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea'>>;
+  Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea' | 'ai'>>;
 
 const KEY = 'mindledger.v1';
 const DAYS = 'mindledger.days.v1';
@@ -167,7 +179,7 @@ export class Book {
     const w = weightOf(n.helpLevel, Boolean(ownIdea.trim()));
     const e: Entry = { id: `mind_${n.clientId}`, clientId: n.clientId, board: n.board, topic: (n.topic ?? '').trim(),
       question: n.question.trim(), answer: n.answer ?? '', ownIdea, helpLevel: n.helpLevel, weight: w, passes: 0,
-      attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today };
+      attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today, ...(n.ai?.trim() ? { ai: n.ai.trim() } : {}) };
     if (w && heldBack(n.clientId) && (this.trial || (await this.trialStart()))) Object.assign(e, { held: true, dueOn: null });
     await this.save([...es, e]);
     return e;
@@ -230,6 +242,49 @@ export class Book {
     return e;
   }
 
+  // ---- 知识召回: an imported text that says the opposite reopens what you learned from the AI ----
+  /** Check every AI answer in the book against a text just imported; returns the entries that now have an open 召回单. */
+  async recallScan(source: Source, today: string): Promise<Entry[]> {
+    const es = await this.all();
+    const out: Entry[] = [];
+    for (const e of es) {
+      if (!e.weight || e.kind || !e.answer.trim() || e.recalls?.some((r) => r.state === 'open')) continue;
+      const o = opposing(e.answer, source);
+      if (!o || e.recalls?.some((r) => r.quote === o.quote)) continue;
+      e.recalls = [...(e.recalls ?? []), { claim: o.claim, quote: o.quote, page: o.page, paper: source.name, on: today, state: 'open' }];
+      out.push(e);
+    }
+    if (out.length) await this.save(es);
+    return out;
+  }
+
+  async recalled(): Promise<Entry[]> { return (await this.all()).filter((e) => e.recalls?.some((r) => r.state === 'open')); }
+
+  /** 接受: the source sentence replaces the claim in the reference answer, and the debt is owed again from today. */
+  async acceptRecall(id: string, today: string, exam?: string): Promise<Entry> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    const r = e?.recalls?.find((x) => x.state === 'open');
+    if (!e || !r || !e.weight) throw new Error('no_open_recall');
+    r.state = 'accepted';
+    Object.assign(e, { answer: e.answer.replace(r.claim, r.quote), passes: 0, red: false,
+      dueOn: e.held ? null : frontLoad(today, today, exam) });
+    await this.save(es);
+    return e;
+  }
+
+  /** 驳回 needs evidence the rules can check: a sentence found word for word in an imported text that agrees with the claim. */
+  async dismissRecall(id: string, evidence: string, sources: Source[]): Promise<Entry> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    const r = e?.recalls?.find((x) => x.state === 'open');
+    if (!e || !r) throw new Error('no_open_recall');
+    if (!backs(r.claim, evidence, sources)) throw new Error('no_evidence');
+    Object.assign(r, { state: 'dismissed', evidence: evidence.trim() });
+    await this.save(es);
+    return e;
+  }
+
   /** 考前真实掌握度报告: independence from no-AI attempts only, and what to repay before the exam, in order. */
   async report(today: string, exam: string, board?: Entry['board']) {
     const es = (await this.all()).filter((e) => !board || e.board === board);
@@ -249,7 +304,8 @@ export class Book {
     const STATUS: Record<Status, string> = { own: '自己想的', settled: '已讲清', shaky: '讲到一半', untested: '还没讲' };
     const state = (e: Entry): string => e.kind
       ? (e.red ? '崩分，改好再考' : statusOf(e.passes, e.attempts, e.weight) === 'settled' ? '零世界考过' : '还没考过')
-      : e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)];
+      : e.recalls?.some((r) => r.state === 'open') ? '被召回，待你看'
+        : `${e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)]}${e.recalls?.some((r) => r.state === 'accepted') ? '（召回后重开）' : ''}`;
     const es = (await this.all()).filter((e) => !board || e.board === board)
       .sort((a, b) => (a.createdOn < b.createdOn ? -1 : a.createdOn > b.createdOn ? 1 : 0));
     const head = exam ? await this.report(today, exam, board) : null;

@@ -10,6 +10,8 @@ import { chat } from '../model/direct';
 import { loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
+import { loadPaper, paperPages } from '../local/paperStore';
+import type { Source } from '../rules/recall';
 
 const EXAM_KEY = 'mindledger.exam.v1';
 const LEVELS: { id: HelpLevel; label: string }[] = [
@@ -29,6 +31,12 @@ async function modelAsk(): Promise<Ask | undefined> {
 type Report = Awaited<ReturnType<Book['report']>>;
 const missedOf = (g: Grade) => g.points.filter((_, i) => !g.hits.includes(i)).join('；');
 const redTag = (e: Entry) => (e.kind ? tr('崩分') : tr('讲不出来'));
+const openRecall = (e: Entry) => e.recalls!.find((r) => r.state === 'open')!;
+/** The paper imported on this phone, as the recall rules read it; null before any import. */
+async function importedPaper(): Promise<Source | null> {
+  const p = await loadPaper(preferencesKV);
+  return p ? { name: p.ref.name, pages: paperPages(p) } : null;
+}
 
 /** The paired computer as the book sees it; null when computer features are off. */
 async function remote(): Promise<LedgerRemote | null> {
@@ -48,10 +56,13 @@ export function LedgerScreen() {
   const [quiz, setQuiz] = useState<Entry[]>([]);
   const [fresh, setFresh] = useState<Entry | null>(null); // just booked: 「这一步你讲给我听？」
   const [endNow, setEndNow] = useState(false);
-  const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', level: 'answer' as HelpLevel });
+  const [recalled, setRecalled] = useState<Entry[]>([]);
+  const [disputing, setDisputing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', ai: '', level: 'answer' as HelpLevel });
 
   async function refresh(e = exam, end = endNow) {
     setDue(await book.due(today()));
+    setRecalled(await book.recalled());
     setQuiz(await book.quizDue(today(), end));
     setReport(e ? await book.report(today(), e) : null);
   }
@@ -92,16 +103,62 @@ export function LedgerScreen() {
     setNote(ok ? tr('讲顺了。') : tr('记下了，这一笔不影响你的账。'));
     setSaid(''); setOpen(null); await refresh();
   }
+  /** Check the paper already imported here against the ledger (a new import does this by itself). */
+  async function scan() {
+    const paper = await importedPaper();
+    if (!paper) { setNote(tr('还没导入论文。先在「向论文提问」里导入一篇。')); return; }
+    const hits = await book.recallScan(paper, today());
+    setNote(hits.length ? tr('{0} 条 AI 的说法被《{1}》的原话推翻，召回单在最上面。', hits.length, paper.name)
+      : tr('《{0}》里没有和账上说法相反的原话。', paper.name));
+    await refresh();
+  }
+  async function accept(id: string) {
+    await book.acceptRecall(id, today(), exam || undefined);
+    setNote(tr('这笔重新打开了：参考答案换成了原文那句，今天再讲一遍。')); await refresh();
+  }
+  /** 驳回 only with a sentence the rules can find in the imported paper and that backs what the AI said. */
+  async function dismiss(id: string) {
+    const paper = await importedPaper();
+    try {
+      await book.dismissRecall(id, said, paper ? [paper] : []);
+      setNote(tr('证据核对通过，这张召回单撤下了。')); setSaid(''); setDisputing(null); await refresh();
+    } catch {
+      setNote(tr('这句话在导入的论文里找不到原文，或者它不支持 AI 当时的说法，召回单保留。'));
+    }
+  }
   async function copy(text: string, done: string) { await copyText(text); setNote(done); }
   async function add() {
     const e = await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
-      answer: draft.answer, ownIdea: draft.ownIdea, helpLevel: draft.level }, today(), exam || undefined);
+      answer: draft.answer, ownIdea: draft.ownIdea, ai: draft.ai, helpLevel: draft.level }, today(), exam || undefined);
     setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); setNote('');
     setFresh(e.weight && e.dueOn ? e : null); setSaid(''); await refresh();
   }
 
   return (
     <section>
+      {recalled.length > 0 && (
+        <div className="card" data-testid="recall-slips">
+          <h2>{tr('召回单（{0} 条）', recalled.length)}</h2>
+          <p className="muted">{tr('你导入的论文里有原话和 AI 当时的说法相反。')}</p>
+          {recalled.map(e => { const r = openRecall(e); return (
+            <div key={e.id} className="red-mark" data-testid="recall-slip">
+              <b>{e.question}</b>
+              <div>{tr('当时 {0} 说：{1}', e.ai ?? 'AI', r.claim)}</div>
+              <div>{tr('《{0}》第 {1} 页：{2}', r.paper, r.page, r.quote)}</div>
+              <div role="group">
+                <button onClick={() => void accept(e.id)}>{tr('接受，重开这笔')}</button>
+                <button className="ghost" onClick={() => { setDisputing(disputing === e.id ? null : e.id); setSaid(''); }}>{tr('我有原文证据')}</button>
+              </div>
+              {disputing === e.id && (
+                <>
+                  <textarea value={said} placeholder={tr('贴一句导入论文里的原话，要支持 AI 当时的说法')} onChange={x => setSaid(x.target.value)} />
+                  <button disabled={!said.trim()} onClick={() => void dismiss(e.id)}>{tr('提交证据')}</button>
+                </>
+              )}
+            </div>
+          ); })}
+        </div>
+      )}
       <div className="card">
         <h2>{tr('考前真实掌握度')}</h2>
         <label>{tr('考试、组会或答辩日期')} <input type="date" value={exam} onChange={e => pickExam(e.target.value)} /></label>
@@ -123,6 +180,7 @@ export function LedgerScreen() {
         <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
           {tr('复制过程记录')}
         </button>
+        <button className="ghost" onClick={() => void scan()}>{tr('用导入的论文查一遍召回')}</button>
       </div>
       {quiz.length > 0 && (
         <div className="card" data-testid="trial-quiz">
@@ -180,6 +238,7 @@ export function LedgerScreen() {
         <textarea value={draft.ownIdea} placeholder={tr('先写下你自己的想法（写了债会轻一档）')} onChange={x => setDraft({ ...draft, ownIdea: x.target.value })} />
         <textarea value={draft.question} placeholder={tr('问了 AI 什么')} onChange={x => setDraft({ ...draft, question: x.target.value })} />
         <textarea value={draft.answer} placeholder={tr('AI 的回答（可选，还账时对照）')} onChange={x => setDraft({ ...draft, answer: x.target.value })} />
+        <input value={draft.ai} placeholder={tr('哪个 AI（可选，比如豆包）')} onChange={x => setDraft({ ...draft, ai: x.target.value })} />
         <div role="group">{LEVELS.map(l => (
           <button key={l.id} className={draft.level === l.id ? '' : 'ghost'} onClick={() => setDraft({ ...draft, level: l.id })}>{l.label}</button>
         ))}</div>
