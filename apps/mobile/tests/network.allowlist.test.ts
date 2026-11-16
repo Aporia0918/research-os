@@ -9,6 +9,7 @@ describe('network allowlist (static scan)', () => {
   it('only allowed files can start a request', () => {
     const allowed = new Set(['src/App.tsx', 'src/logic/askLocal.ts', 'src/model/direct.ts', 'src/screens/EnhancedScreen.tsx', 'src/screens/ExamScreen.tsx',
       'src/screens/LedgerScreen.tsx', // the user's own model key, only to grade an unsure repayment
+      'src/screens/LifeScreen.tsx', // the user's own model key, for the 生活 reply and a second risk check; text redacted first
       'src/screens/SettingsScreen.tsx', 'src/screens/UpdateCard.tsx', 'src/update/manifest.ts', 'src/update/native.ts']);
     expect(sites.filter(f => !allowed.has(f))).toEqual([]);
   });

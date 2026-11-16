@@ -172,6 +172,7 @@ export class Book {
   /** Idempotent by clientId, so a retried share or an offline replay never books twice. */
   async add(n: NewEntry, today: string, exam?: string): Promise<Entry> {
     if (!n.question.trim()) throw new Error('empty_question');
+    if (n.board === '生活') throw new Error('life_has_its_own_book'); // 生活这本账 is a separate table: ledger/life.ts
     const es = await this.all();
     const prior = es.find((e) => e.clientId === n.clientId);
     if (prior) return prior;

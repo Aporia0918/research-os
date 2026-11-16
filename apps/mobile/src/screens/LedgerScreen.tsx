@@ -12,13 +12,18 @@ import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
 import { loadPaper, paperPages } from '../local/paperStore';
 import type { Source } from '../rules/recall';
+import { LifeScreen } from './LifeScreen';
 
 const EXAM_KEY = 'mindledger.exam.v1';
 const LEVELS: { id: HelpLevel; label: string }[] = [
   { id: 'own', label: tr('自己想的') }, { id: 'hint', label: tr('提示') },
   { id: 'approach', label: tr('思路') }, { id: 'answer', label: tr('完整答案') },
 ];
-const BOARDS: Entry['board'][] = ['学习', '科研', '生活'];
+type Board = Entry['board'];
+const BOARDS: Board[] = ['科研', '学习', '生活'];
+const BOARD_KEY = 'mindledger.board.v1';
+/** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
+const ofBoard = (b: Board) => (e: Entry) => e.board === b;
 const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 6 个要点，再按从 0 开始的序号列出作答在实质上讲到了哪些。不要判断通过与否。只回复 JSON：' + '{"points":[],"hits":[]}';
 
 async function modelAsk(): Promise<Ask | undefined> {
@@ -47,6 +52,7 @@ async function remote(): Promise<LedgerRemote | null> {
 }
 
 export function LedgerScreen() {
+  const [board, setBoard] = useState<Board>('科研');
   const [exam, setExam] = useState('');
   const [report, setReport] = useState<Report | null>(null);
   const [due, setDue] = useState<Entry[]>([]);
@@ -58,17 +64,22 @@ export function LedgerScreen() {
   const [endNow, setEndNow] = useState(false);
   const [recalled, setRecalled] = useState<Entry[]>([]);
   const [disputing, setDisputing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', ai: '', level: 'answer' as HelpLevel });
+  const [draft, setDraft] = useState({ topic: '', question: '', answer: '', ownIdea: '', ai: '', level: 'answer' as HelpLevel });
 
-  async function refresh(e = exam, end = endNow) {
-    setDue(await book.due(today()));
-    setRecalled(await book.recalled());
-    setQuiz(await book.quizDue(today(), end));
-    setReport(e ? await book.report(today(), e) : null);
+  async function refresh(e = exam, end = endNow, b = board) {
+    if (b === '生活') return;
+    setDue((await book.due(today())).filter(ofBoard(b)));
+    setRecalled((await book.recalled()).filter(ofBoard(b)));
+    setQuiz((await book.quizDue(today(), end)).filter(ofBoard(b)));
+    setReport(e ? await book.report(today(), e, b) : null);
   }
+  function pickBoard(b: Board) { setBoard(b); setNote(''); setFresh(null); setOpen(null); void preferencesKV.set(BOARD_KEY, b); void refresh(exam, endNow, b); }
   useEffect(() => {
     void book.trialStart().then(async s => { if (s) await book.opened(today()); });
-    void preferencesKV.get(EXAM_KEY).then(e => { setExam(e ?? ''); void refresh(e ?? ''); });
+    void Promise.all([preferencesKV.get(EXAM_KEY), preferencesKV.get(BOARD_KEY)]).then(([e, b]) => {
+      const start = BOARDS.includes(b as Board) ? b as Board : '科研';
+      setExam(e ?? ''); setBoard(start); void refresh(e ?? '', false, start);
+    });
     void remote().then(async r => {
       if (!r) return;
       const s = await book.sync(r, today());
@@ -80,6 +91,11 @@ export function LedgerScreen() {
 
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
+  const switcher = (
+    <div role="tablist" className="board-switch" data-testid="board-switch">{BOARDS.map(b => (
+      <button key={b} role="tab" aria-selected={board === b} className={board === b ? '' : 'ghost'} onClick={() => pickBoard(b)}>{tr(b)}</button>
+    ))}</div>
+  );
   async function repay(id: string) {
     const g = await book.repay(id, said, today(), exam || undefined, await modelAsk());
     setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missedOf(g)));
@@ -128,14 +144,17 @@ export function LedgerScreen() {
   }
   async function copy(text: string, done: string) { await copyText(text); setNote(done); }
   async function add() {
-    const e = await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
+    if (board === '生活') return;
+    const e = await book.add({ clientId: newId(), board, topic: draft.topic, question: draft.question,
       answer: draft.answer, ownIdea: draft.ownIdea, ai: draft.ai, helpLevel: draft.level }, today(), exam || undefined);
     setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); setNote('');
     setFresh(e.weight && e.dueOn ? e : null); setSaid(''); await refresh();
   }
 
+  if (board === '生活') return <section>{switcher}<LifeScreen /></section>;
   return (
     <section>
+      {switcher}
       {recalled.length > 0 && (
         <div className="card" data-testid="recall-slips">
           <h2>{tr('召回单（{0} 条）', recalled.length)}</h2>
@@ -177,7 +196,7 @@ export function LedgerScreen() {
             ))}
           </ol>
         )}
-        <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
+        <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined, board).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
           {tr('复制过程记录')}
         </button>
         <button className="ghost" onClick={() => void scan()}>{tr('用导入的论文查一遍召回')}</button>
@@ -232,9 +251,6 @@ export function LedgerScreen() {
       </div>
       <div className="card">
         <h2>{tr('记一笔')}</h2>
-        <div role="group">{BOARDS.map(b => (
-          <button key={b} className={draft.board === b ? '' : 'ghost'} onClick={() => setDraft({ ...draft, board: b })}>{tr(b)}</button>
-        ))}</div>
         <textarea value={draft.ownIdea} placeholder={tr('先写下你自己的想法（写了债会轻一档）')} onChange={x => setDraft({ ...draft, ownIdea: x.target.value })} />
         <textarea value={draft.question} placeholder={tr('问了 AI 什么')} onChange={x => setDraft({ ...draft, question: x.target.value })} />
         <textarea value={draft.answer} placeholder={tr('AI 的回答（可选，还账时对照）')} onChange={x => setDraft({ ...draft, answer: x.target.value })} />
