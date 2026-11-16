@@ -105,3 +105,7 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 @media (prefers-reduced-transparency: reduce) {
   .card, .tabbar, .demo-banner { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--bg); }
 }
+/* 讲不出来: marked, never scored. Goes first on the pre-exam list. */
+.exam-list { margin: 8px 0; padding-left: 1.4em; display: grid; gap: 6px; }
+.red-mark { border-left: 4px solid var(--bad); background: var(--bad-bg); padding: 4px 8px; border-radius: 8px; }
+.red-tag { color: var(--bad); font-weight: 700; font-size: .85em; margin-left: 6px; }

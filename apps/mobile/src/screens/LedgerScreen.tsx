@@ -2,7 +2,7 @@
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
-import { countdown, type Ask, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
+import { countdown, type Ask, type Book, type Entry, type Grade, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
 import { ResearchOsClient } from '../api/computer';
 import { loadComputerSettings } from '../settings';
 import { book, copyText, today } from '../ledger/book';
@@ -27,6 +27,7 @@ async function modelAsk(): Promise<Ask | undefined> {
 }
 
 type Report = Awaited<ReturnType<Book['report']>>;
+const missedOf = (g: Grade) => g.points.filter((_, i) => !g.hits.includes(i)).join('；');
 
 /** The paired computer as the book sees it; null when computer features are off. */
 async function remote(): Promise<LedgerRemote | null> {
@@ -44,6 +45,7 @@ export function LedgerScreen() {
   const [said, setSaid] = useState('');
   const [note, setNote] = useState('');
   const [quiz, setQuiz] = useState<Entry[]>([]);
+  const [fresh, setFresh] = useState<Entry | null>(null); // just booked: 「这一步你讲给我听？」
   const [endNow, setEndNow] = useState(false);
   const [draft, setDraft] = useState({ board: BOARDS[0], topic: '', question: '', answer: '', ownIdea: '', level: 'answer' as HelpLevel });
 
@@ -68,9 +70,16 @@ export function LedgerScreen() {
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
   async function repay(id: string) {
     const g = await book.repay(id, said, today(), exam || undefined, await modelAsk());
-    const missed = g.points.filter((_, i) => !g.hits.includes(i));
-    setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missed.join('；')));
+    setNote(g.passed ? tr('讲顺了，这笔还上了。') : tr('还差这些没讲到：{0}。明天再讲一次。', missedOf(g)));
     setSaid(''); setOpen(null); await refresh();
+  }
+  /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
+  async function checkNow(e: Entry, attempt: string) {
+    const g = await book.checkNow(e.id, attempt, today(), exam || undefined, attempt.trim() ? await modelAsk() : undefined);
+    setNote(g?.passed ? tr('讲顺了。到日子再讲一次，记得更牢。')
+      : g ? tr('还差这些没讲到：{0}。这一笔标红，排在考前清单最前面。', missedOf(g))
+        : tr('记下了。这一笔标红，排在考前清单最前面。'));
+    setSaid(''); setFresh(null); await refresh();
   }
   /** Opening a debt brings back whatever was said before an interruption (a call, the app closed). */
   async function pick(id: string) {
@@ -84,9 +93,10 @@ export function LedgerScreen() {
   }
   async function copy(text: string, done: string) { await copyText(text); setNote(done); }
   async function add() {
-    await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
+    const e = await book.add({ clientId: newId(), board: draft.board, topic: draft.topic, question: draft.question,
       answer: draft.answer, ownIdea: draft.ownIdea, helpLevel: draft.level }, today(), exam || undefined);
-    setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); await refresh();
+    setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); setNote('');
+    setFresh(e.weight && e.dueOn ? e : null); setSaid(''); await refresh();
   }
 
   return (
@@ -99,6 +109,15 @@ export function LedgerScreen() {
             {tr('独立掌握度 {0}（只算不靠 AI 的作答）', report.independence === null ? '—' : `${Math.round(report.independence * 100)}%`)}<br />
             {tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}
           </p>
+        )}
+        {report && report.repayBeforeExam.length > 0 && (
+          <ol className="exam-list" data-testid="exam-list">
+            {report.repayBeforeExam.map(i => (
+              <li key={i.id} className={i.red ? 'red-mark' : undefined}>
+                {i.question}{i.red && <span className="red-tag">{tr('讲不出来')}</span>}
+              </li>
+            ))}
+          </ol>
         )}
         <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
           {tr('复制过程记录')}
@@ -117,6 +136,18 @@ export function LedgerScreen() {
           )}
         </div>
       )}
+      {fresh && (
+        <div className="card" data-testid="explain-now">
+          <h2>{tr('这一步你讲给我听？')}</h2>
+          <p className="muted">{fresh.question}</p>
+          <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
+          <div role="group">
+            <button disabled={!said.trim()} onClick={() => void checkNow(fresh, said)}>{tr('讲完了')}</button>
+            <button className="ghost" onClick={() => void checkNow(fresh, '')}>{tr('讲不出来')}</button>
+            <button className="ghost" onClick={() => setFresh(null)}>{tr('先不讲')}</button>
+          </div>
+        </div>
+      )}
       <TrialCard onEnd={() => { setEndNow(true); void refresh(exam, true); }} onCopy={copy} />
       <div className="card">
         <h2>{tr('今天要还的')}</h2>
@@ -124,7 +155,7 @@ export function LedgerScreen() {
         {left !== null && <p data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
         {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
         {due.map(e => (
-          <div key={e.id}>
+          <div key={e.id} className={e.red ? 'red-mark' : undefined}>
             <button className="ghost" onClick={() => void pick(e.id)}>{e.question}{e.fromComputer ? tr('（电脑上记的）') : ''}</button>
             {open === e.id && (
               <>
