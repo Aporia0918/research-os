@@ -8,13 +8,14 @@ import os
 import sys
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from functools import partial
 from pathlib import Path
 from random import Random
 from typing import Any
 
 from . import runner
+from .screen import Suspect, label_copies
 from .table import Table, TableError
 from .verdict import TOLERANCE, Verdict, chance_level, judge
 from .worlds import Layout, layout, naive_labels, null_labels
@@ -38,6 +39,7 @@ class ExamSpec:
     python: str = sys.executable
     timeout_s: float = 600.0
     workers: int = field(default_factory=lambda: max(1, min(4, (os.cpu_count() or 2) // 2)))
+    allow: tuple[str, ...] = ()  # columns the person confirmed are real measurements, not derived from the label
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,7 @@ class ExamReport:
     data_sha256: str
     script_sha256: str
     errors: list[str]  # distinct run errors, first few
+    suspects: list[Suspect] = field(default_factory=list)  # feature columns that already hold the label
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -114,8 +117,12 @@ def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
     real = real_f.result()
     nulls, naive = results[: spec.runs], results[spec.runs :]
     chance = spec.chance if spec.chance is not None else null_chance(spec.metric, worlds[: spec.runs] or [d.labels])
+    verdict = judge(real.score, [r.score for r in nulls], chance, spec.tolerance)
+    suspects = label_copies(d.table, spec.group, spec.label, spec.allow)
+    if suspects and verdict.outcome != "fail":  # a structural leak keeps its own reason; it is the one to fix first
+        verdict = replace(verdict, outcome="fail", reason="feature_copies_label")
     return ExamReport(
-        verdict=judge(real.score, [r.score for r in nulls], chance, spec.tolerance),
+        verdict=verdict,
         real=real.score,
         nulls=[r.score for r in nulls],
         naive=[r.score for r in naive],
@@ -124,4 +131,5 @@ def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
         data_sha256=hashlib.sha256(d.raw).hexdigest(),
         script_sha256=hashlib.sha256(spec.script.read_bytes()).hexdigest(),
         errors=distinct_errors([real, *results]),
+        suspects=suspects,
     )

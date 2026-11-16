@@ -7,10 +7,11 @@ Cases (each built from several independent synthetic datasets):
   clean_signal    split by subject, AF signal present            truth: clean   exam should say pass
   clean_weak      split by subject, a weak AF signal             truth: clean   pass if 20 worlds have the power
   clean_nosignal  split by subject, no AF signal                 truth: clean   exam should not say pass
-  target_leak     split by subject, a feature copies the label   truth: leak    outside what the exam can see
+  target_leak     split by subject, a feature copies the label   truth: leak    caught by the label-copy screen
 
-`target_leak` is kept on purpose: a feature that already holds the answer moves with the real labels, not the
-shuffled ones, so the exam passes it. The report shows that miss instead of hiding it.
+`target_leak` is the leak no label shuffle can reveal: a feature that already holds the answer moves with the real
+labels, not the shuffled ones, so the null worlds alone pass it. The exam now screens the table for such columns
+(screen.py) and fails it with its own reason; the report scores that separately from the structure leaks.
 
     python blind.py [--datasets 4] [--runs 19] [--json out.json]
 """
@@ -41,7 +42,7 @@ class Case:
     signal: float
     morph_is_label: bool
     leak: bool  # the truth
-    visible: bool  # whether the leak, if any, is the kind the exam is built to catch
+    visible: bool  # whether the leak, if any, is the kind the null worlds catch (False: left to the label-copy screen)
 
 
 CASES = [
