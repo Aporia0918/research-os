@@ -9,7 +9,8 @@ import { describePdfError } from '../pdf/extract';
 import { loadKey, loadModelSettings } from '../model/settings';
 import { ANSWER_STATUS_LABEL, type PaperRef } from '../logic/papers';
 import { pageLabel } from '../logic/types';
-import { loadPaper, preparePaper, savePaper, type ImportTimings, type LocalPaper } from '../local/paperStore';
+import { loadPaper, paperPages, preparePaper, savePaper, type ImportTimings, type LocalPaper } from '../local/paperStore';
+import { book, today } from '../ledger/book';
 import { importStages, resetImportTimings, timed } from '../perf/timing';
 
 export function AskScreen({ demo }: { demo: boolean }) {
@@ -58,6 +59,9 @@ export function AskScreen({ demo }: { demo: boolean }) {
         return built;
       });
       setSaved(all); setPaper(all.ref); setInfo(tr('已在本机读好 {0}:共 {1} 页,可以提问、生成计划和做引用检查了。', f.name, all.doc.numPages));
+      // 知识召回: a new paper is checked against every AI answer on the ledger, on the phone, by rules only.
+      const hits = await book.recallScan({ name: f.name, pages: paperPages(all) }, today());
+      if (hits.length) setInfo(tr('已在本机读好 {0}。账上有 {1} 条 AI 的说法被这篇论文的原话推翻，召回单在账本最上面。', f.name, hits.length));
       const timings: ImportTimings = {
         file_read_ms: round('file_read_ms'), parser_load_ms: round('parser_load_ms'), pdf_parse_ms: round('pdf_parse_ms'),
         chunking_ms: round('chunking_ms'), rule_index_ms: round('rule_index_ms'), save_ms: round('save_ms'), total_after_pick_ms: round('import_after_user_pick'),
