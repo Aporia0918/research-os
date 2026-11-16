@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fixture from './fixtures/ledger-repayments.json';
-import { Book, gradeFree, needsModel, nextDue, weightOf, type LedgerRemote } from '../src/ledger/ledger';
+import { Book, countdown, gradeFree, needsModel, nextDue, weightOf, type LedgerRemote } from '../src/ledger/ledger';
 import { memoryKV } from '../src/storage/kv';
 
 const DERIV = '导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。';
@@ -112,5 +112,15 @@ describe('思维账本 on the phone, no key', () => {
     expect(seen).toEqual(['entry-m1', 'srv_m1:attempt-m1-1']);
     expect(await book.sync(computer, '2026-12-02')).toEqual({ sent: 0, pulled: 0, stopped: false }); // nothing sent twice
     expect((await book.due('2026-12-02')).map((x) => [x.question, x.fromComputer])).toEqual([['电脑上问的链式法则', true]]);
+  });
+});
+
+describe('还债提醒带上日期', () => {
+  it('counts days only when the date is within a week and something is owed', () => {
+    expect(countdown('2026-12-01', '2026-12-04', 3)).toBe(3);
+    expect(countdown('2026-12-01', '2026-12-04', 0)).toBeNull();
+    expect(countdown('2026-12-01', '2026-12-20', 3)).toBeNull();
+    expect(countdown('2026-12-01', undefined, 3)).toBeNull();
+    expect(countdown('2026-12-05', '2026-12-04', 3)).toBeNull();
   });
 });

@@ -427,6 +427,8 @@ export const EN: Record<string, string> = {
   "还差这些没讲到：{0}。明天再讲一次。": "Not covered yet: {0}. Explain it again tomorrow.",
   "考前真实掌握度": "Real mastery before the exam",
   "考试日期": "Exam date",
+  "考试、组会或答辩日期": "Exam, group meeting or defence date",
+  "离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。": "{0} days to go, and {1} debts are not explained yet. They may come up that day.",
   "独立掌握度 {0}（只算不靠 AI 的作答）": "Independent mastery {0} (no-AI attempts only)",
   "考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔": "{0} to repay before the exam, {1} settled, {2} half explained",
   "今天要还的": "Due today",

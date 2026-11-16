@@ -33,6 +33,12 @@ export function frontLoad(due: string, today: string, exam?: string): string {
   return dayBefore > today ? dayBefore : today;
 }
 
+/** Days left to the exam, group meeting or defence when it is close (same window as frontLoad) and debts are still owed. */
+export function countdown(today: string, exam: string | undefined, owed: number): number | null {
+  if (!exam || owed === 0 || !(today < exam && exam <= addDays(today, EXAM_WINDOW_DAYS))) return null;
+  return Math.round((Date.parse(exam) - Date.parse(today)) / 86400000);
+}
+
 export function nextDue(w: Weight, passes: number, last: string, exam?: string): string | null {
   return passes >= STEPS[w].length ? null : frontLoad(addDays(last, STEPS[w][passes]), last, exam);
 }

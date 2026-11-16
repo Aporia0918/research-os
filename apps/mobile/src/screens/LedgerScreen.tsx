@@ -2,7 +2,7 @@
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
-import { type Ask, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
+import { countdown, type Ask, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
 import { ResearchOsClient } from '../api/computer';
 import { loadComputerSettings } from '../settings';
 import { book, copyText, today } from '../ledger/book';
@@ -64,6 +64,7 @@ export function LedgerScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on open
   }, []);
 
+  const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
   async function repay(id: string) {
     const g = await book.repay(id, said, today(), exam || undefined, await modelAsk());
@@ -92,7 +93,7 @@ export function LedgerScreen() {
     <section>
       <div className="card">
         <h2>{tr('考前真实掌握度')}</h2>
-        <label>{tr('考试日期')} <input type="date" value={exam} onChange={e => pickExam(e.target.value)} /></label>
+        <label>{tr('考试、组会或答辩日期')} <input type="date" value={exam} onChange={e => pickExam(e.target.value)} /></label>
         {report && (
           <p data-testid="ledger-report">
             {tr('独立掌握度 {0}（只算不靠 AI 的作答）', report.independence === null ? '—' : `${Math.round(report.independence * 100)}%`)}<br />
@@ -120,6 +121,7 @@ export function LedgerScreen() {
       <div className="card">
         <h2>{tr('今天要还的')}</h2>
         {note && <p role="status">{note}</p>}
+        {left !== null && <p data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
         {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
         {due.map(e => (
           <div key={e.id}>
