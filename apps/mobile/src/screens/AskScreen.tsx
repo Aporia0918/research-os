@@ -11,6 +11,8 @@ import { ANSWER_STATUS_LABEL, type PaperRef } from '../logic/papers';
 import { pageLabel } from '../logic/types';
 import { loadPaper, paperPages, preparePaper, savePaper, type ImportTimings, type LocalPaper } from '../local/paperStore';
 import { book, today } from '../ledger/book';
+import type { Entry } from '../ledger/ledger';
+import { askDebts } from '../rules/understand';
 import { importStages, resetImportTimings, timed } from '../perf/timing';
 
 export function AskScreen({ demo }: { demo: boolean }) {
@@ -22,9 +24,10 @@ export function AskScreen({ demo }: { demo: boolean }) {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<LocalPaper | null>(null);
   const [local, setLocal] = useState<LocalAnswer | null>(null);
+  const [booked, setBooked] = useState<Entry[] | null>(null); // 理解债 the last model answer booked
   useEffect(() => {
     let live = true;
-    setAnswer(null); setError(''); setInfo(''); setLocal(null);
+    setAnswer(null); setError(''); setInfo(''); setLocal(null); setBooked(null);
     void loadPaper(preferencesKV).then(p => {
       if (!live) return;
       setSaved(p);
@@ -72,11 +75,28 @@ export function AskScreen({ demo }: { demo: boolean }) {
   }
   function round(stage: string): number { return importStages.find(s => s.stage === stage)?.ms ?? 0; }
   async function submit() {
-    if (demo) { setAnswer(demoAnswer); setInfo(tr('演示:示例问题的预先保存回答。')); return; }
+    setBooked(null);
+    if (demo) { setAnswer(demoAnswer); setInfo(tr('演示:示例问题的预先保存回答。')); return; } // a saved sample: never booked
     if (!saved) return;
     setBusy(true); setError(''); setAnswer(null); setLocal(null);
-    try { setLocal(await askLocal(saved.doc, q.trim(), await loadModelSettings(preferencesKV), await loadKey(preferencesKV))); }
+    try {
+      const settings = await loadModelSettings(preferencesKV);
+      const a = await askLocal(saved.doc, q.trim(), settings, await loadKey(preferencesKV));
+      setLocal(a);
+      // 记一笔: what the model explained is booked at once, one 理解债 per cited page; the user's own reading is not.
+      if (a.mode === 'model') {
+        const day = today();
+        const entries: Entry[] = [];
+        for (const n of askDebts({ question: q, answer: a.text, pages: a.pages, paper: saved.ref, ai: settings.model })) entries.push(await book.add(n, day));
+        setBooked(entries);
+      }
+    }
     finally { setBusy(false); }
+  }
+  async function unbook() {
+    if (!booked) return;
+    const n = await book.remove(booked.map(e => e.id));
+    setBooked(null); setInfo(tr('这次的 {0} 笔没记。', n));
   }
 
   const sentences = answer?.answer?.sentences ?? [];
@@ -104,6 +124,13 @@ export function AskScreen({ demo }: { demo: boolean }) {
       {local.mode === 'model' && (local.pages.length ? <div className="muted">{tr('引用页码:')}{local.pages.map(n => <span className="cite" key={n}>[p.{n}]</span>)}</div> : <div className="verdict warn">{tr('模型回答没有标出页码,请对照下面的原文段落。')}</div>)}
       {local.passages.map((p, i) => <div className="passage" key={i}><span className="cite">p.{p.page}</span><div>{p.text.length > 400 ? p.text.slice(0, 400) + '…' : p.text}</div></div>)}
     </div>}
+    {local?.mode === 'rules' && local.passages.length > 0 && <div className="card muted" data-testid="not-booked">{tr('这次是你自己读原文，不记账。')}</div>}
+    {booked && (booked.length ? <div className="card" data-testid="booked">
+      <h2>{tr('记了 {0} 笔理解债', booked.length)}</h2>
+      <ul>{booked.map(e => <li key={e.id}>{e.question}</li>)}</ul>
+      <div className="muted">{tr('AI 替你读懂的部分按页记下，之后讲给我听，讲顺就还清。')}</div>
+      <button className="ghost" onClick={() => void unbook()}>{tr('这次不记')}</button>
+    </div> : <div className="card muted" data-testid="not-booked">{tr('这次回答没标出页码，没有记账。')}</div>)}
     {answer && <div className="card" data-testid="answer">
       <div className="muted">{tr('状态:')}{ANSWER_STATUS_LABEL(answer.status)}{answer.status === 'not_configured' ? tr(' — 没有配置模型密钥,下面列出找到的原文段落(带页码),辅助定位原文、由你判断') : ''}</div>
       {sentences.map((s, i) => <p key={i}>{s.text} {(s.citations ?? []).map((c, j) => c.page_index != null && <span className="cite" key={j}>[{pageLabel(c.page_index)}]</span>)}</p>)}

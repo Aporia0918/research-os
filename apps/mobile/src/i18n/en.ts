@@ -513,4 +513,10 @@ export const EN: Record<string, string> = {
   "听到你这么说，我很担心你。你现在的安全最重要。\n可以拨打全国统一心理援助热线 12356，那里有人会认真听你说。\n如果你已经伤到自己，或者觉得马上会有危险，请立刻拨打 120 或 110。\n也请现在就联系一个你信任的人，告诉对方你的情况，别一个人扛着。": "I'm worried about you hearing this. Your safety matters most right now.\nIn mainland China you can call the national mental health hotline 12356, where someone will listen.\nIf you have already hurt yourself or feel you are in danger, call 120 or 110 now.\nPlease also reach out to someone you trust right now and tell them what's going on. You don't have to carry this alone.",
   "我在听。这件事里你最在意的是哪一点？": "I'm listening. What matters most to you in this?",
   "这事和朋友或家里人说过吗？有时候说出来会轻一点。": "Have you told a friend or someone at home? Saying it out loud can make it lighter.",
+  "记了 {0} 笔理解债": "Booked {0} understanding debts",
+  "AI 替你读懂的部分按页记下，之后讲给我听，讲顺就还清。": "What the AI read for you is booked page by page. Explain it to me later; once it flows, it is repaid.",
+  "这次不记": "Don't book this time",
+  "这次的 {0} 笔没记。": "The {0} debts from this answer were not booked.",
+  "这次是你自己读原文，不记账。": "You read the original text yourself this time, so nothing is booked.",
+  "这次回答没标出页码，没有记账。": "This answer cites no page, so nothing was booked.",
 };
