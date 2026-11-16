@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { ResearchOsClient, type FetchLike } from '../src/api/computer';
-import { describeVerdict, examPayload, phase, retake, strip, type ExamReport, type Task } from '../src/logic/nullworld';
+import { analysisKey, debtLine, describeVerdict, examPayload, phase, retake, strip, type ExamReport, type Task } from '../src/logic/nullworld';
+import { book } from '../src/ledger/book';
 import { ExamScreen } from '../src/screens/ExamScreen';
 import { saveComputerSettings } from '../src/settings';
 import { preferencesKV } from '../src/storage/kv';
@@ -36,6 +37,14 @@ describe('null-world logic', () => {
     const i = { script: ' /p/s.py ', data: '/p/d.csv', group: 'subject', label: 'af', runs: 19, seed: 3 };
     expect(retake(i)).toEqual({ ...i, seed: 4 });
     expect(examPayload(i)).toEqual({ script: '/p/s.py', data: '/p/d.csv', group: 'subject', label: 'af', runs: 19, seed: 3 });
+  });
+  it('names the column that copies the label and keeps one 结论债 per analysis', () => {
+    const v = { ...report('fail', 1, [0.5]).verdict, reason: 'feature_copies_label' };
+    expect(describeVerdict(v)).toMatchObject({ tone: 'bad', title: '没通过：有一列已经藏着答案' });
+    const i = { script: '/p/s.py', data: '/p/d.csv', group: 'subject', label: 'af', runs: 19, seed: 3 };
+    expect(analysisKey(retake(i))).toBe(analysisKey(i)); // a retake lands on the same debt
+    expect(analysisKey({ ...i, label: 'other' })).not.toBe(analysisKey(i));
+    expect(debtLine('fail')).toBe('这个高分还站不住，改好再考一次就还清。');
   });
   it('approves the exact hash the server showed', async () => {
     const calls: { url: string; body?: string }[] = [];
@@ -92,5 +101,38 @@ describe('exam screen', () => {
     await act(async () => { button(h, '批准运行').click(); }); await flush();
     expect(h.querySelector('[data-testid=exam-verdict]')?.textContent).toContain('没通过');
     expect(button(h, '复考（换一批零世界）')).toBeTruthy();
+  });
+
+  it('崩分 books a red 结论债 on the research board; a passing retake repays the same debt (演示第二段)', async () => {
+    await saveComputerSettings(preferencesKV, { enabled: true, url: 'http://computer:1' });
+    const leak = { ...report('fail', 1, Array(19).fill(0.5)), suspects: [{ column: 'morph', reason: 'separates_label' as const, gap_sd: 25 }] };
+    leak.verdict = { ...leak.verdict, reason: 'feature_copies_label' };
+    const results = [leak, report('pass', 0.9, Array(19).fill(0.5))];
+    let state = task('awaiting_approval');
+    vi.stubGlobal('fetch', async (url: string) => {
+      const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status });
+      if (url.endsWith('/null-world/detect')) return json({ data: '/p/features.csv', rows: 480, columns: ['subject', 'af', 'morph'], groups: [{ column: 'subject', score: 2, reason: '' }], labels: [{ column: 'af', score: 2, reason: '' }], features: ['morph'] });
+      if (url.endsWith('/tasks')) { state = task('awaiting_approval', { id: `t${results.length}` }); return json(state, 202); }
+      if (url.includes('subject-hash')) return json({ hash: 'h' });
+      if (url.endsWith('/approvals')) { state = { ...state, state: 'succeeded', result: results.shift()! }; return json({}, 201); }
+      return json(state);
+    });
+    const h = await mount();
+    const [script, data] = [...h.querySelectorAll('input')];
+    await type(script, '/p/train.py'); await type(data, '/p/features.csv');
+    await act(async () => { button(h, '认结构').click(); }); await flush();
+    expect((h.querySelector('[data-testid=exam-columns] input[type=checkbox]') as HTMLInputElement).checked).toBe(true);
+    await act(async () => { button(h, '开始考试').click(); }); await flush();
+    await act(async () => { button(h, '批准运行').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-suspects]')?.textContent).toContain('morph');
+    expect(h.querySelector('[data-testid=exam-debt]')?.textContent).toBe('这个高分还站不住，改好再考一次就还清。');
+    const [owed] = await book.all();
+    expect(owed).toMatchObject({ board: '科研', kind: 'conclusion', red: true, question: 'train.py 在 features.csv 上跑出的结论' });
+    await act(async () => { button(h, '复考（换一批零世界）').click(); }); await flush();
+    await act(async () => { button(h, '批准运行').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-debt]')?.textContent).toContain('结论债已还清');
+    const all = await book.all();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ red: false, dueOn: null, attempts: 2 });
   });
 });

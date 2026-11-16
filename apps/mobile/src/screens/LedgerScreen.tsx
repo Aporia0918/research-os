@@ -28,6 +28,7 @@ async function modelAsk(): Promise<Ask | undefined> {
 
 type Report = Awaited<ReturnType<Book['report']>>;
 const missedOf = (g: Grade) => g.points.filter((_, i) => !g.hits.includes(i)).join('；');
+const redTag = (e: Entry) => (e.kind ? tr('崩分') : tr('讲不出来'));
 
 /** The paired computer as the book sees it; null when computer features are off. */
 async function remote(): Promise<LedgerRemote | null> {
@@ -114,7 +115,7 @@ export function LedgerScreen() {
           <ol className="exam-list" data-testid="exam-list">
             {report.repayBeforeExam.map(i => (
               <li key={i.id} className={i.red ? 'red-mark' : undefined}>
-                {i.question}{i.red && <span className="red-tag">{tr('讲不出来')}</span>}
+                {i.question}{i.red && <span className="red-tag">{redTag(i)}</span>}
               </li>
             ))}
           </ol>
@@ -154,7 +155,12 @@ export function LedgerScreen() {
         {note && <p role="status">{note}</p>}
         {left !== null && <p data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
         {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
-        {due.map(e => (
+        {due.map(e => e.kind ? (
+          <div key={e.id} className={e.red ? 'red-mark' : undefined} data-testid="conclusion-due">
+            <b>{e.question}</b>{e.red && <span className="red-tag">{redTag(e)}</span>}
+            <div className="muted">{tr('结论债靠零世界考试还：改好后到「科研 → 零世界」再考一次。')}</div>
+          </div>
+        ) : (
           <div key={e.id} className={e.red ? 'red-mark' : undefined}>
             <button className="ghost" onClick={() => void pick(e.id)}>{e.question}{e.fromComputer ? tr('（电脑上记的）') : ''}</button>
             {open === e.id && (
