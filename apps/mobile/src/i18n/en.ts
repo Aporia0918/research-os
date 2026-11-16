@@ -455,4 +455,10 @@ export const EN: Record<string, string> = {
   "开始两周试用": "Start two-week trial",
   "电脑上记的 {0} 笔已经到手机上，可以接着还。": "{0} debts booked on the computer are now on the phone, ready to repay.",
   "（电脑上记的）": " (booked on the computer)",
+  "讲不出来": "Can't explain it yet",
+  "先不讲": "Not now",
+  "这一步你讲给我听？": "Can you explain this step to me?",
+  "讲顺了。到日子再讲一次，记得更牢。": "You explained it. Explain it once more when it comes due, so it sticks.",
+  "还差这些没讲到：{0}。这一笔标红，排在考前清单最前面。": "Still missing: {0}. This one is marked red and goes first on the pre-exam list.",
+  "记下了。这一笔标红，排在考前清单最前面。": "Noted. This one is marked red and goes first on the pre-exam list.",
 };

@@ -105,6 +105,13 @@ export async function grade(e: Entry, attempt: string, ask?: Ask): Promise<Grade
   }
 }
 
+/** Red (讲不出来) first, then the earlier date, then the heavier debt. */
+function firstToRepay(a: Entry, b: Entry): number {
+  if (Boolean(a.red) !== Boolean(b.red)) return a.red ? -1 : 1;
+  if (a.dueOn !== b.dueOn) return a.dueOn! < b.dueOn! ? -1 : 1;
+  return (b.weight ? WEIGHTS.indexOf(b.weight) : -1) - (a.weight ? WEIGHTS.indexOf(a.weight) : -1);
+}
+
 // ---- local book -------------------------------------------------------------------------------------------
 export interface Entry {
   id: string; clientId: string; board: '学习' | '科研' | '生活'; topic: string; question: string; answer: string;
@@ -113,6 +120,7 @@ export interface Entry {
   held?: boolean; quiz?: boolean; // trial only: held back from repayment / passed the end-of-trial quiz
   serverId?: string; // set once the computer has the entry (multi-device)
   fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
+  red?: boolean; // 讲不出来: the last try fell short or the user said so; no score, it just goes first on the pre-exam list
 }
 
 /** The computer's 思维账本 API, as the phone needs it. Kept as an interface so the book never touches the network. */
@@ -161,9 +169,7 @@ export class Book {
   }
 
   async due(today: string): Promise<Entry[]> {
-    const order = (e: Entry) => (e.weight ? 2 - WEIGHTS.indexOf(e.weight) : 3);
-    return (await this.all()).filter((e) => e.dueOn && e.dueOn <= today)
-      .sort((a, b) => (a.dueOn! < b.dueOn! ? -1 : a.dueOn! > b.dueOn! ? 1 : order(a) - order(b)));
+    return (await this.all()).filter((e) => e.dueOn && e.dueOn <= today).sort(firstToRepay);
   }
 
   async repay(id: string, attempt: string, today: string, exam?: string, ask?: Ask): Promise<Grade & { nextDue: string | null }> {
@@ -173,11 +179,27 @@ export class Book {
     const g = await grade(e, attempt, ask);
     e.attempts += 1;
     e.passes += g.passed ? 1 : 0;
+    e.red = !g.passed;
     e.dueOn = g.passed ? nextDue(e.weight, e.passes, today, exam) : frontLoad(addDays(today, 1), today, exam);
     await this.save(es);
     await this.queue({ clientId: e.clientId, text: attempt, key: `attempt-${e.clientId}-${e.attempts}` });
     await this.kv.set(DRAFT + id, '');
     return { ...g, nextDue: e.dueOn };
+  }
+
+  /**
+   * 「这一步你讲给我听？」right after booking. Explaining what you have just read proves little, so a good try leaves the
+   * schedule alone; a try that falls short, or 讲不出来 (no attempt at all), marks the debt red and brings it to tomorrow.
+   */
+  async checkNow(id: string, attempt: string, today: string, exam?: string, ask?: Ask): Promise<Grade | null> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    if (!e || !e.weight || !e.dueOn) throw new Error('nothing_to_repay');
+    const g = attempt.trim() ? await grade(e, attempt, ask) : null;
+    if (g?.passed) return g;
+    Object.assign(e, { red: true, attempts: e.attempts + 1, dueOn: frontLoad(addDays(today, 1), today, exam) });
+    await this.save(es);
+    return g;
   }
 
   /** 考前真实掌握度报告: independence from no-AI attempts only, and what to repay before the exam, in order. */
@@ -188,8 +210,7 @@ export class Book {
     const counts = { own: 0, settled: 0, shaky: 0, untested: 0 };
     items.forEach((i) => { counts[i.status] += 1; });
     const independence = items.length ? Math.round(((counts.own + counts.settled) / items.length) * 1000) / 1000 : null;
-    const before = items.filter((i) => i.dueOn && i.dueOn < exam)
-      .sort((a, b) => (a.dueOn! < b.dueOn! ? -1 : a.dueOn! > b.dueOn! ? 1 : WEIGHTS.indexOf(b.weight!) - WEIGHTS.indexOf(a.weight!)));
+    const before = items.filter((i) => i.dueOn && i.dueOn < exam).sort(firstToRepay);
     return { exam, asOf: today, total: items.length, counts, independence, repayBeforeExam: before,
       notReachableBeforeExam: items.filter((i) => i.dueOn && i.dueOn >= exam) };
   }
@@ -205,7 +226,7 @@ export class Book {
     return [`思维账本过程记录 · ${today}${board ? ` · ${board}` : ''}`,
       ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
       ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), LEVEL[e.helpLevel], e.ownIdea.trim() ? '先想过' : '没先想',
-        STATUS[statusOf(e.passes, e.attempts, e.weight)]].join(' · '))].join('\n');
+        e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)]].join(' · '))].join('\n');
   }
 
   // ---- several devices: borrow on the computer, repay on the phone, pick up where you stopped ----

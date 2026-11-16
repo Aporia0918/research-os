@@ -124,3 +124,40 @@ describe('还债提醒带上日期', () => {
     expect(countdown('2026-12-05', '2026-12-04', 3)).toBeNull();
   });
 });
+
+describe('讲不出来那一笔标红，排在考前清单第一行（演示第一段）', () => {
+  const SUB = '换元积分：令 u 等于里层函数，dx 换成 du 除以 u 的导数，积完再把 u 换回去。';
+
+  it('right after booking: 讲不出来 marks it red, first on the list, no score; a later pass clears it', async () => {
+    const book = new Book(memoryKV());
+    const exam = '2026-12-02'; // tomorrow
+    const older = await book.add({ clientId: 'o', board: '学习', question: '什么是导数', answer: DERIV, helpLevel: 'answer' }, '2026-11-28');
+    const e = await book.add({ clientId: 'r', board: '学习', question: '这道换元积分怎么做', answer: SUB, helpLevel: 'answer' }, D0, exam);
+    expect(await book.checkNow(e.id, '', D0, exam)).toBeNull(); // nothing graded
+    const rep = await book.report(D0, exam);
+    expect(rep.repayBeforeExam.map((i) => [i.id, Boolean(i.red)])).toEqual([[e.id, true], [older.id, false]]);
+    expect((await book.due(D0))[0].id).toBe(e.id);
+    expect((await book.processRecord(D0)).split('\n').pop()).toContain('讲不出来');
+    const r = await book.repay(e.id, '令 u 等于里层函数，dx 换成 du 除以 u 的导数，积完再把 u 换回去', D0, exam);
+    expect([r.passed, (await book.all()).find((x) => x.id === e.id)!.red]).toEqual([true, false]);
+  });
+
+  it('a good explanation right after reading the answer leaves the schedule alone; a weak one marks it red', async () => {
+    const book = new Book(memoryKV());
+    const a = await book.add({ clientId: 'a', board: '学习', question: '换元积分', answer: SUB, helpLevel: 'answer' }, D0);
+    const g = await book.checkNow(a.id, '令 u 等于里层函数，dx 换成 du 除以 u 的导数，积完再把 u 换回去', D0);
+    const after = (await book.all())[0];
+    expect([g!.passed, after.dueOn, after.attempts, after.passes, Boolean(after.red)]).toEqual([true, a.dueOn, 0, 0, false]);
+    const w = await book.checkNow(a.id, '先换元再积分', D0);
+    const red = (await book.all())[0];
+    expect([w!.passed, red.red, red.dueOn, red.attempts]).toEqual([false, true, '2026-12-02', 1]);
+  });
+
+  it('a failed repayment on the due day also marks it red', async () => {
+    const book = new Book(memoryKV());
+    const e = await book.add({ clientId: 'f', board: '学习', question: '什么是导数', answer: DERIV, helpLevel: 'answer' }, D0);
+    await book.repay(e.id, '不会', '2026-12-02');
+    expect((await book.all())[0].red).toBe(true);
+  });
+});
+
