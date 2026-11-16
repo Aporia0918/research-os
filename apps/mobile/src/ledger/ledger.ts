@@ -186,6 +186,14 @@ export class Book {
     return e;
   }
 
+  /** 这次不记: undo an automatic booking. Only entries never tried, never synced and not recalled are taken out. */
+  async remove(ids: string[]): Promise<number> {
+    const es = await this.all();
+    const keep = es.filter((e) => !ids.includes(e.id) || e.attempts > 0 || e.serverId || e.recalls?.length);
+    await this.save(keep);
+    return es.length - keep.length;
+  }
+
   async due(today: string): Promise<Entry[]> {
     return (await this.all()).filter((e) => e.dueOn && e.dueOn <= today).sort(firstToRepay);
   }
