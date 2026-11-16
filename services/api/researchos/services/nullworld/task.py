@@ -33,6 +33,9 @@ EXAM_PROPS: dict[str, Any] = {
     "contrast": {"type": "boolean"},
     "seed": {"type": "integer", "minimum": 0, "maximum": 2**31 - 1},
     "timeout_s": {"type": "number", "exclusiveMinimum": 0, "maximum": 3600},
+    # columns the owner confirmed are real measurements: the label-copy screen leaves them alone. Part of the approved
+    # payload, so the owner sees exactly which columns they vouched for.
+    "allow": {"type": "array", "items": _NAME, "maxItems": 50, "uniqueItems": True},
 }
 _EFFECT = {"type": "number", "minimum": 0, "maximum": 5}
 _FRACTION = {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
@@ -61,6 +64,8 @@ def exam_spec(conn: sqlite3.Connection, p: dict[str, Any]) -> ExamSpec:
     extra: dict[str, Any] = {k: p[k] for k in ("metric", "runs", "contrast", "seed", "timeout_s") if k in p}
     if "python" in paths:
         extra["python"] = str(paths["python"])
+    if p.get("allow"):
+        extra["allow"] = tuple(p["allow"])
     return ExamSpec(paths["script"], paths["data"], p["group"], p["label"], project=paths.get("project"), **extra)
 
 

@@ -87,3 +87,23 @@ def test_payload_is_checked_before_approval(client: Client, demo: Path) -> None:
     assert r.status_code == 422 and r.json()["code"] == "invalid_payload"
     r = client.post("/api/v1/tasks", json={"kind": "nullworld.exam", "payload": _payload(demo, shell="rm -rf /")})
     assert r.status_code == 422
+
+
+def test_allow_reaches_the_exam_and_is_part_of_what_is_approved(
+    client: Client, conn: sqlite3.Connection, svc: Services, demo: Path
+) -> None:
+    import csv
+
+    data = demo / "ecg_features.csv"
+    rows = list(csv.DictReader(data.open(newline="")))
+    with data.open("w", newline="") as f:
+        w = csv.DictWriter(f, [*rows[0], "af_flag"])
+        w.writeheader()
+        w.writerows({**r, "af_flag": r["af"]} for r in rows)
+
+    plain = _run(client, conn, svc, "nullworld.exam", _payload(demo, runs=19))
+    assert [s["column"] for s in plain["result"]["suspects"]] == ["af_flag"]
+    vouched = _run(client, conn, svc, "nullworld.exam", _payload(demo, runs=19, allow=["af_flag"]))
+    assert vouched["payload"]["allow"] == ["af_flag"] and vouched["result"]["suspects"] == []
+    r = client.post("/api/v1/tasks", json={"kind": "nullworld.exam", "payload": _payload(demo, allow=["a", "a"])})
+    assert r.status_code == 422
