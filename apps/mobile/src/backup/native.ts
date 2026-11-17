@@ -15,13 +15,17 @@ export const prefsStore: Store = {
 const AUTO_DIR = 'backups';
 const AUTO_LAST = 'backup.autoLast.v1';
 
-/** Write the backup to a file and open the share sheet so the user can keep it anywhere. */
-export async function shareBackup(title: string): Promise<'shared' | 'copied'> {
-  const text = JSON.stringify(await makeBackup(prefsStore, CURRENT.name));
+/** Write text to a file and open the share sheet so the user can keep or send it anywhere; off the phone it is copied. */
+export async function shareFile(name: string, text: string, title: string): Promise<'shared' | 'copied'> {
   if (!Capacitor.isNativePlatform()) { await navigator.clipboard?.writeText(text); return 'copied'; }
-  const { uri } = await Filesystem.writeFile({ path: backupName(), data: text, directory: Directory.Cache, encoding: Encoding.UTF8 });
+  const { uri } = await Filesystem.writeFile({ path: name, data: text, directory: Directory.Cache, encoding: Encoding.UTF8 });
   await Share.share({ title, files: [uri] });
   return 'shared';
+}
+
+/** The backup as a file through the share sheet. */
+export async function shareBackup(title: string): Promise<'shared' | 'copied'> {
+  return shareFile(backupName(), JSON.stringify(await makeBackup(prefsStore, CURRENT.name)), title);
 }
 
 /** Let the user pick a backup file; returns it parsed, or null if they cancelled. */

@@ -36,7 +36,7 @@ export function BalanceView({ all, board, day, onCopy }: { all: Entry[]; board: 
       <div className="card" data-testid="balance">
         <div className="kpis">
           <div><span className="big">{signed(balanceOn(mine, day))}</span><span className="kpi-label">{tr('自己想出的，减去还没讲清的')}</span></div>
-          <div><span className="big">{days}</span><span className="kpi-label">{tr('天连续记账')}</span></div>
+          <div><span className="big">{days}</span><span className="kpi-label">{tr('天还账连击')}</span></div>
         </div>
         <Curve points={balanceCurve(mine, day)} />
         <p className="muted">{tr('只有说出想法或讲顺一笔的日子才算，不看用了多久。{0} 到今天。', addDays(day, -13))}</p>

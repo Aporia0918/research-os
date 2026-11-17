@@ -41,10 +41,10 @@ export const balanceCurve = (es: Entry[], until: string, days = 14): number[] =>
   Array.from({ length: days }, (_, i) => balanceOn(es, addDays(until, i - days + 1)));
 
 /** A day counts only when the user said an idea or repaid a debt: never for time spent in the app. */
-const counted = (es: Entry[], day: string) =>
-  es.some((e) => (e.createdOn === day && isIdea(e)) || (e.tries ?? []).some((t) => t.ok && t.on === day));
+/** A day counts only when a debt was actually repaid that day: opening the app or booking does not. */
+const counted = (es: Entry[], day: string) => es.some((e) => (e.tries ?? []).some((t) => t.ok && t.on === day));
 
-/** 连续记账天数, ending today (or yesterday, so a streak is not lost before today's first idea). */
+/** 还账连击: days in a row with a debt repaid, ending today (or yesterday, so it is not lost before today's first repayment). */
 export function streak(es: Entry[], today: string): number {
   let day = counted(es, today) ? today : addDays(today, -1), n = 0;
   while (counted(es, day)) { n += 1; day = addDays(day, -1); }

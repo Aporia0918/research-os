@@ -19,6 +19,8 @@ import { balanceOn, streak } from '../ledger/insight';
 import { DueView } from './ledger/DueView';
 import { BalanceView } from './ledger/BalanceView';
 import { SearchView } from './ledger/SearchView';
+import { cardsOf, toAnki, toCsv } from '../ledger/exportCards';
+import { shareFile } from '../backup/native';
 import { importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
 import { fromShared } from '../me/shareIn';
 import { refreshReminders } from '../remind';
@@ -35,6 +37,8 @@ const LEVELS: { id: HelpLevel; label: string; cost: string }[] = [
   { id: 'answer', label: tr('完整答案'), cost: tr('记一笔重的，明天和一周后各问你一次。') },
 ];
 type Board = Entry['board'];
+const ANKI_FILE = 'researchos-anki.txt';
+const CSV_FILE = 'researchos-ledger.csv';
 type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance' | 'search';
 const BOARD_KEY = 'mindledger.board.v1';
 /** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
@@ -172,6 +176,16 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
 
   if (board === '生活') return <section className="home">{switcher}<LifeScreen /></section>;
   const topics = recentTopics(all, board);
+  async function exportCards(as: 'anki' | 'csv') {
+    const es = cardsOf(await book.all(), board);
+    if (!es.length) { setNote(tr('{0}还没有可以导出的账。', tr(board))); return; }
+    const text = as === 'anki' ? toAnki(es, { idea: tr('你当时的想法') })
+      : toCsv(es, [tr('板块'), tr('课程'), tr('问题'), tr('你当时的想法'), tr('AI 的回答'), tr('哪个 AI'), tr('记账日期'), tr('下次讲'), tr('讲不出来')]);
+    try {
+      const how = await shareFile(as === 'anki' ? ANKI_FILE : CSV_FILE, text, tr('导出成卡片'));
+      setNote(how === 'copied' ? tr('已复制 {0} 笔。', es.length) : tr('导出了 {0} 笔，选一个地方存好。', es.length));
+    } catch { setNote(tr('没能导出，请再试一次。')); }
+  }
   const back = <button className="back" onClick={() => { setView('home'); setCourse(null); }}>{tr('‹ 账本')}</button>;
   const status = note && <p className="note" role="status">{note}</p>;
 
@@ -246,6 +260,14 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
           {tr('复制过程记录')}
         </button>
         <button className="ghost" onClick={() => void scan().then(() => setView('recall'))}>{tr('用导入的论文查一遍召回')}</button>
+      </div>
+      <div className="card" data-testid="export-cards">
+        <div><b>{tr('导出成卡片')}</b></div>
+        <div className="muted">{tr('{0}的账导出成 Anki 能导入的文件，或 Excel 能打开的表格。你的想法跟着答案一起走。', tr(board))}</div>
+        <div className="row">
+          <button className="ghost" onClick={() => void exportCards('anki')}>{tr('导出到 Anki')}</button>
+          <button className="ghost" onClick={() => void exportCards('csv')}>{tr('导出表格')}</button>
+        </div>
       </div>
     </section>
   );
@@ -336,7 +358,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
             </div>
           )}
           <button type="button" className="balance-line" onClick={go('balance')} data-testid="go-balance">
-            {tr('思考结余 {0} · 连续 {1} 天', signedNum(balanceOn(mine, today())), streak(mine, today()))}<span className="chev" aria-hidden="true">›</span>
+            {tr('思考结余 {0} · 还账连击 {1} 天', signedNum(balanceOn(mine, today())), streak(mine, today()))}<span className="chev" aria-hidden="true">›</span>
           </button>
           {report && <p className="muted" data-testid="ledger-report">{tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}</p>}
           {left !== null && <p className="muted" data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
