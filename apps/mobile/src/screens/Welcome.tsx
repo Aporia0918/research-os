@@ -1,6 +1,6 @@
 // 第一次打开 (plan 2.2, 30 秒): say who you are (or skip), 账账 opens the conversation, you explain one thing you are
 // learning, and it says what was clear. That first explanation is booked as an idea of your own (进账), so the user sees
-// on day one how the book works. Age is asked only of 中学生 and only to turn on 未成年人模式.
+// on day one how the book works.
 import { useState } from 'react';
 import { tr } from '../i18n';
 import { Zhangzhang, type ZzState } from '../jelly/Zhangzhang';
@@ -12,18 +12,17 @@ import { firstFeedback } from './ledger/shared';
 
 export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '科研') => void }) {
   const [who, setWho] = useState<Who | null>(null);
-  const [age, setAge] = useState('');
-  const [step, setStep] = useState<'who' | 'age' | 'talk' | 'reply'>('who');
+  const [step, setStep] = useState<'who' | 'talk' | 'reply'>('who');
   const [said, setSaid] = useState('');
   const [reply, setReply] = useState('');
   const [busy, setBusy] = useState(false);
   const [zz, setZz] = useState<ZzState>('wave');
   const p = who ? preset(who) : null;
   const research = who === 'research';
-  const profile = (): Profile => ({ who: who ?? 'other', ...(age ? { age: Number(age) } : {}), slots: p?.slots ?? [], remind: p?.remind ?? false });
+  const profile = (): Profile => ({ who: who ?? 'other', slots: p?.slots ?? [], remind: p?.remind ?? false });
   const finish = () => onDone(profile(), research ? '科研' : '学习');
 
-  function pick(w: Who) { setWho(w); setZz('smile'); setStep(w === 'middle' ? 'age' : 'talk'); }
+  function pick(w: Who) { setWho(w); setZz('smile'); setStep('talk'); }
   async function talk() {
     setBusy(true); setZz('think');
     const q = fromShared(said).question || said.trim();
@@ -44,12 +43,6 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
             <div className="chips" role="group" aria-label={tr('我是')}>{WHO.map(w => (
               <button key={w.id} type="button" className="chip" onClick={() => pick(w.id)}>{tr(w.label)}</button>
             ))}</div>
-          </>}
-          {step === 'age' && <>
-            <h1>{tr('你多大了？')}</h1>
-            <p className="muted">{tr('只存在这台手机上，用来打开未成年人模式：聊天时间长了会提醒休息，不满 14 岁用生活板块要先请监护人同意。')}</p>
-            <input type="number" inputMode="numeric" min={6} max={25} value={age} onChange={x => setAge(x.target.value.replace(/\D/g, '').slice(0, 2))} />
-            <button className="primary" disabled={!age} onClick={() => setStep('talk')}>{tr('好了')}</button>
           </>}
           {step === 'talk' && <>
             <h1>{research ? tr('最近在读哪篇论文、跑哪个分析？') : tr('最近在学什么？')}</h1>

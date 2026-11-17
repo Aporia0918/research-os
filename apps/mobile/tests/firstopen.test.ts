@@ -4,13 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { planReminders, MAX_A_DAY } from '../src/remind/plan';
-import { lifeLocked, isMinor, loadProfile, preset, restDue, saveProfile, type Profile } from '../src/me/profile';
+import { loadProfile, preset, saveProfile } from '../src/me/profile';
 import { fromShared } from '../src/me/shareIn';
 import type { Entry } from '../src/ledger/ledger';
 import { book } from '../src/ledger/book';
 import { preferencesKV } from '../src/storage/kv';
 import { Welcome } from '../src/screens/Welcome';
-import { LifeScreen } from '../src/screens/LifeScreen';
 import { LedgerScreen } from '../src/screens/LedgerScreen';
 import { MeCard } from '../src/screens/MeCard';
 import { localNow } from '../src/remind';
@@ -58,34 +57,15 @@ describe('到期提醒', () => {
   });
 });
 
-describe('我是谁和未成年人模式', () => {
+describe('我是谁', () => {
   it('presets by who: research opens on 科研, work starts with reminders off', () => {
     expect(preset('research').board).toBe('科研');
     expect(preset('college').remind).toBe(true);
     expect(preset('work').remind).toBe(false);
   });
-  it('rests sooner for minors; 生活 under 14 waits for a guardian', () => {
-    expect(restDue(0, 39 * 60000, true)).toBeNull();
-    expect(restDue(0, 41 * 60000, true)).toBe(41);
-    expect(restDue(0, 100 * 60000, false)).toBeNull();
-    expect(restDue(0, 121 * 60000, false)).toBe(121);
-    const kid: Profile = { who: 'middle', age: 12, slots: [], remind: true };
-    expect(isMinor(kid)).toBe(true); expect(lifeLocked(kid)).toBe(true);
-    expect(lifeLocked({ ...kid, guardian: true })).toBe(false);
-    expect(lifeLocked({ ...kid, age: 15 })).toBe(false);
-  });
   it('keeps only real times, once each, in order', async () => {
     await saveProfile(preferencesKV, { who: 'college', slots: ['17:40', '25:00', '12:10', '17:40'], remind: true });
     expect((await loadProfile(preferencesKV))!.slots).toEqual(['12:10', '17:40']);
-  });
-  it('生活 asks for a guardian under 14, then says it is an AI', async () => {
-    await saveProfile(preferencesKV, { who: 'middle', age: 12, slots: [], remind: true });
-    const h = await mount(createElement(LifeScreen, {}));
-    expect(h.querySelector('[data-testid=life-guardian]')).not.toBeNull();
-    await click(button(h, '监护人已同意'));
-    expect(h.querySelector('[data-testid=life-guardian]')).toBeNull();
-    expect(h.querySelector('[data-testid=life-ai-note]')!.textContent).toBe('我是 AI，不是真人。');
-    expect((await loadProfile(preferencesKV))!.guardian).toBe(true);
   });
   it('设置 changes who and the reminder times', async () => {
     await saveProfile(preferencesKV, { who: 'college', slots: ['12:10'], remind: true });
@@ -115,14 +95,13 @@ describe('第一次打开', () => {
     await click(button(h, '开始用'));
     expect(done).toHaveBeenCalledWith(expect.objectContaining({ who: 'college', remind: true, slots: ['12:10', '17:40'] }), '学习');
   });
-  it('asks a middle-schooler their age, and research opens with a paper question', async () => {
+  it('asks no age, and research opens with a paper question', async () => {
     const done = vi.fn();
     let h = await mount(createElement(Welcome, { onDone: done }));
     await click(button(h, '中学生'));
-    type(h.querySelector('input[type=number]'), '13');
-    await click(button(h, '好了'));
+    expect(h.querySelector('input[type=number]')).toBeNull();
     await click(button(h, '先跳过'));
-    expect(done).toHaveBeenCalledWith(expect.objectContaining({ who: 'middle', age: 13 }), '学习');
+    expect(done).toHaveBeenCalledWith(expect.not.objectContaining({ age: expect.anything() }), '学习');
     act(() => root?.unmount()); host?.remove();
     h = await mount(createElement(Welcome, { onDone: done }));
     await click(button(h, '做科研'));

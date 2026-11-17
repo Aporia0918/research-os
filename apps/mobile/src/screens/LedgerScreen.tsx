@@ -9,7 +9,7 @@ import { loadComputerSettings } from '../settings';
 import { book, copyText, today } from '../ledger/book';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
-import { LifeScreen } from './LifeScreen';
+import { GrowthScreen } from './GrowthScreen';
 import { Icon, type IconName } from '../icons';
 import { Zhangzhang } from '../jelly/Zhangzhang';
 import { BoardSwitch } from '@jelly/BoardSwitch';
@@ -21,7 +21,7 @@ import { BalanceView } from './ledger/BalanceView';
 import { SearchView } from './ledger/SearchView';
 import { cardsOf, toAnki, toCsv } from '../ledger/exportCards';
 import { shareFile } from '../backup/native';
-import { importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
+import { boardName, importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
 import { fromShared } from '../me/shareIn';
 import { refreshReminders } from '../remind';
 
@@ -41,7 +41,7 @@ const ANKI_FILE = 'researchos-anki.txt';
 const CSV_FILE = 'researchos-ledger.csv';
 type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance' | 'search';
 const BOARD_KEY = 'mindledger.board.v1';
-/** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
+/** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 (shown as 成长空间) is its own screen. */
 const ofBoard = (b: Board) => (e: Entry) => e.board === b;
 type Report = Awaited<ReturnType<Book['report']>>;
 const signedNum = (n: number) => (n > 0 ? `+${n}` : String(n));
@@ -124,7 +124,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
 
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
-  const switcher = <BoardSwitch board={board} onPick={pickBoard} name={b => tr(b)} className="seg" />;
+  const switcher = <BoardSwitch board={board} onPick={pickBoard} name={boardName} className="seg" />;
   /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
   async function checkNow(e: Entry, attempt: string) {
     const g = await book.checkNow(e.id, attempt, today(), exam || undefined, attempt.trim() ? await modelAsk() : undefined);
@@ -174,7 +174,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
     setFresh(e.weight && e.dueOn ? e : null); setSaid(''); setView('home'); setMoment('booked'); await refresh();
   }
 
-  if (board === '生活') return <section className="home">{switcher}<LifeScreen /></section>;
+  if (board === '生活') return <GrowthScreen switcher={switcher} onRepay={b => { pickBoard(b); setCourse(null); setView('due'); }} />;
   const topics = recentTopics(all, board);
   async function exportCards(as: 'anki' | 'csv') {
     const es = cardsOf(await book.all(), board);

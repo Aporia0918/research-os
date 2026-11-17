@@ -6,8 +6,6 @@ import type { Entry } from '../ledger/ledger';
 export type Who = 'middle' | 'college' | 'exam' | 'work' | 'research' | 'other';
 export interface Profile {
   who: Who;
-  age?: number; // self-reported; under 18 turns on 未成年人模式
-  guardian?: boolean; // 监护人已同意 (self-reported), needed for 生活 under 14
   slots: string[]; // free times "HH:MM" after class (课表的空档) or chosen by the user; reminders come only then
   remind: boolean;
 }
@@ -25,9 +23,6 @@ export function preset(who: Who): { board: Entry['board']; remind: boolean; slot
     slots: who === 'research' ? ['12:10', '17:30'] : ['12:10', '17:40'], // after the morning and the afternoon classes
   };
 }
-export const isMinor = (p: Profile | null): boolean => p?.age !== undefined && p.age < 18;
-/** 生活 under 14 needs a guardian's consent first (《人工智能拟人化互动服务管理暂行办法》第十四条). */
-export const lifeLocked = (p: Profile | null): boolean => p?.age !== undefined && p.age < 14 && !p.guardian;
 
 export async function loadProfile(kv: KV): Promise<Profile | null> {
   try { const p = JSON.parse((await kv.get(KEY)) ?? 'null') as Profile | null; return p && p.who ? p : null; } catch { return null; }
@@ -36,9 +31,3 @@ export async function saveProfile(kv: KV, p: Profile): Promise<void> {
   await kv.set(KEY, JSON.stringify({ ...p, slots: [...new Set(p.slots.filter(isTime))].sort() }));
 }
 export const isTime = (s: string): boolean => /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
-
-/** 连续使用提醒 (第十八条: every 2 hours; 未成年人模式 sooner): minutes since the sitting started, once past the limit. */
-export function restDue(startMs: number, nowMs: number, minor: boolean): number | null {
-  const min = Math.floor((nowMs - startMs) / 60000);
-  return min >= (minor ? 40 : 120) ? min : null;
-}

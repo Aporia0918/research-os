@@ -39,3 +39,6 @@ export async function firstFeedback(said: string): Promise<string | null> {
   try { return (await chat(forJob(s, 'grade'), key, [{ role: 'system', content: FIRST_SYSTEM }, { role: 'user', content: said }])).trim() || null; }
   catch { return null; }
 }
+
+/** What a board is called on screen: the 生活 board shows as 成长空间 (owner 2026-11-17); stored data keeps 生活. */
+export const boardName = (b: Entry['board']): string => tr(b === '生活' ? '成长空间' : b);
