@@ -14,7 +14,7 @@ import { preferencesKV } from '../storage/kv';
 import { loadPaper, paperPages } from '../local/paperStore';
 import type { Source } from '../rules/recall';
 import { LifeScreen } from './LifeScreen';
-import { Icon } from '../icons';
+import { Icon, type IconName } from '../icons';
 
 const EXAM_KEY = 'mindledger.exam.v1';
 const LEVELS: { id: HelpLevel; label: string }[] = [
@@ -54,7 +54,7 @@ async function remote(): Promise<LedgerRemote | null> {
   return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue() };
 }
 
-export function LedgerScreen() {
+export function LedgerScreen({ onGo }: { onGo?: (to: 'ask' | 'exam') => void } = {}) {
   const [board, setBoard] = useState<Board>('科研');
   useEffect(() => setLook(board === '生活' ? 'warm' : 'scifi'), [board]);
   const [exam, setExam] = useState('');
@@ -274,20 +274,37 @@ export function LedgerScreen() {
     </section>
   );
 
-  // Home: one number, one button, three ways in. Everything else is one tap away.
+  // Home: one hero, one button, a few ways in. 学习 and 科研 share the book but not the screen: 学习 counts down to the
+  // exam; 科研 is a console of 理解债 from papers and 结论债 from analyses, with the 零世界 check one tap away.
   const owed = report?.repayBeforeExam.length ?? due.length;
   const indep = report?.independence;
+  const pct = indep === null || indep === undefined ? '—' : `${Math.round(indep * 100)}%`;
+  const research = board === '科研';
+  const conclusions = due.filter(e => e.kind === 'conclusion').length;
+  const go = (v: View) => () => { setNote(''); setView(v); };
+  const orb = (icon: IconName, label: string, onClick: () => void) => (
+    <button key={label} className="orb-button" onClick={onClick}><span className="orb"><Icon name={icon} /></span>{tr(label)}</button>
+  );
   return (
-    <section className="home">
+    <section className={`home ${research ? 'home-research' : 'home-study'}`}>
       {switcher}
-      <div className="card hero" data-testid="ledger-hero">
-        <div className="kpis">
-          <div><span className="big" data-testid="owed">{owed}</span><span className="kpi-label">{exam ? tr('笔考前要还') : tr('笔要还')}</span></div>
-          <div><span className="big">{indep === null || indep === undefined ? '—' : `${Math.round(indep * 100)}%`}</span><span className="kpi-label">{tr('独立掌握度')}</span></div>
-        </div>
+      <div className="card hero" data-testid="ledger-hero" data-board={board}>
+        <p className="eyebrow">{research ? tr('科研 · 读论文、跑分析时问过 AI 的') : tr('学习 · 课上、刷题时问过 AI 的')}</p>
+        {research ? (
+          <div className="kpis kpis-3">
+            <div><span className="big" data-testid="owed">{owed}</span><span className="kpi-label">{exam ? tr('笔组会前要还') : tr('笔要还')}</span></div>
+            <div><span className="big">{conclusions}</span><span className="kpi-label">{tr('笔结论债')}</span></div>
+            <div><span className="big">{pct}</span><span className="kpi-label">{tr('独立掌握度')}</span></div>
+          </div>
+        ) : (
+          <div className="kpis">
+            <div><span className="big" data-testid="owed">{owed}</span><span className="kpi-label">{exam ? tr('笔考前要还') : tr('笔要还')}</span></div>
+            <div><span className="big">{pct}</span><span className="kpi-label">{tr('独立掌握度')}</span></div>
+          </div>
+        )}
         {report && <p className="muted" data-testid="ledger-report">{tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}</p>}
         {left !== null && <p className="muted" data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
-        <button className="primary big-button" onClick={() => { setNote(''); setView('due'); }} data-testid="go-due">
+        <button className="primary big-button" onClick={go('due')} data-testid="go-due">
           {due.length ? tr('讲给我听 · 今天 {0} 笔', due.length) : tr('讲给我听')}
         </button>
       </div>
@@ -306,10 +323,17 @@ export function LedgerScreen() {
           </div>
         </div>
       )}
-      <nav className="orbs" aria-label={tr('账本')}>
-        <button className="orb-button" onClick={() => { setNote(''); setView('add'); }}><span className="orb"><Icon name="plus" /></span>{tr('记一笔')}</button>
-        <button className="orb-button" onClick={() => { setNote(''); setView('list'); }}><span className="orb"><Icon name="list" /></span>{tr('考前清单')}</button>
-        <button className="orb-button" onClick={() => { setNote(''); setView('recall'); }}><span className="orb"><Icon name="recall" /></span>{tr('召回单')}</button>
+      <nav className={`orbs${research ? ' orbs-4' : ''}`} aria-label={tr('账本')}>
+        {research ? [
+          orb('plus', '记一笔', go('add')),
+          orb('list', '考前清单', go('list')),
+          orb('recall', '召回单', go('recall')),
+          orb('exam', '结论体检', () => onGo?.('exam')),
+        ] : [
+          orb('plus', '记一笔', go('add')),
+          orb('list', '考前清单', go('list')),
+          orb('camera', '拍一页问', () => onGo?.('ask')),
+        ]}
       </nav>
     </section>
   );

@@ -15,8 +15,8 @@ const PARTS: { id: Part; label: string; note: string; icon: IconName }[] = [
   { id: 'guide', label: '指导', note: '下一步做什么', icon: 'guide' },
 ];
 
-export function ResearchScreen({ demo }: { demo: boolean }) {
-  const [part, setPart] = useState<Part | null>(null);
+export function ResearchScreen({ demo, start = null }: { demo: boolean; start?: Part | null }) {
+  const [part, setPart] = useState<Part | null>(start);
   if (part) return (
     <>
       <button className="back" onClick={() => setPart(null)}>{tr('‹ 科研')}</button>

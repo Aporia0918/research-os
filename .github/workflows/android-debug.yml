@@ -1,5 +1,8 @@
 # Android test build: a debug APK of apps/mobile on a GitHub-hosted runner (it has the Android SDK and JDK 17).
-# Artifacts only: no release, no tag, no signing secrets (debug builds use the runner's throwaway debug key).
+# Every build is signed with the one debug-only key in the repo (android/app/debug-ci.keystore) and numbered
+# 100 + run number, so each APK installs over the last. On integrate/whole-app it also replaces the rolling
+# 「测试版」 pre-release (tag test-latest) with this APK and its version.json; the test app checks that page.
+# The owner agreed to publish test pre-releases on 2026-11-17. No stable release, never master.
 name: android-debug
 
 on:
@@ -10,13 +13,21 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   apk:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: apps/mobile
+    env:
+      VERSION_CODE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
@@ -26,7 +37,10 @@ jobs:
           cache-dependency-path: apps/mobile/package-lock.json
 
       - name: Build the web app and copy it into the Android project
-        run: npm ci && npm run build && npx cap sync android
+        run: |
+          set -eu
+          export VITE_TEST_BUILD=1 VITE_VERSION_CODE=$((100 + VERSION_CODE))
+          npm ci && npm run build && npx cap sync android
 
       - name: Build the debug APK
         # The wrapper jar is not in the repo, so fetch the Gradle version the wrapper names and run it directly.
@@ -45,3 +59,24 @@ jobs:
           path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Replace the 测试版 pre-release
+        if: github.ref == 'refs/heads/integrate/whole-app'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          code=$((100 + VERSION_CODE))
+          out="$RUNNER_TEMP/release"; mkdir -p "$out"
+          apk="researchos-test-$code.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$out/$apk"
+          sha=$(sha256sum "$out/$apk" | cut -d' ' -f1); size=$(stat -c %s "$out/$apk")
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/test-latest"
+          jq -n --arg name "1.4.$code" --argjson code "$code" --arg sha "$sha" --argjson size "$size" \
+            --arg url "$base/$apk" --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg short "${GITHUB_SHA::7}" \
+            '{versionName:$name, versionCode:$code, minSupportedVersionCode:1, sha256:$sha, size:$size,
+              apk:[{url:$url, priority:10}], releaseNotes:("测试版 " + $name + "（" + $short + "）"),
+              publishedAt:$at, channel:"test"}' > "$out/version.json"
+          gh release delete test-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create test-latest "$out/$apk" "$out/version.json" --prerelease --target "$GITHUB_SHA" \
+            --title "测试版 1.4.$code" --notes "思维账本测试版，自动打包，未在真机验证。装好后 App 会自己检查这里有没有新版。"

@@ -31,6 +31,19 @@ const btn = (h: HTMLElement, t: string) => { const b = [...h.querySelectorAll('b
 const click = async (b: HTMLElement) => { act(() => b.click()); await flush(); };
 
 describe('T6 update UI', () => {
+  it('a test build checks only the 测试版 pre-release, with no address to type, on the test channel', async () => {
+    const seen: string[] = [];
+    const test = JSON.stringify({ ...JSON.parse(body), channel: 'test', versionCode: 140, asset: undefined,
+      apk: [{ url: 'https://github.com/Aporia0918/research-os/releases/download/test-latest/researchos-test-140.apk', priority: 10 }] });
+    const f = (async (u: string) => { seen.push(u); return new Response(test); }) as unknown as typeof fetch;
+    host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host);
+    const current = { code: 139, name: '1.4.139', channel: 'test', source: 'https://github.com/Aporia0918/research-os/releases/download/test-latest/version.json' };
+    await act(async () => { root!.render(createElement(UpdateCard, { testBuild: true, current, deps: { kv: memoryKV(), fetchFn: f, now: () => 9e12 } })); });
+    expect(host.querySelector('input')).toBeNull();
+    await click(btn(host, '检查更新'));
+    expect(seen).toEqual([current.source]);
+    expect(host.querySelector('[role=dialog]')?.textContent ?? host.textContent).toContain('1.5.0');
+  });
   it('empty source shows 未配置源 and makes no request', async () => {
     const dl = vi.fn(); const { h } = await mount('', dl as unknown as Downloader);
     await click(btn(h, '检查更新'));

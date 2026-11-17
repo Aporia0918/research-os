@@ -276,14 +276,15 @@ export function manualAllowed(lastManual: number, now: number): boolean { return
  * Cold-start auto check. Silent when no source is configured or on any failure; throttled to 12h
  * (success or failure); never downloads or installs — it only reports that an update exists.
  */
-export async function autoCheckUpdate(kv: KV, now: number, localCode: number, channel: string, f: typeof fetch = fetch): Promise<Manifest | null> {
-  const src = await loadSource(kv);
+export async function autoCheckUpdate(kv: KV, now: number, localCode: number, channel: string, f: typeof fetch = fetch,
+  opts: { source?: string; everyStart?: boolean } = {}): Promise<Manifest | null> {
+  const src = opts.source ?? await loadSource(kv);
   if (!src.trim()) return null;
-  if (!(await shouldAutoCheck(kv, now))) return null;
+  if (!opts.everyStart && !(await shouldAutoCheck(kv, now))) return null;
   await markAutoCheck(kv, now);
   try {
     const prefix = await loadMirrorPrefix(kv);
-    const { manifest } = await fetchManifestFromSources(sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
+    const { manifest } = await fetchManifestFromSources(opts.source ? [src] : sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
     const d = decide(manifest, localCode, channel);
     return d.kind === 'update' ? d.manifest : null;
   } catch { return null; }

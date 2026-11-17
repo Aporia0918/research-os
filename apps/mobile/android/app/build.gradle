@@ -16,16 +16,35 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Test builds are signed with one fixed debug-only key kept in the repo, so each new APK installs over the last one
+    // (a fresh CI runner otherwise makes a new random debug key and Android refuses the update). Never used for release.
+    signingConfigs {
+        fixedDebug {
+            storeFile file('debug-ci.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
         // A test build installs beside the released app instead of over it.
         debug {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
+            signingConfig signingConfigs.fixedDebug
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// Each CI build gets a higher version code than the last, so the phone treats it as an update.
+def ciRun = (System.getenv('GITHUB_RUN_NUMBER') ?: '0').toInteger()
+android.applicationVariants.all { variant ->
+    if (variant.buildType.name == 'debug') {
+        variant.outputs.each { output -> output.versionCodeOverride = 100 + ciRun }
     }
 }
 

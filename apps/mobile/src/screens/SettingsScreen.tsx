@@ -11,7 +11,7 @@ import { chat, describeModelError, listModels } from '../model/direct';
 
 const JOBS: { id: Job; label: string }[] = [{ id: 'grade', label: '判「讲给我听」用的模型' }, { id: 'photo', label: '看照片用的模型（要能读图）' }];
 
-export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; onComputer?: (enabled: boolean) => void }) {
+export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer, onJelly }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; onComputer?: (enabled: boolean) => void; onJelly?: () => void }) {
   const [computer, setComputer] = useState<ComputerSettings>({ enabled: false, url: DEFAULT_COMPUTER_URL });
   useEffect(() => { void loadComputerSettings(preferencesKV).then(setComputer); }, []);
   async function updateComputer(next: ComputerSettings) { setComputer(next); await saveComputerSettings(preferencesKV, next); onComputer?.(next.enabled); }
@@ -62,6 +62,7 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
   return (
     <section>
       <h1>{tr('设置')}</h1>
+      {onJelly && <button className="ghost" data-testid="open-jelly" onClick={onJelly}>{tr('看账账和果冻界面演示')}</button>}
       <div className="card" data-testid="lang-switch">
         <div><b>{tr('界面语言')}</b></div>
         <div className="row" role="radiogroup" aria-label={tr('界面语言')}>

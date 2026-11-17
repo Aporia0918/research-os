@@ -6,7 +6,7 @@ import {
   loadMirrorPrefix, loadSource, manualAllowed, percent, saveSource, sourceList,
   type Downloader, type Manifest,
 } from '../update/manifest';
-import { LOCAL_VERSION_CODE, LOCAL_VERSION_NAME, UPDATE_CHANNEL } from '../update/version';
+import { CURRENT, TEST_BUILD } from '../update/version';
 import { openInstaller, platformDownloader } from '../update/native';
 
 export interface UpdateDeps {
@@ -14,16 +14,21 @@ export interface UpdateDeps {
 }
 const defaults = (): UpdateDeps => ({ kv: preferencesKV, fetchFn: (...a) => fetch(...a), downloader: platformDownloader, install: openInstaller, now: Date.now });
 
-export function UpdateCard({ deps }: { deps?: Partial<UpdateDeps> }) {
+/** A test build checks the 测试版 pre-release only, so there is no address to type. */
+export function UpdateCard({ deps, testBuild = TEST_BUILD, current = CURRENT }: { deps?: Partial<UpdateDeps>; testBuild?: boolean; current?: typeof CURRENT }) {
+  return <UpdateChecker deps={deps} fixedSource={testBuild ? current.source : null} current={current} />;
+}
+
+function UpdateChecker({ deps, fixedSource, current }: { deps?: Partial<UpdateDeps>; fixedSource: string | null; current: typeof CURRENT }) {
   const d = { ...defaults(), ...deps };
-  const [src, setSrc] = useState(DEFAULT_MANIFEST_URL);
+  const [src, setSrc] = useState(fixedSource ?? DEFAULT_MANIFEST_URL);
   const [msg, setMsg] = useState('');
   const [offer, setOffer] = useState<{ m: Manifest; urgent: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [waited, setWaited] = useState<number | null>(null);   // seconds spent checking
   const [pct, setPct] = useState<number | null>(null);         // download percent
   const lastManual = useRef(0);
-  useEffect(() => { void loadSource(d.kv).then(setSrc); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (fixedSource === null) void loadSource(d.kv).then(setSrc); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function check() {
     const now = d.now();
@@ -34,12 +39,12 @@ export function UpdateCard({ deps }: { deps?: Partial<UpdateDeps> }) {
     const started = Date.now();
     const tick = setInterval(() => setWaited(Math.min(UPDATE_TIMEOUT_MS / 1000, Math.floor((Date.now() - started) / 1000))), 500);
     try {
-      await saveSource(d.kv, src);
+      if (fixedSource === null) await saveSource(d.kv, src);
       const prefix = await loadMirrorPrefix(d.kv);
-      const { manifest } = await fetchManifestFromSources(sourceList(src), d.fetchFn, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
-      const r = decide(manifest, LOCAL_VERSION_CODE, UPDATE_CHANNEL);
+      const { manifest } = await fetchManifestFromSources(fixedSource ? [fixedSource] : sourceList(src), d.fetchFn, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
+      const r = decide(manifest, current.code, current.channel);
       if (r.kind === 'update') { setOffer({ m: r.manifest, urgent: r.urgent }); setMsg(''); }
-      else setMsg(r.kind === 'latest' ? tr('已是最新版本({0})。', LOCAL_VERSION_NAME) : tr('更新源是别的渠道,已忽略。'));
+      else setMsg(r.kind === 'latest' ? tr('已是最新版本({0})。', current.name) : tr('更新源是别的渠道,已忽略。'));
     } catch (e) { setMsg(describeUpdateError(e)); } finally { clearInterval(tick); setWaited(null); setBusy(false); }
   }
   async function confirm() {
@@ -57,8 +62,8 @@ export function UpdateCard({ deps }: { deps?: Partial<UpdateDeps> }) {
 
   return (
     <div className="card" data-testid="update-card">
-      <label>{tr('应用内更新(当前版本 {0})', LOCAL_VERSION_NAME)}</label>
-      <input value={src} onChange={e => setSrc(e.target.value)} inputMode="url" autoCapitalize="off" placeholder={tr('更新地址(version.json),没填就是未配置源')} aria-label={tr('更新地址')} />
+      <label>{tr('应用内更新(当前版本 {0})', current.name)}</label>
+      {fixedSource ? <div className="muted">{tr('测试版：从仓库的测试版页面检查新版本，每次打开 App 也会自动看一眼。')}</div> : <input value={src} onChange={e => setSrc(e.target.value)} inputMode="url" autoCapitalize="off" placeholder={tr('更新地址(version.json),没填就是未配置源')} aria-label={tr('更新地址')} />}
       <button className="ghost" disabled={busy} onClick={check}>{tr('检查更新')}</button>
       {msg && <div className="muted" role="status" data-testid="update-msg">{msg}</div>}
       {waited !== null && <div className="muted" data-testid="update-check-progress">
