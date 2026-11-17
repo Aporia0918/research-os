@@ -37,7 +37,7 @@ export function examPayload(i: ExamInput): Record<string, unknown> {
     ...(i.allow?.length ? { allow: i.allow } : {}) };
 }
 export function powerPayload(i: ExamInput): Record<string, unknown> {
-  const { allow: _vouched, ...exam } = examPayload(i); // the detection-rate check has no label-copy screen
+  const exam = examPayload({ ...i, allow: undefined }); // the detection-rate check has no label-copy screen
   return { ...exam, runs: POWER_RUNS, effects: [...POWER_EFFECTS], fractions: [...POWER_FRACTIONS] };
 }
 /** How many times the computer will run the script for this task, read from what the server holds. */
