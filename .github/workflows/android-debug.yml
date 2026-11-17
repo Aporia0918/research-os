@@ -73,7 +73,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish the 测试版 (test-builds branch for jsDelivr, then the GitHub pre-release)
+      - name: Publish the 测试版 (test-builds branch and tb tag for jsDelivr, then the GitHub pre-release)
         # GitHub downloads are often unreachable from mainland China, so each test build also goes on the orphan
         # branch test-builds (one APK, one version.json, history replaced every time) that jsDelivr serves from
         # several CDNs. version.json lists the jsDelivr copies first (pinned to the APK's commit) and GitHub last;
@@ -103,7 +103,16 @@ jobs:
                   + [{url:$gh, priority:40}]),
               releaseNotes:("测试版 " + $name + "（" + $short + "）"), publishedAt:$at, channel:"test"}' > "$out/version.json"
           cp "$out/version.json" "$tb/"; git -C "$tb" add version.json; git -C "$tb" commit -qm "测试版 1.4.$code version.json"
-          git -C "$tb" push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" test-builds
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -C "$tb" push -qf "$remote" test-builds
+          # A tag per build (tb-<code>) on a commit holding only version.json: an address that never changes, so no
+          # jsDelivr cache can hide it (the branch copy above stayed on an old build for hours). Keep the last ten.
+          vj="$RUNNER_TEMP/tag"; git init -q -b tag "$vj"; cp "$out/version.json" "$vj/"
+          git -C "$vj" config user.name "github-actions[bot]"
+          git -C "$vj" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$vj" add version.json; git -C "$vj" commit -qm "测试版 1.4.$code version.json"; git -C "$vj" tag "tb-$code"
+          git -C "$vj" push -q "$remote" "tb-$code"
+          git -C "$vj" push -q "$remote" --delete "tb-$((code - 10))" 2>/dev/null || true
 
           gh release delete test-latest --yes --cleanup-tag 2>/dev/null || true
           gh release create test-latest "$out/$apk" "$out/version.json" --prerelease --target "$GITHUB_SHA" \
@@ -124,16 +133,9 @@ jobs:
           java -cp "$d" dev.paperlab.assistant.UpdateDownloadCheck \
             "$(jq -r '.apk[-1].url' "$v")" "$(jq -r .size "$v")" "$(jq -r .sha256 "$v")" \
             $(jq -r '.apk[:-1][].url' "$v")
-          # The purge can take a little while to reach every CDN: ask again each 30 s for up to 5 minutes.
           code=$(jq -r .versionCode "$v")
-          for h in gcore fastly cdn; do
-            got=none
-            for try in $(seq 1 10); do
-              got=$(curl -sS -m 30 "https://$h.jsdelivr.net/gh/${GITHUB_REPOSITORY}@test-builds/version.json" | jq -r .versionCode 2>/dev/null || echo none)
-              [ "$got" = "$code" ] && break
-              curl -sS -m 30 -o /dev/null "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@test-builds/version.json" || true
-              sleep 30
-            done
-            [ "$got" = "$code" ] && echo "ok   $h.jsdelivr.net version.json is $got" \
-              || echo "::warning::$h.jsdelivr.net version.json is $got, not $code after 5 minutes; the app also asks GitHub and takes the newest"
+          for h in gcore fastly; do
+            got=$(curl -sS -m 30 "https://$h.jsdelivr.net/gh/${GITHUB_REPOSITORY}@tb-$code/version.json" | jq -r .versionCode 2>/dev/null || echo none)
+            [ "$got" = "$code" ] && echo "ok   $h.jsdelivr.net tb-$code/version.json is $got" \
+              || { echo "::error::$h.jsdelivr.net tb-$code/version.json is $got, not $code"; exit 1; }
           done

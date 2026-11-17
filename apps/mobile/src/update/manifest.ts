@@ -190,13 +190,14 @@ export function sourceList(userSource: string, sources: readonly UpdateSource[] 
   return [u];
 }
 /**
- * Ask every source at once, each with its own hard timeout, and take the newest valid version.json.
- * A CDN copy can lag behind GitHub (or the other way round), so the highest versionCode wins; on a tie the earlier
- * source in the list wins. When none answers, the error of the first source is reported.
+ * Ask every source at once, each with its own hard timeout, and take the newest valid version.json; on a tie the
+ * earlier source wins. With `absentOk` (a test build's per-version jsDelivr tags), a 404 means "that build is not out":
+ * when nothing answered with a version.json but some source answered 404, the result is null (nothing newer).
+ * Otherwise, when none answers, the error of the last source (the main one, GitHub) is reported.
  */
 export async function fetchManifestFromSources(
-  urls: readonly string[], f: typeof fetch = fetch, timeoutMs = UPDATE_TIMEOUT_MS, opts: ResolveOpts = {},
-): Promise<{ manifest: Manifest; url: string }> {
+  urls: readonly string[], f: typeof fetch = fetch, timeoutMs = UPDATE_TIMEOUT_MS, opts: ResolveOpts & { absentOk?: boolean } = {},
+): Promise<{ manifest: Manifest; url: string } | null> {
   if (!urls.length) throw new UpdateError('no_source');
   const got = await Promise.allSettled(urls.map(u => fetchManifest(u, f, timeoutMs, opts)));
   let best: { manifest: Manifest; url: string } | null = null;
@@ -204,7 +205,9 @@ export async function fetchManifestFromSources(
     if (r.status === 'fulfilled' && (!best || r.value.versionCode > best.manifest.versionCode)) best = { manifest: r.value, url: urls[i] };
   });
   if (best) return best;
-  throw (got[0] as PromiseRejectedResult).reason;
+  const errs = got.map(r => (r as PromiseRejectedResult).reason);
+  if (opts.absentOk && errs.some(e => e instanceof UpdateError && e.code === 'http' && e.status === 404)) return null;
+  throw errs[errs.length - 1];
 }
 
 /** One mirror attempt: must check size then sha256 and delete the file on mismatch. */
@@ -292,8 +295,9 @@ export async function autoCheckUpdate(kv: KV, now: number, localCode: number, ch
   await markAutoCheck(kv, now);
   try {
     const prefix = await loadMirrorPrefix(kv);
-    const { manifest } = await fetchManifestFromSources(opts.sources ?? sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
-    const d = decide(manifest, localCode, channel);
+    const got = await fetchManifestFromSources(opts.sources ?? sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix, absentOk: !!opts.sources });
+    if (!got) return null;
+    const d = decide(got.manifest, localCode, channel);
     return d.kind === 'update' ? d.manifest : null;
   } catch { return null; }
 }

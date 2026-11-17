@@ -1,6 +1,6 @@
 // In-app update client against a LOCAL test server only (no hosting account). 非真机: native download/install not exercised.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { TEST_MANIFEST_URL, TEST_MANIFEST_URLS } from '../src/update/version';
+import { TEST_MANIFEST_URL, testManifestUrls } from '../src/update/version';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createHash } from 'node:crypto';
@@ -222,7 +222,7 @@ describe('T7 1.4: 10 s hard timeout, ordered sources (GitHub only), download pro
   });
   it('tries the next source after a failing one, in order', async () => {
     const r = await fetchManifestFromSources([`${base}/v/500.json`, 'http://127.0.0.1:9/v.json', `${base}/v/ok.json`], fetch, 400);
-    expect(r.url).toBe(`${base}/v/ok.json`); expect(r.manifest.versionCode).toBe(2);
+    expect(r?.url).toBe(`${base}/v/ok.json`); expect(r?.manifest.versionCode).toBe(2);
     const e = await fetchManifestFromSources([`${base}/v/slow.json`], fetch, 300).catch(x => x);
     expect(e.code).toBe('timeout');
   });
@@ -234,14 +234,30 @@ describe('T7 1.4: 10 s hard timeout, ordered sources (GitHub only), download pro
       return new Response(at(u.includes('new') ? 9 : 8));
     }) as unknown as typeof fetch;
     const r = await fetchManifestFromSources(['https://down/v.json', 'https://cdn-old/v.json', 'https://slow-new/v.json'], f, 1000);
-    expect(r.url).toBe('https://slow-new/v.json'); expect(r.manifest.versionCode).toBe(9);
+    expect(r?.url).toBe('https://slow-new/v.json'); expect(r?.manifest.versionCode).toBe(9);
     const tie = await fetchManifestFromSources(['https://a-old/v.json', 'https://b-old/v.json'], f, 1000);
-    expect(tie.url).toBe('https://a-old/v.json');
+    expect(tie?.url).toBe('https://a-old/v.json');
     expect((await fetchManifestFromSources(['https://down/1', 'https://down/2'], f, 1000).catch(x => x)).code).toBe('offline');
   });
-  it('test builds look at jsDelivr copies first and GitHub last', () => {
-    expect(TEST_MANIFEST_URLS.at(-1)).toBe(TEST_MANIFEST_URL);
-    expect(TEST_MANIFEST_URLS.slice(0, -1).every(u => /^https:\/\/\w+\.jsdelivr\.net\/gh\/Aporia0918\/research-os@test-builds\/version\.json$/.test(u))).toBe(true);
+  it('test builds ask jsDelivr for the next few version tags, and GitHub', () => {
+    const u = testManifestUrls(118);
+    expect(u.at(-1)).toBe(TEST_MANIFEST_URL);
+    expect(u).toContain('https://gcore.jsdelivr.net/gh/Aporia0918/research-os@tb-119/version.json');
+    expect(u).toContain('https://fastly.jsdelivr.net/gh/Aporia0918/research-os@tb-121/version.json');
+    expect(u.some(x => x.includes('@tb-118/') || x.includes('@tb-122/') || x.includes('@test-builds'))).toBe(false);
+  });
+  it('a missing tag means "not out yet": nothing newer instead of an error, even with GitHub down', async () => {
+    const f = (async (u: string) => {
+      if (u.includes('github')) throw new Error('offline');
+      if (u.includes('tb-120')) return new Response(JSON.stringify({ ...manifest(), versionCode: 120 }));
+      return new Response('Not found', { status: 404 });
+    }) as unknown as typeof fetch;
+    expect((await fetchManifestFromSources(testManifestUrls(118), f, 1000, { absentOk: true }))?.manifest.versionCode).toBe(120);
+    expect(await fetchManifestFromSources(testManifestUrls(120), f, 1000, { absentOk: true })).toBeNull();
+    const down = (async () => { throw new Error('offline'); }) as unknown as typeof fetch;
+    expect((await fetchManifestFromSources(testManifestUrls(120), down, 1000, { absentOk: true }).catch(x => x)).code).toBe('offline');
+    // without absentOk a 404 stays an error (the stable channel's single address)
+    expect((await fetchManifestFromSources(['https://x/v.json'], f, 1000).catch(x => x)).status).toBe(404);
   });
   it('reports download progress up to 100%', async () => {
     const seen: number[] = [];

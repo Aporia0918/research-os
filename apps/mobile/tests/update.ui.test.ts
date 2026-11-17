@@ -37,7 +37,7 @@ describe('T6 update UI', () => {
       apk: [{ url: 'https://github.com/Aporia0918/research-os/releases/download/test-latest/researchos-test-140.apk', priority: 10 }] });
     const f = (async (u: string) => { seen.push(u); return new Response(test); }) as unknown as typeof fetch;
     host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host);
-    const current = { code: 139, name: '1.4.139', channel: 'test', sources: ['https://gcore.jsdelivr.net/gh/Aporia0918/research-os@test-builds/version.json', 'https://github.com/Aporia0918/research-os/releases/download/test-latest/version.json'] };
+    const current = { code: 139, name: '1.4.139', channel: 'test', sources: ['https://gcore.jsdelivr.net/gh/Aporia0918/research-os@tb-140/version.json', 'https://github.com/Aporia0918/research-os/releases/download/test-latest/version.json'] };
     await act(async () => { root!.render(createElement(UpdateCard, { testBuild: true, current, deps: { kv: memoryKV(), fetchFn: f, now: () => 9e12 } })); });
     expect(host.querySelector('input')).toBeNull();
     await click(btn(host, '检查更新'));

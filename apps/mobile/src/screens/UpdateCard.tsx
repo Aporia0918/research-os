@@ -43,8 +43,8 @@ function UpdateChecker({ deps, fixedSources, current }: { deps?: Partial<UpdateD
     try {
       if (fixedSources === null) await saveSource(d.kv, src);
       const prefix = await loadMirrorPrefix(d.kv);
-      const { manifest } = await fetchManifestFromSources(fixedSources ?? sourceList(src), d.fetchFn, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
-      const r = decide(manifest, current.code, current.channel);
+      const got = await fetchManifestFromSources(fixedSources ?? sourceList(src), d.fetchFn, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix, absentOk: fixedSources !== null });
+      const r = got ? decide(got.manifest, current.code, current.channel) : { kind: 'latest' as const };
       if (r.kind === 'update') { setOffer({ m: r.manifest, urgent: r.urgent }); setMsg(''); }
       else setMsg(r.kind === 'latest' ? tr('已是最新版本({0})。', current.name) : tr('更新源是别的渠道,已忽略。'));
     } catch (e) { setMsg(describeUpdateError(e)); } finally { clearInterval(tick); setWaited(null); setBusy(false); }
