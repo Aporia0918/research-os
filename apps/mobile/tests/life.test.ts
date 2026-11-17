@@ -102,10 +102,10 @@ describe('生活 screen', () => {
   it('a risk message gets the fixed care message at once, with no model call and nothing to record', async () => {
     const model: LifeModel = { reply: vi.fn(async () => '嗯'), flag: vi.fn(async () => false) };
     const h = await mount(createElement(LifeScreen, { model }));
-    expect(h.querySelector('[data-testid=life-hello]')?.textContent).toContain('我是小账');
-    expect(h.querySelector('.helper-head [data-testid=mascot]')?.getAttribute('data-mood')).toBe('happy');
+    expect(h.querySelector('[data-testid=life-hello]')?.textContent).toContain('我是账账');
+    expect(h.querySelector('[data-testid=zhangzhang]')?.getAttribute('data-state')).toBe('wave');
     await say(h, '我决定了，不想活了');
-    expect(h.querySelector('.helper-head [data-testid=mascot]')?.getAttribute('data-mood')).toBe('worried');
+    expect(h.querySelector('[data-testid=zhangzhang]')?.getAttribute('data-state')).toBe('hug');
     expect(h.querySelector('[data-testid=life-care]')?.textContent).toContain('12356');
     expect(model.reply).not.toHaveBeenCalled();
     expect(h.querySelector('[data-testid=life-record]')).toBeNull();
@@ -139,11 +139,13 @@ describe('生活 screen', () => {
   it('the ledger screen switches boards; 生活 shows the chat, not the debts', async () => {
     const h = await mount(createElement(LedgerScreen));
     expect(h.querySelector('[data-testid=ledger-hero]')).not.toBeNull();
-    expect(document.documentElement.dataset.look).toBe('scifi');
+    expect(document.documentElement.dataset.board).toBe('科研');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#3d7bff');
     await act(async () => { [...h.querySelectorAll<HTMLButtonElement>('[data-testid=board-switch] button')].find(b => b.textContent === '生活')!.click(); });
     await flush();
     expect(h.querySelector('[data-testid=life-chat]')).not.toBeNull();
-    expect(document.documentElement.dataset.look).toBe('warm');
+    expect(document.documentElement.dataset.board).toBe('生活');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#ff9f7a');
     expect(h.querySelector('[data-testid=ledger-hero]')).toBeNull();
   });
 });

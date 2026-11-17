@@ -1,6 +1,10 @@
-// Two looks: 学习 and 科研 are a dark sci-fi console (cold blue light, thin lines); 生活 is warm and soft.
-// The look is a data attribute on <html>; styles.css redefines the colour tokens under it.
-export type Look = 'scifi' | 'warm';
-export function setLook(look: Look): void {
-  if (typeof document !== 'undefined') document.documentElement.dataset.look = look;
+// The board's colours (src/jelly/theme.ts) go on <html>, so every page and every jelly surface takes them. The colours
+// are registered as <color> in jelly.css, so switching board fades them over 400 ms.
+import { THEMES, themeVars, type Board } from './jelly/theme';
+
+export function setBoardTheme(board: Board): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.dataset.board = board;
+  for (const [k, v] of Object.entries(themeVars(THEMES[board]))) root.style.setProperty(k, String(v));
 }

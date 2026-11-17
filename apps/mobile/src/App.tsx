@@ -1,5 +1,5 @@
 import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } from './i18n';
-import { setLook } from './look';
+import { setBoardTheme } from './look';
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
@@ -13,9 +13,13 @@ import { autoCheckUpdate } from './update/manifest';
 import { CURRENT, TEST_BUILD } from './update/version';
 import { Icon, type IconName } from './icons';
 import { JellyDemo } from './jelly/JellyDemo';
+import { Backdrop } from './jelly/Backdrop';
+import { jellyPress } from './jelly/spring';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
+/** Everything a finger presses on the real pages squashes and springs back like the jelly demo. */
+const PRESSABLE = 'button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip';
 /** One main line on the surface: borrow (提问), repay and read the report (账本). Research tools sit in one tab. */
 type Tab = 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
@@ -25,7 +29,8 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
 
 export function App() {
   const [tab, setTab] = useState<Tab>('ledger');
-  useEffect(() => { if (tab !== 'ledger') setLook('scifi'); }, [tab]);
+  useEffect(() => { if (tab === 'research') setBoardTheme('科研'); }, [tab]); // 账本 sets its own board's colours
+  useEffect(() => jellyPress(PRESSABLE), []);
   const [researchStart, setResearchStart] = useState<'exam' | null>(null);
   /** From the ledger home straight into 提问 or 科研 → 零世界. */
   const go = (to: 'ask' | 'exam') => { setResearchStart(to === 'exam' ? 'exam' : null); setTab(to === 'exam' ? 'research' : 'ask'); };
@@ -48,13 +53,14 @@ export function App() {
     }, STARTUP_CHECK_DELAY_MS);
     return () => { live = false; clearTimeout(t); };
   }, []);
-  /** Test builds open on the jelly demo page until the owner confirms the look; 设置 can open it again. */
-  const [jelly, setJelly] = useState(TEST_BUILD);
+  /** The jelly demo page (owner approved the look 2026-11-17); 设置 opens it. */
+  const [jelly, setJelly] = useState(false);
   const chooseLang = (l: Lang) => { setLang(l); void saveLang(preferencesKV, l); };
   const toggleDemo = (on: boolean) => { setDemo(on); void saveDemo(preferencesKV, on); };
   if (jelly) return <JellyDemo onExit={() => setJelly(false)} />;
   return (
     <div className="app" data-lang={lang}>
+      <Backdrop />
       {newVer && (
         <div className="card" role="note" data-testid="update-banner">
           {tr('发现新版本 {0}。到设置页点“检查更新”查看说明,确认后才会安装。', newVer)}

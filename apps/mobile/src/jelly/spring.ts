@@ -34,6 +34,16 @@ export function runSpring(from: number, to: number, s: SpringSpec, onFrame: (x: 
   return () => cancel(id);
 }
 
+interface Squash { u: number; v: number; stop: () => void }
+/** Moves `el` toward squash `target` (0 rest, 1 = `shape`) on spring `spec`, carrying the current speed over. */
+function squashTo(el: () => HTMLElement | null, st: Squash, shape: [number, number], target: number, spec: SpringSpec) {
+  st.stop();
+  st.stop = runSpring(st.u, target, spec, (x, v) => {
+    st.u = x; st.v = v;
+    const e = el(); if (e) e.style.scale = `${1 + (shape[0] - 1) * x} ${1 + (shape[1] - 1) * x}`;
+  }, st.v);
+}
+
 /**
  * Squash and spring back, anchored where the element's transform-origin is. `amount` 0 is at rest, 1 is fully squashed
  * to `shape` [scaleX, scaleY]; overshoot past 0 is the wobble. Uses the individual `scale` property, so it adds to any
@@ -41,15 +51,9 @@ export function runSpring(from: number, to: number, s: SpringSpec, onFrame: (x: 
  */
 export function useSquash<T extends HTMLElement>(shape: [number, number], release: SpringSpec) {
   const ref = useRef<T | null>(null);
-  const st = useRef({ u: 0, v: 0, stop: () => {}, pop: 0 as ReturnType<typeof setTimeout> | 0 });
+  const st = useRef<Squash & { pop: ReturnType<typeof setTimeout> | 0 }>({ u: 0, v: 0, stop: () => {}, pop: 0 });
   const [sx, sy] = shape;
-  const go = useCallback((target: number, spec: SpringSpec) => {
-    const s = st.current; s.stop();
-    s.stop = runSpring(s.u, target, spec, (x, v) => {
-      s.u = x; s.v = v;
-      if (ref.current) ref.current.style.scale = `${1 + (sx - 1) * x} ${1 + (sy - 1) * x}`;
-    }, s.v);
-  }, [sx, sy, release]); // eslint-disable-line react-hooks/exhaustive-deps
+  const go = useCallback((target: number, spec: SpringSpec) => squashTo(() => ref.current, st.current, [sx, sy], target, spec), [sx, sy]);
   const press = useCallback(() => go(1, QUICK), [go]);
   const letGo = useCallback(() => go(0, release), [go, release]);
   /** Squash by `amount` and spring back on its own: a tap, or the squeeze when the mascot changes state. */
@@ -60,4 +64,27 @@ export function useSquash<T extends HTMLElement>(shape: [number, number], releas
   }, [go, release]);
   useEffect(() => () => { st.current.stop(); if (st.current.pop) clearTimeout(st.current.pop); }, []);
   return { ref, press, release: letGo, pop };
+}
+
+/** The jelly press for plain buttons anywhere on the page: 1.06 / 0.9 from the bottom edge, released on 0.32 / 380. */
+export const PRESS_SHAPE: [number, number] = [1.06, 0.9];
+export const PRESS_RELEASE: SpringSpec = { dampingRatio: 0.32, stiffness: 380 };
+
+/**
+ * One pair of listeners gives every element matching `selector` the jelly press, so existing screens need no change.
+ * Returns the function that removes the listeners.
+ */
+export function jellyPress(selector: string): () => void {
+  const live = new WeakMap<HTMLElement, Squash>();
+  let held: HTMLElement | null = null;
+  const state = (el: HTMLElement) => { let s = live.get(el); if (!s) { s = { u: 0, v: 0, stop: () => {} }; live.set(el, s); } return s; };
+  const down = (e: PointerEvent) => {
+    const el = (e.target as Element | null)?.closest?.(selector) as HTMLElement | null;
+    if (!el || (el as HTMLButtonElement).disabled) return;
+    held = el; squashTo(() => el, state(el), PRESS_SHAPE, 1, QUICK);
+  };
+  const up = () => { const el = held; held = null; if (el) squashTo(() => el, state(el), PRESS_SHAPE, 0, PRESS_RELEASE); };
+  document.addEventListener('pointerdown', down);
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  return () => { document.removeEventListener('pointerdown', down); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
 }

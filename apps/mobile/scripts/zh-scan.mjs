@@ -48,6 +48,7 @@ function prose(s) {
   if (/^\$\{[^}]*\}\/[\w/.-]+$/.test(s.trim())) return false;      // URL join like ${base}/chat/completions                              // API path
   if (/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$/.test(s.trim())) return false; // storage key like settings.demoMode.v1
   if (/^(voice|photo)\.\$\{/.test(s.trim())) return false;            // generated upload file name, not shown
+  if (/^[a-z.\-\s>,]+$/.test(s) && /(?:^|\s)\.[a-z]/.test(s)) return false; // CSS selector list (App.tsx jelly press)
   if (/^(?:translate|rotate|scale)\([\d\s.,-]+\)$/.test(s.trim())) return false; // SVG transform (Mascot.tsx)
   if (/^M[\d.\s,a-zA-Z-]+$/.test(s.trim()) && !/[a-z]{2,}/i.test(s.replace(/[MmLlHhVvCcSsQqTtAaZz](?=[\d.\s-]|$)/g, ''))) return false; // SVG path data (icons.tsx)
   let t = s; for (const a of ALLOW) t = t.split(a).join(' ');

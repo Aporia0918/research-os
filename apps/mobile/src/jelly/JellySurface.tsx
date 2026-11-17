@@ -4,10 +4,7 @@
 // follows the finger (screen blend) ⑥ a c2 light spot cast under the bottom edge. Cards drift their corners and float;
 // a press squashes from the bottom edge to 1.06 / 0.9 and the release springs back (dampingRatio 0.32, stiffness 380).
 import { useRef, type CSSProperties, type HTMLAttributes, type PointerEvent, type ReactNode } from 'react';
-import { useSquash, type SpringSpec } from './spring';
-
-const RELEASE: SpringSpec = { dampingRatio: 0.32, stiffness: 380 };
-const PRESSED: [number, number] = [1.06, 0.9];
+import { PRESS_RELEASE, PRESS_SHAPE, useSquash } from './spring';
 
 /** Idle beat for the n-th card: 6–9 s periods that never line up between neighbours. */
 export function beat(n: number): { dur: number; delay: number } {
@@ -22,7 +19,7 @@ interface Props extends HTMLAttributes<HTMLElement> {
 }
 
 export function JellySurface({ as = 'div', shape = 'card', n = 0, pressable = as === 'button', className = '', style, children, ...rest }: Props) {
-  const squash = useSquash<HTMLElement>(PRESSED, RELEASE);
+  const squash = useSquash<HTMLElement>(PRESS_SHAPE, PRESS_RELEASE);
   const wet = useRef<HTMLSpanElement | null>(null);
   const b = beat(n);
   const follow = (e: PointerEvent<HTMLElement>, down: boolean) => {

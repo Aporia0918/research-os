@@ -6,9 +6,9 @@ import { Icon, type IconName } from '../icons';
 import { JellySurface } from './JellySurface';
 import { BOARDS, THEMES, themeVars, type Board } from './theme';
 import { ZZ, Zhangzhang, type ZzState } from './Zhangzhang';
-import './jelly.css';
+import { RESIDENT } from './mood';
+import { Backdrop } from './Backdrop';
 
-const RESIDENT: Record<Board, ZzState> = { 生活: 'life', 学习: 'study', 科研: 'research' };
 const STATES: ZzState[] = ['idle', 'wave', 'smile', 'write', 'dun', 'paid', 'think', 'confused', 'sleepy', 'hug', 'lens'];
 const TAB_ICON: Record<Board, IconName> = { 生活: 'guide', 学习: 'ledger', 科研: 'research' };
 
@@ -76,7 +76,7 @@ export function JellyDemo({ onExit }: { onExit?: () => void }) {
   const shown = ZZ[state];
   return (
     <div className={noBlur ? 'jl no-blur' : 'jl'} style={themeVars(THEMES[board])} data-board={board} data-testid="jelly-demo">
-      <div className="jl-bg" aria-hidden="true"><i className="b1" /><i className="b2" /><i className="b3" /><i className="band" /></div>
+      <Backdrop />
       <header className="jl-top">
         <div><h1>{tr('账账和果冻')}</h1><p className="jl-muted">{tr('界面演示：按一按卡片和按钮，点一点账账')}</p></div>
         {onExit && <JellySurface as="button" type="button" shape="pill" n={1} className="jl-btn" onClick={onExit}>{tr('回到 App')}</JellySurface>}
