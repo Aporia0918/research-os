@@ -1,0 +1,28 @@
+{
+  "versionName": "1.4.124",
+  "versionCode": 124,
+  "minSupportedVersionCode": 1,
+  "sha256": "829f5b48c11fd22f7fae8fecc8978070e3cd8318c0c68ae2119597d1b07513bb",
+  "size": 10353740,
+  "apk": [
+    {
+      "url": "https://gcore.jsdelivr.net/gh/Aporia0918/research-os@1d4a44cc8665cca947d8f9ac42556d4958b6f188/researchos-test-124.apk",
+      "priority": 10
+    },
+    {
+      "url": "https://fastly.jsdelivr.net/gh/Aporia0918/research-os@1d4a44cc8665cca947d8f9ac42556d4958b6f188/researchos-test-124.apk",
+      "priority": 20
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Aporia0918/research-os@1d4a44cc8665cca947d8f9ac42556d4958b6f188/researchos-test-124.apk",
+      "priority": 30
+    },
+    {
+      "url": "https://github.com/Aporia0918/research-os/releases/download/test-latest/researchos-test-124.apk",
+      "priority": 40
+    }
+  ],
+  "releaseNotes": "测试版 1.4.124（b2f0de2）",
+  "publishedAt": "2026-11-17T07:56:42Z",
+  "channel": "test"
+}
