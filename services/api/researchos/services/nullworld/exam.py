@@ -1,0 +1,135 @@
+"""The null-world exam: run the script on the real data, on structure-preserving null worlds and (optionally) on
+naive shuffles, then judge. Deterministic for a given seed; every world's seed is derived from it."""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import sys
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field, replace
+from functools import partial
+from pathlib import Path
+from random import Random
+from typing import Any
+
+from . import runner
+from .screen import Suspect, label_copies
+from .table import Table, TableError
+from .verdict import TOLERANCE, Verdict, chance_level, judge
+from .worlds import Layout, layout, naive_labels, null_labels
+
+Run = Callable[[bytes], runner.RunResult]
+
+
+@dataclass(frozen=True)
+class ExamSpec:
+    script: Path
+    data: Path
+    group: str
+    label: str
+    metric: str = "accuracy"
+    runs: int = 20
+    contrast: bool = False  # also run as many naive row shuffles, to show what the textbook check would say
+    seed: int = 0
+    chance: float | None = None  # override when the metric's chance level is not the default
+    tolerance: float = TOLERANCE
+    project: Path | None = None  # folder the script runs in; defaults to the script's folder
+    python: str = sys.executable
+    timeout_s: float = 600.0
+    workers: int = field(default_factory=lambda: max(1, min(4, (os.cpu_count() or 2) // 2)))
+    allow: tuple[str, ...] = ()  # columns the person confirmed are real measurements, not derived from the label
+
+
+@dataclass(frozen=True)
+class ExamReport:
+    verdict: Verdict
+    real: float | None
+    nulls: list[float | None]
+    naive: list[float | None]
+    layout: Layout
+    seed: int
+    data_sha256: str
+    script_sha256: str
+    errors: list[str]  # distinct run errors, first few
+    suspects: list[Suspect] = field(default_factory=list)  # feature columns that already hold the label
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def _job(spec: ExamSpec) -> runner.Job:
+    project = (spec.project or spec.script.parent).resolve()
+    try:
+        script, data = spec.script.resolve().relative_to(project), spec.data.resolve().relative_to(project)
+    except ValueError as e:
+        raise TableError("the script and the data must both be inside the project folder") from e
+    return runner.Job(project, script, data, spec.python, spec.metric, spec.timeout_s)
+
+
+@dataclass(frozen=True)
+class Data:
+    raw: bytes
+    table: Table
+    labels: list[str]
+    groups: list[str]
+    layout: Layout
+
+
+def load(spec: ExamSpec) -> Data:
+    raw = spec.data.read_bytes()
+    table = Table.parse(raw)
+    labels, groups = table.column(spec.label), table.column(spec.group)
+    if any(g == "" for g in groups):
+        raise TableError(f"column {spec.group!r} has empty cells; every row needs a group")
+    return Data(raw, table, labels, groups, layout(labels, groups))
+
+
+def executor(spec: ExamSpec, run: Run | None) -> Run:
+    """`run` executes the script on one world's table bytes; the default runs it locally as a child process."""
+    return run or partial(runner.run, _job(spec))
+
+
+def distinct_errors(results: list[runner.RunResult]) -> list[str]:
+    return list(dict.fromkeys(r.error for r in results if r.error))[:5]
+
+
+def null_chance(metric: str, worlds: list[list[str]]) -> float:
+    """Chance level averaged over the null worlds' own labels. Moving whole groups changes the class balance when
+    group size goes with the label (e.g. one class has more recordings per subject), so the real labels' majority
+    rate is not what a pipeline that learned nothing scores there."""
+    return sum(chance_level(metric, w) for w in worlds) / len(worlds)
+
+
+def run_exam(spec: ExamSpec, run: Run | None = None) -> ExamReport:
+    d, execute = load(spec), executor(spec, run)
+
+    def world(kind: str, i: int) -> list[str]:
+        rng = Random(f"{spec.seed}:{kind}:{i}")
+        return null_labels(d.labels, d.groups, d.layout.mode, rng) if kind == "null" else naive_labels(d.labels, rng)
+
+    tasks = [("null", i) for i in range(spec.runs)] + [("naive", i) for i in range(spec.runs if spec.contrast else 0)]
+    worlds = [world(*t) for t in tasks]
+    with ThreadPoolExecutor(max_workers=spec.workers) as pool:
+        real_f = pool.submit(execute, d.raw)
+        results = list(pool.map(lambda w: execute(d.table.with_column(spec.label, w).to_bytes()), worlds))
+    real = real_f.result()
+    nulls, naive = results[: spec.runs], results[spec.runs :]
+    chance = spec.chance if spec.chance is not None else null_chance(spec.metric, worlds[: spec.runs] or [d.labels])
+    verdict = judge(real.score, [r.score for r in nulls], chance, spec.tolerance)
+    suspects = label_copies(d.table, spec.group, spec.label, spec.allow)
+    if suspects and verdict.outcome != "fail":  # a structural leak keeps its own reason; it is the one to fix first
+        verdict = replace(verdict, outcome="fail", reason="feature_copies_label")
+    return ExamReport(
+        verdict=verdict,
+        real=real.score,
+        nulls=[r.score for r in nulls],
+        naive=[r.score for r in naive],
+        layout=d.layout,
+        seed=spec.seed,
+        data_sha256=hashlib.sha256(d.raw).hexdigest(),
+        script_sha256=hashlib.sha256(spec.script.read_bytes()).hexdigest(),
+        errors=distinct_errors([real, *results]),
+        suspects=suspects,
+    )
