@@ -32,8 +32,11 @@ describe('讲不出来 on the ledger screen', () => {
     root = createRoot(host);
     await act(async () => { root!.render(createElement(LedgerScreen)); });
     await flush();
+    await act(async () => { button(host!, '考前清单')!.click(); });
     type(host.querySelector('input[type=date]')!, addDays(today(), 1));
     await flush();
+    await act(async () => { button(host!, '‹ 账本')!.click(); });
+    await act(async () => { button(host!, '记一笔')!.click(); });
     type(field(host, '问了 AI 什么'), '这道换元积分怎么做');
     type(field(host, 'AI 的回答'), '令 u 等于里层函数，dx 换成 du 除以 u 的导数，积完再把 u 换回去。');
     await act(async () => { button(host!, '记下')!.click(); });
@@ -43,10 +46,13 @@ describe('讲不出来 on the ledger screen', () => {
     await act(async () => { button(host!, '讲不出来')!.click(); });
     await flush();
     expect(host.querySelector('[data-testid=explain-now]')).toBeNull();
+    expect(host.textContent).toContain('这一笔标红，排在考前清单最前面');
+    expect(host.querySelector('[data-testid=owed]')?.textContent).toBe('1');
+    await act(async () => { button(host!, '考前清单')!.click(); });
+    await flush();
     const first = host.querySelector('[data-testid=exam-list] li');
     expect(first?.className).toBe('red-mark');
     expect(first?.textContent).toContain('这道换元积分怎么做');
-    expect(host.textContent).toContain('这一笔标红，排在考前清单最前面');
     expect(host.textContent).not.toMatch(/分数|失败|不及格/);
   });
 });
@@ -62,7 +68,8 @@ describe('召回单 on the ledger screen (演示第三段, phone half)', () => {
     root = createRoot(host);
     await act(async () => { root!.render(createElement(LedgerScreen)); });
     await flush();
-    expect(host.querySelector('[data-testid=recall-slips]')).toBeNull();
+    expect(host.querySelector('[data-testid=recall-alert]')).toBeNull();
+    await act(async () => { button(host!, '考前清单')!.click(); });
     await act(async () => { button(host!, '用导入的论文查一遍召回')!.click(); });
     await flush();
     const slip = host.querySelector('[data-testid=recall-slip]');
@@ -77,6 +84,9 @@ describe('召回单 on the ledger screen (演示第三段, phone half)', () => {
     await flush();
     expect(host.querySelector('[data-testid=recall-slips]')).toBeNull();
     expect(host.textContent).toContain('这笔重新打开了');
-    expect([...host.querySelectorAll('button')].some(b => b.textContent === '空间滤波为什么放在分类之前')).toBe(true);
+    await act(async () => { button(host!, '‹ 账本')!.click(); });
+    await act(async () => { button(host!, '讲给我听 · 今天 1 笔')!.click(); });
+    await flush();
+    expect(host.querySelector('.item')?.textContent).toContain('空间滤波为什么放在分类之前');
   });
 });

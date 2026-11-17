@@ -7,7 +7,7 @@ import { LifeBook, TITLE_MAX, type Decision, type Week } from '../ledger/life';
 import { today } from '../ledger/book';
 import { CARE, LIFE_SYSTEM, LISTEN, OUTWARD, decision, redact, risk, unsafe } from '../rules/life';
 import { chat } from '../model/direct';
-import { loadKey, loadModelSettings } from '../model/settings';
+import { forJob, loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
 
@@ -23,7 +23,7 @@ async function configuredModel(): Promise<LifeModel | null> {
   if (!key || !s.baseUrl) return null;
   return {
     reply: (h) => chat(s, key, [{ role: 'system', content: LIFE_SYSTEM }, ...h.map((m) => ({ ...m, content: redact(m.content) }))]),
-    flag: async (t) => (await chat(s, key, [{ role: 'system', content: FLAG_SYSTEM }, { role: 'user', content: redact(t) }])).includes('是'),
+    flag: async (t) => (await chat(forJob(s, 'grade'), key, [{ role: 'system', content: FLAG_SYSTEM }, { role: 'user', content: redact(t) }])).includes('是'),
   };
 }
 

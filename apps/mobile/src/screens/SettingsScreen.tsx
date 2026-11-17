@@ -6,8 +6,10 @@ import { ResearchOsClient, describeError } from '../api/computer';
 import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
 import { book, today } from '../ledger/book';
-import { DEFAULT_MODEL_SETTINGS, clearKey, hasKey, loadKey, loadModelSettings, saveKey, saveModelSettings, type KeyHeader, type ModelSettings } from '../model/settings';
-import { chat, describeModelError } from '../model/direct';
+import { DEFAULT_MODEL_SETTINGS, OPENROUTER_BASE_URL, clearKey, hasKey, loadKey, loadModelSettings, saveKey, saveModelSettings, type Job, type KeyHeader, type ModelSettings } from '../model/settings';
+import { chat, describeModelError, listModels } from '../model/direct';
+
+const JOBS: { id: Job; label: string }[] = [{ id: 'grade', label: '判「讲给我听」用的模型' }, { id: 'photo', label: '看照片用的模型（要能读图）' }];
 
 export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; onComputer?: (enabled: boolean) => void }) {
   const [computer, setComputer] = useState<ComputerSettings>({ enabled: false, url: DEFAULT_COMPUTER_URL });
@@ -32,6 +34,14 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
     setKey('');
     setStatus(tr('已保存在这台手机上。密钥不会发给电脑,也不会显示出来。'));
   }
+  const [models, setModels] = useState<string[]>([]);
+  const useOpenRouter = () => { setMs({ ...ms, baseUrl: OPENROUTER_BASE_URL, header: 'bearer' }); setStatus(tr('已填好 OpenRouter 的地址。粘贴 OpenRouter 密钥，再选模型。')); };
+  async function readModels() {
+    setStatus(tr('正在读取模型列表…'));
+    try { const ids = await listModels(ms.baseUrl); setModels(ids); setStatus(tr('读到 {0} 个模型，在下面的框里输入几个字就能挑。', ids.length)); }
+    catch (e) { setStatus(describeModelError(e)); }
+  }
+  const setJob = (j: Job, v: string) => setMs({ ...ms, jobs: { ...ms.jobs, [j]: v } });
   async function removeKey() { await clearKey(preferencesKV); setKeyOnPhone(false); setStatus(tr('已从这台手机删除模型密钥,现在用规则模式。')); }
   async function testModel() {
     setStatus(tr('正在测试模型连接…'));
@@ -70,8 +80,21 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
       </div>
       <div className="card" data-testid="model-settings">
         <label>{tr('模型直连(可选;密钥只存在这台手机上,不发给电脑)')}</label>
+        <div className="muted">{tr('推荐 OpenRouter：一个密钥就能用各家模型，按名字切换。')}</div>
+        <div className="row">
+          <button className="ghost small" onClick={useOpenRouter}>{tr('用 OpenRouter')}</button>
+          <button className="ghost small" disabled={!ms.baseUrl} onClick={() => void readModels()}>{tr('读取模型列表')}</button>
+        </div>
         <input value={ms.baseUrl} onChange={e => setMs({ ...ms, baseUrl: e.target.value })} inputMode="url" autoCapitalize="off" placeholder="https://…/v1" aria-label={tr('模型地址(Base URL)')} />
-        <input value={ms.model} onChange={e => setMs({ ...ms, model: e.target.value })} autoCapitalize="off" placeholder={tr('模型名称')} aria-label={tr('模型名称')} />
+        <input list="model-names" value={ms.model} onChange={e => setMs({ ...ms, model: e.target.value })} autoCapitalize="off" placeholder={tr('模型名称')} aria-label={tr('模型名称')} />
+        <datalist id="model-names">{models.map(m => <option key={m} value={m} />)}</datalist>
+        <details className="more">
+          <summary>{tr('不同的事用不同的模型（可选）')}</summary>
+          {JOBS.map(j => (
+            <input key={j.id} list="model-names" value={ms.jobs?.[j.id] ?? ''} onChange={e => setJob(j.id, e.target.value)} autoCapitalize="off"
+              placeholder={tr('{0}：空着就用上面的', tr(j.label))} aria-label={tr(j.label)} />
+          ))}
+        </details>
         <select aria-label={tr('密钥放在哪个请求头')} value={ms.header} onChange={e => setMs({ ...ms, header: e.target.value as KeyHeader })}>
           <option value="bearer">Authorization: Bearer</option>
           <option value="x-api-key">x-api-key</option>

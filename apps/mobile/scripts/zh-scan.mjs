@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ALLOW = ['AI', 'JSON', 'CSV', 'TSV', 'accuracy', 'PdfError', 'version.json', 'MB', 'UpdateError', 'SHA-256', 'mem:', 'UpdateInstaller', 'Research OS', 'EEGNet', 'EEG', 'PDF', 'App', 'Hz', 'Adam', 'epoch', 'extra_allowed_hosts', 'http://', 'https://', 'Methods / Materials and Methods / Experimental setup / Dataset', 'Android', 'p.', 'HTTP', 'ERP', 'OK', 'English', 'Base URL', 'Authorization: Bearer', 'x-api-key', 'Bearer ', 'ModelError', 'NFKC', 'this item has no number that needs your confirmation', 'only a key action needs approval', 'Python', 'StratifiedGroupKFold', 'GroupShuffleSplit', 'GroupKFold', 'validation_split', 'validation_data', 'Pipeline', 'imblearn', 'transform', 'groups', 'ComBat', 'SMOTE', 'UMAP', 'PCA', 'fit', 'cv',
+const ALLOW = ['OpenRouter', 'AI', 'JSON', 'CSV', 'TSV', 'accuracy', 'PdfError', 'version.json', 'MB', 'UpdateError', 'SHA-256', 'mem:', 'UpdateInstaller', 'Research OS', 'EEGNet', 'EEG', 'PDF', 'App', 'Hz', 'Adam', 'epoch', 'extra_allowed_hosts', 'http://', 'https://', 'Methods / Materials and Methods / Experimental setup / Dataset', 'Android', 'p.', 'HTTP', 'ERP', 'OK', 'English', 'Base URL', 'Authorization: Bearer', 'x-api-key', 'Bearer ', 'ModelError', 'NFKC', 'this item has no number that needs your confirmation', 'only a key action needs approval', 'Python', 'StratifiedGroupKFold', 'GroupShuffleSplit', 'GroupKFold', 'validation_split', 'validation_data', 'Pipeline', 'imblearn', 'transform', 'groups', 'ComBat', 'SMOTE', 'UMAP', 'PCA', 'fit', 'cv',
   // Backend port (src/rules/*): parity reasons/errors compared verbatim with the Python golden tests,
   // never shown raw in the UI (UI uses Chinese labels / tr()).
   'rule mode cannot check paraphrases; this does not mean the claim has no support',
@@ -48,6 +48,7 @@ function prose(s) {
   if (/^\$\{[^}]*\}\/[\w/.-]+$/.test(s.trim())) return false;      // URL join like ${base}/chat/completions                              // API path
   if (/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$/.test(s.trim())) return false; // storage key like settings.demoMode.v1
   if (/^(voice|photo)\.\$\{/.test(s.trim())) return false;            // generated upload file name, not shown
+  if (/^M[\d.\s,a-zA-Z-]+$/.test(s.trim()) && !/[a-z]{2,}/i.test(s.replace(/[MmLlHhVvCcSsQqTtAaZz](?=[\d.\s-]|$)/g, ''))) return false; // SVG path data (icons.tsx)
   let t = s; for (const a of ALLOW) t = t.split(a).join(' ');
   t = t.replace(/\$\{[^}]*\}/g, ' ');
   if (!/[A-Za-z]{2,}/.test(t)) return false;

@@ -1,7 +1,7 @@
 // Direct model client: phone -> model API (OpenAI-compatible /chat/completions). No computer involved.
 // Errors are plain Chinese (via tr); the key is never part of any message, log or thrown error.
 import { tr } from '../i18n';
-import type { ModelSettings } from './settings';
+import { clampTimeout, type ModelSettings } from './settings';
 
 export type ModelErrorCode = 'no_key' | 'no_base_url' | 'bad_base_url' | 'timeout' | 'offline' | 'unauthorized' | 'rate_limited' | 'http' | 'bad_response';
 export class ModelError extends Error {
@@ -24,7 +24,9 @@ export function describeModelError(e: unknown): string {
 }
 
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
-export interface ChatMessage { role: 'system' | 'user' | 'assistant'; content: string }
+/** Text, or text plus a photo (data URL) for a model that reads pictures. */
+export type Part = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+export interface ChatMessage { role: 'system' | 'user' | 'assistant'; content: string | Part[] }
 
 export async function chat(s: ModelSettings, key: string, messages: ChatMessage[], f: FetchLike = fetch): Promise<string> {
   if (!key) throw new ModelError('no_key');
@@ -34,7 +36,7 @@ export async function chat(s: ModelSettings, key: string, messages: ChatMessage[
   if (s.header === 'x-api-key') headers['x-api-key'] = key; else headers.Authorization = `Bearer ${key}`;
   const ctl = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, rej) => { timer = setTimeout(() => { ctl.abort(); rej(new ModelError('timeout')); }, Math.min(8000, Math.max(1000, s.timeoutMs)) ); });
+  const timeout = new Promise<never>((_, rej) => { timer = setTimeout(() => { ctl.abort(); rej(new ModelError('timeout')); }, clampTimeout(s.timeoutMs)); });
   try {
     const res = await Promise.race([
       f(`${s.baseUrl.replace(/\/+$/, '')}/chat/completions`, { method: 'POST', headers, signal: ctl.signal,
@@ -59,4 +61,16 @@ export type Outcome<T> = { mode: 'model'; text: string } | { mode: 'rules'; resu
 export async function withFallback<T>(s: ModelSettings, key: string, messages: ChatMessage[], rules: () => T, f?: FetchLike): Promise<Outcome<T>> {
   try { return { mode: 'model', text: await chat(s, key, messages, f) }; }
   catch (e) { return { mode: 'rules', result: rules(), reason: describeModelError(e) }; }
+}
+
+/** Model names the service offers, read from its public /models list (OpenRouter needs no key for it, so none is sent). */
+export async function listModels(baseUrl: string, f: FetchLike = fetch): Promise<string[]> {
+  if (!/^https?:\/\//i.test(baseUrl)) throw new ModelError('bad_base_url');
+  let res: Response;
+  try { res = await f(`${baseUrl.replace(/\/+$/, '')}/models`); } catch { throw new ModelError('offline'); }
+  if (!res.ok) throw new ModelError('http', res.status);
+  const body = (await res.json().catch(() => null)) as { data?: { id?: unknown }[] } | null;
+  const ids = (body?.data ?? []).map(m => m.id).filter((x): x is string => typeof x === 'string' && x.length > 0);
+  if (!ids.length) throw new ModelError('bad_response');
+  return [...new Set(ids)].sort();
 }

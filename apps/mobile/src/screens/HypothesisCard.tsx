@@ -19,6 +19,7 @@ export function HypothesisCard({ plan, demo, onChange }: { plan: Plan; demo: boo
     if (demo || !canHypothesize(plan)) return;
     void loadHypotheses(preferencesKV, plan.id).then(setList);
     void queue.all().then(l => setLogs(l.map(x => ({ id: x.id, text: x.note, created_at: x.createdAt })).filter(x => x.text)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reload only when the plan or its state changes; queue is a fresh view of the same store
   }, [plan.id, plan.state, demo]);
   if (!canHypothesize(plan)) return null;
   const put = (h: Hypothesis) => setList(l => l.some(x => x.id === h.id) ? l.map(x => x.id === h.id ? h : x) : [...l, h]);

@@ -7,12 +7,13 @@ import { ResearchOsClient } from '../api/computer';
 import { loadComputerSettings } from '../settings';
 import { book, copyText, today } from '../ledger/book';
 import { chat } from '../model/direct';
-import { loadKey, loadModelSettings } from '../model/settings';
+import { forJob, loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
 import { loadPaper, paperPages } from '../local/paperStore';
 import type { Source } from '../rules/recall';
 import { LifeScreen } from './LifeScreen';
+import { Icon } from '../icons';
 
 const EXAM_KEY = 'mindledger.exam.v1';
 const LEVELS: { id: HelpLevel; label: string }[] = [
@@ -20,7 +21,8 @@ const LEVELS: { id: HelpLevel; label: string }[] = [
   { id: 'approach', label: tr('思路') }, { id: 'answer', label: tr('完整答案') },
 ];
 type Board = Entry['board'];
-const BOARDS: Board[] = ['科研', '学习', '生活'];
+type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz';
+const BOARDS: Board[] = ['学习', '科研', '生活'];
 const BOARD_KEY = 'mindledger.board.v1';
 /** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
 const ofBoard = (b: Board) => (e: Entry) => e.board === b;
@@ -29,7 +31,7 @@ const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 
 async function modelAsk(): Promise<Ask | undefined> {
   const [s, key] = await Promise.all([loadModelSettings(preferencesKV), loadKey(preferencesKV)]);
   if (!key || !s.baseUrl) return undefined;
-  return (q, ref, attempt) => chat(s, key, [{ role: 'system', content: GRADE_SYSTEM },
+  return (q, ref, attempt) => chat(forJob(s, 'grade'), key, [{ role: 'system', content: GRADE_SYSTEM },
     { role: 'user', content: `问题：\n${q}\n\n参考答案：\n${ref}\n\n不看 AI 写的作答：\n${attempt}` }]);
 }
 
@@ -64,6 +66,7 @@ export function LedgerScreen() {
   const [endNow, setEndNow] = useState(false);
   const [recalled, setRecalled] = useState<Entry[]>([]);
   const [disputing, setDisputing] = useState<string | null>(null);
+  const [view, setView] = useState<View>('home');
   const [draft, setDraft] = useState({ topic: '', question: '', answer: '', ownIdea: '', ai: '', level: 'answer' as HelpLevel });
 
   async function refresh(e = exam, end = endNow, b = board) {
@@ -73,7 +76,7 @@ export function LedgerScreen() {
     setQuiz((await book.quizDue(today(), end)).filter(ofBoard(b)));
     setReport(e ? await book.report(today(), e, b) : null);
   }
-  function pickBoard(b: Board) { setBoard(b); setNote(''); setFresh(null); setOpen(null); void preferencesKV.set(BOARD_KEY, b); void refresh(exam, endNow, b); }
+  function pickBoard(b: Board) { setBoard(b); setNote(''); setFresh(null); setOpen(null); setView('home'); void preferencesKV.set(BOARD_KEY, b); void refresh(exam, endNow, b); }
   useEffect(() => {
     void book.trialStart().then(async s => { if (s) await book.opened(today()); });
     void Promise.all([preferencesKV.get(EXAM_KEY), preferencesKV.get(BOARD_KEY)]).then(([e, b]) => {
@@ -92,8 +95,8 @@ export function LedgerScreen() {
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
   const switcher = (
-    <div role="tablist" className="board-switch" data-testid="board-switch">{BOARDS.map(b => (
-      <button key={b} role="tab" aria-selected={board === b} className={board === b ? '' : 'ghost'} onClick={() => pickBoard(b)}>{tr(b)}</button>
+    <div role="tablist" className="seg board-switch" data-testid="board-switch">{BOARDS.map(b => (
+      <button key={b} role="tab" aria-selected={board === b} onClick={() => pickBoard(b)}>{tr(b)}</button>
     ))}</div>
   );
   async function repay(id: string) {
@@ -122,7 +125,7 @@ export function LedgerScreen() {
   /** Check the paper already imported here against the ledger (a new import does this by itself). */
   async function scan() {
     const paper = await importedPaper();
-    if (!paper) { setNote(tr('还没导入论文。先在「向论文提问」里导入一篇。')); return; }
+    if (!paper) { setNote(tr('还没导入论文。先在「提问」里导入一篇。')); return; }
     const hits = await book.recallScan(paper, today());
     setNote(hits.length ? tr('{0} 条 AI 的说法被《{1}》的原话推翻，召回单在最上面。', hits.length, paper.name)
       : tr('《{0}》里没有和账上说法相反的原话。', paper.name));
@@ -148,46 +151,64 @@ export function LedgerScreen() {
     const e = await book.add({ clientId: newId(), board, topic: draft.topic, question: draft.question,
       answer: draft.answer, ownIdea: draft.ownIdea, ai: draft.ai, helpLevel: draft.level }, today(), exam || undefined);
     setDraft({ ...draft, question: '', answer: '', ownIdea: '' }); setNote('');
-    setFresh(e.weight && e.dueOn ? e : null); setSaid(''); await refresh();
+    setFresh(e.weight && e.dueOn ? e : null); setSaid(''); setView('home'); await refresh();
   }
 
-  if (board === '生活') return <section>{switcher}<LifeScreen /></section>;
-  return (
-    <section>
-      {switcher}
-      {recalled.length > 0 && (
-        <div className="card" data-testid="recall-slips">
-          <h2>{tr('召回单（{0} 条）', recalled.length)}</h2>
-          <p className="muted">{tr('你导入的论文里有原话和 AI 当时的说法相反。')}</p>
-          {recalled.map(e => { const r = openRecall(e); return (
-            <div key={e.id} className="red-mark" data-testid="recall-slip">
-              <b>{e.question}</b>
-              <div>{tr('当时 {0} 说：{1}', e.ai ?? 'AI', r.claim)}</div>
-              <div>{tr('《{0}》第 {1} 页：{2}', r.paper, r.page, r.quote)}</div>
-              <div role="group">
-                <button onClick={() => void accept(e.id)}>{tr('接受，重开这笔')}</button>
-                <button className="ghost" onClick={() => { setDisputing(disputing === e.id ? null : e.id); setSaid(''); }}>{tr('我有原文证据')}</button>
-              </div>
-              {disputing === e.id && (
-                <>
-                  <textarea value={said} placeholder={tr('贴一句导入论文里的原话，要支持 AI 当时的说法')} onChange={x => setSaid(x.target.value)} />
-                  <button disabled={!said.trim()} onClick={() => void dismiss(e.id)}>{tr('提交证据')}</button>
-                </>
-              )}
-            </div>
-          ); })}
+  if (board === '生活') return <section className="home">{switcher}<LifeScreen /></section>;
+  const back = <button className="back" onClick={() => { setView('home'); setOpen(null); }}>{tr('‹ 账本')}</button>;
+  const status = note && <p className="note" role="status">{note}</p>;
+
+  // Sub-pages: one job each, reached from the home screen. Nothing here is on the home screen itself.
+  if (view === 'due') return (
+    <section>{back}
+      <h1>{tr('讲给我听')}</h1>
+      {status}
+      {left !== null && <p className="muted" data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
+      {due.length === 0 && <div className="card"><p>{tr('今天没有要还的。')}</p></div>}
+      {due.map(e => e.kind ? (
+        <div key={e.id} className={`card${e.red ? ' red-mark' : ''}`} data-testid="conclusion-due">
+          <b>{e.question}</b>{e.red && <span className="pill bad">{redTag(e)}</span>}
+          <div className="muted">{tr('结论债靠零世界考试还：改好后到「科研 → 零世界」再考一次。')}</div>
         </div>
-      )}
+      ) : (
+        <div key={e.id} className={`card${e.red ? ' red-mark' : ''}`}>
+          <button className="item" onClick={() => void pick(e.id)}>
+            <span>{e.question}{e.fromComputer ? tr('（电脑上记的）') : ''}</span>
+            <span className="pill">{tr(e.board)}</span>
+          </button>
+          {open === e.id && (
+            <>
+              <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => { setSaid(x.target.value); void book.saveDraft(e.id, x.target.value); }} />
+              <button className="primary" disabled={!said.trim()} onClick={() => void repay(e.id)}>{tr('讲完了')}</button>
+            </>
+          )}
+        </div>
+      ))}
+    </section>
+  );
+  if (view === 'add') return (
+    <section>{back}
+      <h1>{tr('记一笔')}</h1>
       <div className="card">
-        <h2>{tr('考前真实掌握度')}</h2>
+        <textarea value={draft.ownIdea} placeholder={tr('先写下你自己的想法（写了债会轻一档）')} onChange={x => setDraft({ ...draft, ownIdea: x.target.value })} />
+        <textarea value={draft.question} placeholder={tr('问了 AI 什么')} onChange={x => setDraft({ ...draft, question: x.target.value })} />
+        <textarea value={draft.answer} placeholder={tr('AI 的回答（可选，还账时对照）')} onChange={x => setDraft({ ...draft, answer: x.target.value })} />
+        <input value={draft.ai} placeholder={tr('哪个 AI（可选，比如豆包）')} onChange={x => setDraft({ ...draft, ai: x.target.value })} />
+        <div className="seg" role="radiogroup" aria-label={tr('AI 帮了多少')}>{LEVELS.map(l => (
+          <button key={l.id} type="button" role="radio" aria-checked={draft.level === l.id} onClick={() => setDraft({ ...draft, level: l.id })}>{l.label}</button>
+        ))}</div>
+        <button className="primary" disabled={!draft.question.trim()} onClick={() => void add()}>{tr('记下')}</button>
+      </div>
+    </section>
+  );
+  if (view === 'list') return (
+    <section>{back}
+      <h1>{tr('考前清单')}</h1>
+      {status}
+      <div className="card">
         <label>{tr('考试、组会或答辩日期')} <input type="date" value={exam} onChange={e => pickExam(e.target.value)} /></label>
-        {report && (
-          <p data-testid="ledger-report">
-            {tr('独立掌握度 {0}（只算不靠 AI 的作答）', report.independence === null ? '—' : `${Math.round(report.independence * 100)}%`)}<br />
-            {tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}
-          </p>
-        )}
-        {report && report.repayBeforeExam.length > 0 && (
+        {!exam && <p className="muted">{tr('设了日期，账本会按那天往回排还账。')}</p>}
+        {report && report.repayBeforeExam.length > 0 ? (
           <ol className="exam-list" data-testid="exam-list">
             {report.repayBeforeExam.map(i => (
               <li key={i.id} className={i.red ? 'red-mark' : undefined}>
@@ -195,71 +216,99 @@ export function LedgerScreen() {
               </li>
             ))}
           </ol>
-        )}
+        ) : report && <p className="muted">{tr('考前没有要还的。')}</p>}
+      </div>
+      <TrialCard onEnd={() => { setEndNow(true); setView('quiz'); void refresh(exam, true); }} onCopy={copy} />
+      <div className="card">
         <button className="ghost" onClick={() => void book.processRecord(today(), exam || undefined, board).then(t => copy(t, tr('过程记录已复制，只在你自己手里。')))}>
           {tr('复制过程记录')}
         </button>
-        <button className="ghost" onClick={() => void scan()}>{tr('用导入的论文查一遍召回')}</button>
+        <button className="ghost" onClick={() => void scan().then(() => setView('recall'))}>{tr('用导入的论文查一遍召回')}</button>
       </div>
-      {quiz.length > 0 && (
+    </section>
+  );
+  if (view === 'recall') return (
+    <section>{back}
+      <h1>{tr('召回单')}</h1>
+      {status}
+      {recalled.length === 0 && <div className="card"><p className="muted">{tr('现在没有召回单。')}</p></div>}
+      {recalled.length > 0 && (
+        <div data-testid="recall-slips">
+          <p className="muted">{tr('你导入的论文里有原话和 AI 当时的说法相反。')}</p>
+          {recalled.map(e => { const r = openRecall(e); return (
+            <div key={e.id} className="card red-mark" data-testid="recall-slip">
+              <b>{e.question}</b>
+              <div>{tr('当时 {0} 说：{1}', e.ai ?? 'AI', r.claim)}</div>
+              <div>{tr('《{0}》第 {1} 页：{2}', r.paper, r.page, r.quote)}</div>
+              <div className="row">
+                <button className="primary" onClick={() => void accept(e.id)}>{tr('接受，重开这笔')}</button>
+                <button className="ghost" onClick={() => { setDisputing(disputing === e.id ? null : e.id); setSaid(''); }}>{tr('我有原文证据')}</button>
+              </div>
+              {disputing === e.id && (
+                <>
+                  <textarea value={said} placeholder={tr('贴一句导入论文里的原话，要支持 AI 当时的说法')} onChange={x => setSaid(x.target.value)} />
+                  <button className="primary" disabled={!said.trim()} onClick={() => void dismiss(e.id)}>{tr('提交证据')}</button>
+                </>
+              )}
+            </div>
+          ); })}
+        </div>
+      )}
+    </section>
+  );
+  if (view === 'quiz') return (
+    <section>{back}
+      <h1>{tr('试用结束小测')}</h1>
+      {status}
+      {quiz.length === 0 ? <div className="card"><p className="muted">{tr('小测做完了。')}</p></div> : (
         <div className="card" data-testid="trial-quiz">
           <h2>{tr('试用结束小测（还剩 {0} 笔）', quiz.length)}</h2>
           <p className="muted">{tr('每笔都不看答案讲一遍，不管之前排没排过还账。')}</p>
-          <button className="ghost" onClick={() => setOpen(open === quiz[0].id ? null : quiz[0].id)}>{quiz[0].question}</button>
-          {open === quiz[0].id && (
-            <>
-              <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
-              <button disabled={!said.trim()} onClick={() => void answerQuiz(quiz[0].id)}>{tr('讲完了')}</button>
-            </>
-          )}
+          <b>{quiz[0].question}</b>
+          <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
+          <button className="primary" disabled={!said.trim()} onClick={() => void answerQuiz(quiz[0].id)}>{tr('讲完了')}</button>
         </div>
       )}
+    </section>
+  );
+
+  // Home: one number, one button, three ways in. Everything else is one tap away.
+  const owed = report?.repayBeforeExam.length ?? due.length;
+  const indep = report?.independence;
+  return (
+    <section className="home">
+      {switcher}
+      <div className="card hero" data-testid="ledger-hero">
+        <div className="kpis">
+          <div><span className="big" data-testid="owed">{owed}</span><span className="kpi-label">{exam ? tr('笔考前要还') : tr('笔要还')}</span></div>
+          <div><span className="big">{indep === null || indep === undefined ? '—' : `${Math.round(indep * 100)}%`}</span><span className="kpi-label">{tr('独立掌握度')}</span></div>
+        </div>
+        {report && <p className="muted" data-testid="ledger-report">{tr('考前要还 {0} 笔，还清 {1} 笔，讲到一半的 {2} 笔', report.repayBeforeExam.length, report.counts.settled, report.counts.shaky)}</p>}
+        {left !== null && <p className="muted" data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
+        <button className="primary big-button" onClick={() => { setNote(''); setView('due'); }} data-testid="go-due">
+          {due.length ? tr('讲给我听 · 今天 {0} 笔', due.length) : tr('讲给我听')}
+        </button>
+      </div>
+      {status}
+      {recalled.length > 0 && <button className="alert" onClick={() => setView('recall')} data-testid="recall-alert">{tr('召回单 {0} 条：论文原话和 AI 说的相反', recalled.length)}</button>}
+      {quiz.length > 0 && <button className="alert" onClick={() => setView('quiz')}>{tr('试用结束小测还剩 {0} 笔', quiz.length)}</button>}
       {fresh && (
         <div className="card" data-testid="explain-now">
           <h2>{tr('这一步你讲给我听？')}</h2>
           <p className="muted">{fresh.question}</p>
           <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => setSaid(x.target.value)} />
-          <div role="group">
-            <button disabled={!said.trim()} onClick={() => void checkNow(fresh, said)}>{tr('讲完了')}</button>
+          <div className="row">
+            <button className="primary" disabled={!said.trim()} onClick={() => void checkNow(fresh, said)}>{tr('讲完了')}</button>
             <button className="ghost" onClick={() => void checkNow(fresh, '')}>{tr('讲不出来')}</button>
             <button className="ghost" onClick={() => setFresh(null)}>{tr('先不讲')}</button>
           </div>
         </div>
       )}
-      <TrialCard onEnd={() => { setEndNow(true); void refresh(exam, true); }} onCopy={copy} />
-      <div className="card">
-        <h2>{tr('今天要还的')}</h2>
-        {note && <p role="status">{note}</p>}
-        {left !== null && <p data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
-        {due.length === 0 && <p>{tr('今天没有要还的。')}</p>}
-        {due.map(e => e.kind ? (
-          <div key={e.id} className={e.red ? 'red-mark' : undefined} data-testid="conclusion-due">
-            <b>{e.question}</b>{e.red && <span className="red-tag">{redTag(e)}</span>}
-            <div className="muted">{tr('结论债靠零世界考试还：改好后到「科研 → 零世界」再考一次。')}</div>
-          </div>
-        ) : (
-          <div key={e.id} className={e.red ? 'red-mark' : undefined}>
-            <button className="ghost" onClick={() => void pick(e.id)}>{e.question}{e.fromComputer ? tr('（电脑上记的）') : ''}</button>
-            {open === e.id && (
-              <>
-                <textarea value={said} placeholder={tr('不看答案，讲给我听')} onChange={x => { setSaid(x.target.value); void book.saveDraft(e.id, x.target.value); }} />
-                <button disabled={!said.trim()} onClick={() => void repay(e.id)}>{tr('讲完了')}</button>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="card">
-        <h2>{tr('记一笔')}</h2>
-        <textarea value={draft.ownIdea} placeholder={tr('先写下你自己的想法（写了债会轻一档）')} onChange={x => setDraft({ ...draft, ownIdea: x.target.value })} />
-        <textarea value={draft.question} placeholder={tr('问了 AI 什么')} onChange={x => setDraft({ ...draft, question: x.target.value })} />
-        <textarea value={draft.answer} placeholder={tr('AI 的回答（可选，还账时对照）')} onChange={x => setDraft({ ...draft, answer: x.target.value })} />
-        <input value={draft.ai} placeholder={tr('哪个 AI（可选，比如豆包）')} onChange={x => setDraft({ ...draft, ai: x.target.value })} />
-        <div role="group">{LEVELS.map(l => (
-          <button key={l.id} className={draft.level === l.id ? '' : 'ghost'} onClick={() => setDraft({ ...draft, level: l.id })}>{l.label}</button>
-        ))}</div>
-        <button disabled={!draft.question.trim()} onClick={() => void add()}>{tr('记下')}</button>
-      </div>
+      <nav className="orbs" aria-label={tr('账本')}>
+        <button className="orb-button" onClick={() => { setNote(''); setView('add'); }}><span className="orb"><Icon name="plus" /></span>{tr('记一笔')}</button>
+        <button className="orb-button" onClick={() => { setNote(''); setView('list'); }}><span className="orb"><Icon name="list" /></span>{tr('考前清单')}</button>
+        <button className="orb-button" onClick={() => { setNote(''); setView('recall'); }}><span className="orb"><Icon name="recall" /></span>{tr('召回单')}</button>
+      </nav>
     </section>
   );
 }

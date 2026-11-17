@@ -14,6 +14,7 @@ import { book, today } from '../ledger/book';
 import type { Entry } from '../ledger/ledger';
 import { askDebts } from '../rules/understand';
 import { importStages, resetImportTimings, timed } from '../perf/timing';
+import { PhotoAsk } from './PhotoAsk';
 
 export function AskScreen({ demo }: { demo: boolean }) {
   const [q, setQ] = useState('');
@@ -25,6 +26,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
   const [saved, setSaved] = useState<LocalPaper | null>(null);
   const [local, setLocal] = useState<LocalAnswer | null>(null);
   const [booked, setBooked] = useState<Entry[] | null>(null); // 理解债 the last model answer booked
+  const [source, setSource] = useState<'paper' | 'photo'>('paper');
   useEffect(() => {
     let live = true;
     setAnswer(null); setError(''); setInfo(''); setLocal(null); setBooked(null);
@@ -100,8 +102,14 @@ export function AskScreen({ demo }: { demo: boolean }) {
   }
 
   const sentences = answer?.answer?.sentences ?? [];
+  const switcher = !demo && <div className="seg" role="radiogroup" aria-label={tr('问什么')} data-testid="ask-source">
+    <button type="button" role="radio" aria-checked={source === 'paper'} onClick={() => setSource('paper')}>{tr('导入的论文')}</button>
+    <button type="button" role="radio" aria-checked={source === 'photo'} onClick={() => setSource('photo')}>{tr('拍一页')}</button>
+  </div>;
+  if (source === 'photo' && !demo) return <section><h1>{tr('提问')}</h1>{switcher}<PhotoAsk /></section>;
   return <section>
-    <h1>{tr('向论文提问')}</h1>
+    <h1>{tr('提问')}</h1>
+    {switcher}
     {demo && <div className="demo-banner" role="note">{tr(DEMO_LABEL)}</div>}
     <div className="card">
       <div className="muted" data-testid="paper">{paper ? tr('论文:{0}(已在本机解析)', paper.name) : tr('还没有导入论文。')}</div>
@@ -112,7 +120,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
     <div className="card">
       <textarea value={q} readOnly={demo} onChange={e => setQ(e.target.value)} rows={3} placeholder={tr('例如:EEG 是怎么预处理的?')} aria-label={tr('问题')} />
       <button className="primary" disabled={busy || (!saved && !demo) || q.trim().length < 3} onClick={submit}>{busy ? tr('处理中…') : tr('提问')}</button>
-      {!demo && <div className="muted">{tr('模型请求最多等 8 秒。没有密钥或请求失败时,会直接在手机上给出相关原文段落。相近匹配要你自己判断,系统分不出真假。')}</div>}
+      {!demo && <div className="muted">{tr('模型请求最多等 20 秒。没有密钥或请求失败时,会直接在手机上给出相关原文段落。相近匹配要你自己判断,系统分不出真假。')}</div>}
     </div>
     {info && <div className="card muted" role="status" data-testid="import-ready">{info}</div>}
     {error && <div className="card error">{error}</div>}

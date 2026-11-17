@@ -10,14 +10,15 @@ import { preferencesKV } from './storage/kv';
 import { loadDemo, saveDemo } from './demo/demo';
 import { autoCheckUpdate } from './update/manifest';
 import { LOCAL_VERSION_CODE, UPDATE_CHANNEL } from './update/version';
+import { Icon, type IconName } from './icons';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
 /** One main line on the surface: borrow (提问), repay and read the report (账本). Research tools sit in one tab. */
 type Tab = 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
-const TABS: { id: Tab; label: string; icon: string }[] = trObj([
-  { id: 'ledger', label: '账本', icon: '¥' }, { id: 'ask', label: '提问', icon: '?' },
-  { id: 'research', label: '科研', icon: '◎' }, { id: 'settings', label: '设置', icon: '⚙' },
+const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
+  { id: 'ledger', label: '账本', icon: 'ledger' }, { id: 'ask', label: '提问', icon: 'ask' },
+  { id: 'research', label: '科研', icon: 'research' }, { id: 'settings', label: '设置', icon: 'settings' },
 ]);
 
 export function App() {
@@ -59,10 +60,10 @@ export function App() {
         {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} onComputer={setEnhanced} />}
       </main>
       <nav className="tabbar" role="tablist" aria-label={tr('主导航')}>
-        {[...TABS, ...(enhanced ? [{ id: 'enhanced' as Tab, label: tr('电脑增强'), icon: '+' }] : [])].map(t => (
+        {[...TABS, ...(enhanced ? [{ id: 'enhanced' as Tab, label: tr('电脑增强'), icon: 'computer' as IconName }] : [])].map(t => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'tab active' : 'tab'}
                   onClick={() => setTab(t.id)}>
-            <span className="tab-icon">{t.icon}</span><span>{t.label}</span>
+            <span className="tab-icon"><Icon name={t.icon} size={22} /></span><span>{t.label}</span>
           </button>
         ))}
       </nav>
