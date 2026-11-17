@@ -254,6 +254,7 @@
     "signOut": "Sign out",
     "tabDevices": "Devices",
     "tabModels": "Models",
+    "tabFolders": "Folders",
     "tabHost": "Host",
     "tabGeneral": "General",
     "tabAbout": "About",
@@ -306,6 +307,18 @@
     "revokeFallbackName": "device",
     "revokeConfirm": "Revoke access",
     "revokeDescription": "It is signed out immediately and needs a new pairing code to come back."
+  },
+  "folders": {
+    "title": "Folders this computer may use",
+    "description": "Research OS only opens files inside these folders. Read folders can be read, for example by a null-world exam; write folders can also be changed when you approve a plan.",
+    "empty": "No folders yet. Add the folder that holds your project.",
+    "path": "Folder path",
+    "pathPlaceholder": "/Users/me/research/project",
+    "access": "Access",
+    "read": "Read",
+    "write": "Read and write",
+    "add": "Add folder",
+    "remove": "Remove {{path}}"
   },
   "projects": {
     "created": "Project “{{title}}” created",

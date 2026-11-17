@@ -254,6 +254,7 @@
     "signOut": "退出登录",
     "tabDevices": "设备",
     "tabModels": "模型",
+    "tabFolders": "文件夹",
     "tabHost": "主机",
     "tabGeneral": "通用",
     "tabAbout": "关于",
@@ -306,6 +307,18 @@
     "revokeFallbackName": "该设备",
     "revokeConfirm": "撤销访问",
     "revokeDescription": "它会立即退出登录,需要新的配对码才能重新接入。"
+  },
+  "folders": {
+    "title": "这台电脑允许使用的文件夹",
+    "description": "Research OS 只打开这些文件夹里的文件。只读文件夹可以被读取，例如零世界考试；可写文件夹在你批准计划后还可以被修改。",
+    "empty": "还没有文件夹。把放项目的文件夹加进来。",
+    "path": "文件夹路径",
+    "pathPlaceholder": "/Users/me/research/project",
+    "access": "权限",
+    "read": "只读",
+    "write": "可读写",
+    "add": "添加文件夹",
+    "remove": "移除 {{path}}"
   },
   "projects": {
     "created": "已创建项目“{{title}}”",
