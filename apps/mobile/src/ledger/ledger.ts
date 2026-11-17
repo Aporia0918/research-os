@@ -290,6 +290,22 @@ export class Book {
     return grade(e, attempt, ask);
   }
 
+  /**
+   * 大学学习生活: an exam or group meeting close by brings that course's debts in front of it (the day before, or today).
+   * Only moves debts earlier, never later; returns how many moved.
+   */
+  async pullForward(topic: string, day: string, today: string): Promise<number> {
+    const es = await this.all();
+    let n = 0;
+    for (const e of es) {
+      if (e.topic.trim() !== topic || !e.dueOn || e.dropped || e.held || e.dueOn < day) continue;
+      const to = frontLoad(e.dueOn, today, day);
+      if (to < e.dueOn) { e.dueOn = to; n += 1; }
+    }
+    if (n) await this.save(es);
+    return n;
+  }
+
   private async edit(id: string, f: (e: Entry) => void): Promise<Entry> {
     const es = await this.all();
     const e = es.find((x) => x.id === id);
