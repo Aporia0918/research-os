@@ -13,6 +13,16 @@ describe('optional computer link', () => {
     await saveComputerSettings(kv, { enabled: false, url: 'http://computer:8443' });
     expect((await loadComputerSettings(kv)).enabled).toBe(false);
   });
+  it('pairs with the code from the computer: POST /auth/pair with the client header, code upper-cased', async () => {
+    const seen: { url: string; init?: RequestInit }[] = [];
+    const f: FetchLike = async (url, init) => { seen.push({ url, init }); return new Response(JSON.stringify({ authenticated: true, device_name: 'Android' }), { status: 200, headers: { 'Content-Type': 'application/json' } }); };
+    const out = await new ResearchOsClient('http://computer:8443', f).pair(' ab12cd34 ');
+    expect(out.authenticated).toBe(true);
+    expect(seen[0].url).toBe('http://computer:8443/api/v1/auth/pair');
+    expect(seen[0].init?.method).toBe('POST');
+    expect(JSON.parse(String(seen[0].init?.body))).toEqual({ code: 'AB12CD34', device_name: 'Android' });
+    expect((seen[0].init?.headers as Record<string, string>)['x-researchos-client']).toBe('android');
+  });
   it('caps transport at five seconds and maps failure to plain wording', async () => {
     vi.useFakeTimers();
     const hang: FetchLike = (_u, init) => new Promise((_r, rej) => init!.signal!.addEventListener('abort', () => rej(new Error('aborted'))));

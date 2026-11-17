@@ -17,6 +17,10 @@ export class ResearchOsClient {
   private base: string;
   constructor(baseUrl: string, private fetchImpl: FetchLike = (i, init) => fetch(i, init), private timeoutMs = 5000) { this.base = normalizeBaseUrl(baseUrl); }
   health(): Promise<Health> { return this.request('GET', '/api/v1/health'); }
+  /** Pairing: the 8-character code from the computer's 设置 → 设备 → 配对设备; the session lives in the native cookie store. */
+  pair(code: string, deviceName = 'Android'): Promise<{ authenticated: boolean; device_name?: string | null }> {
+    return this.request('POST', '/api/v1/auth/pair', { code: code.trim().toUpperCase(), device_name: deviceName });
+  }
   createLog(form: FormData, idempotencyKey: string): Promise<ServerLog> { return this.request('POST', '/api/v1/mobile/logs', form, { 'Idempotency-Key': idempotencyKey }); }
   compare(logId: string, versionId: string, idempotencyKey: string, useModel = false): Promise<CompareResult> {
     return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });

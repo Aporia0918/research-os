@@ -21,6 +21,12 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
     catch (e) { setStatus(describeError(e)); }
   }
   const [status, setStatus] = useState('');
+  const [code, setCode] = useState('');
+  async function pairComputer() {
+    setStatus(tr('正在配对,最多等 5 秒…'));
+    try { await new ResearchOsClient(computer.url, undefined, 5000).pair(code); setCode(''); setStatus(tr('配对好了。这台手机现在能用电脑增强功能。')); }
+    catch (e) { setStatus(describeError(e)); }
+  }
   const [trial, setTrial] = useState<string | null>(null);
   useEffect(() => { void book.trialStart().then(setTrial); }, []);
   async function joinTrial() { await book.startTrial(today()); setTrial(await book.trialStart()); }
@@ -75,6 +81,11 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer }: { dem
           <label>{tr('电脑地址')}</label>
           <input value={computer.url} onChange={e => { const next = { ...computer, url: e.target.value }; setComputer(next); void saveComputerSettings(preferencesKV, next); }} inputMode="url" autoCapitalize="off" aria-label={tr('电脑地址')} />
           <button className="ghost" onClick={testComputer}>{tr('测试电脑连接')}</button>
+          <label>{tr('配对码(电脑上 设置 → 设备 → 配对设备)')}</label>
+          <div className="row">
+            <input value={code} onChange={e => setCode(e.target.value)} maxLength={16} autoCapitalize="characters" aria-label={tr('配对码')} data-testid="pair-code" />
+            <button className="ghost" disabled={code.trim().length < 4} onClick={pairComputer}>{tr('配对')}</button>
+          </div>
           <div className="muted">{tr('只有下面明确标注“电脑增强”的功能会在开启后使用它。每次最多等 5 秒,失败后自动用手机处理。')}</div>
         </>}
       </div>

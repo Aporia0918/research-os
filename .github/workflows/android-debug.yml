@@ -5,7 +5,7 @@ name: android-debug
 on:
   workflow_dispatch:
   push:
-    branches: ["feat/mobile-apk-ci"]
+    branches: ["feat/mobile-apk-ci", "integrate/whole-app"]
 
 permissions:
   contents: read
