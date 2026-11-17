@@ -13,9 +13,11 @@ export interface ExamReport {
   seed: number; data_sha256: string; script_sha256: string; errors: string[];
   suspects?: Suspect[]; // absent from computers that predate the label-copy screen
 }
+export interface PowerRow { groups: number; effect: number; detected: number; runs: number; rate: number | null; low: number | null; high: number | null }
+export interface PowerReport { rows: PowerRow[]; features: string[]; seed: number; errors: string[] }
 export interface Task {
   id: string; kind: string; state: string; stage: string | null; progress: Record<string, unknown>;
-  payload: Record<string, unknown>; result: ExamReport | null; error_code: string | null;
+  payload: Record<string, unknown>; result: ExamReport | PowerReport | null; error_code: string | null;
 }
 export interface ExamInput {
   script: string; data: string; group: string; label: string; runs: number; seed: number;
@@ -23,11 +25,26 @@ export interface ExamInput {
 }
 
 export const EXAM_KIND = 'nullworld.exam';
+export const POWER_KIND = 'nullworld.power';
 export const RUN_CHOICES = [19, 49, 99] as const;
+/** Planted effects in standard deviations, and the share of subjects kept, for the check before the exam. */
+export const POWER_EFFECTS = [0.2, 0.5, 0.8] as const;
+export const POWER_FRACTIONS = [0.5, 1] as const;
+const POWER_RUNS = 20;
 
 export function examPayload(i: ExamInput): Record<string, unknown> {
   return { script: i.script.trim(), data: i.data.trim(), group: i.group, label: i.label, runs: i.runs, seed: i.seed,
     ...(i.allow?.length ? { allow: i.allow } : {}) };
+}
+export function powerPayload(i: ExamInput): Record<string, unknown> {
+  const { allow: _vouched, ...exam } = examPayload(i); // the detection-rate check has no label-copy screen
+  return { ...exam, runs: POWER_RUNS, effects: [...POWER_EFFECTS], fractions: [...POWER_FRACTIONS] };
+}
+/** How many times the computer will run the script for this task, read from what the server holds. */
+export function plannedRuns(t: Task): number {
+  const n = (k: string) => (Array.isArray(t.payload[k]) ? (t.payload[k] as unknown[]).length : 0);
+  const runs = Number(t.payload.runs) || 0;
+  return t.kind === POWER_KIND ? n('fractions') * runs * (n('effects') + 1) : runs + 1;
 }
 
 /** A retake is the same exam on fresh null worlds: only the seed changes, so the two reports can be compared. */
@@ -80,6 +97,18 @@ export function debtLine(outcome: Verdict['outcome']): string {
   if (outcome === 'pass') return tr('结论债已还清：这条结论在零世界考过了。');
   if (outcome === 'fail') return tr('这个高分还站不住，改好再考一次就还清。');
   return tr('结论债还欠着：结果说不准，改好或多跑几个零世界再考。');
+}
+
+/** One plain sentence on the planted-world check, read off the full-sample rows: the smallest effect found in at
+ * least 80% of worlds, or how often the largest one was found when none reaches that. */
+export function describePower(r: PowerReport): { tone: 'ok' | 'warn'; title: string } {
+  const most = Math.max(...r.rows.map(x => x.groups));
+  const full = r.rows.filter(x => x.groups === most).sort((a, b) => a.effect - b.effect);
+  if (!full.length || full.some(x => x.rate === null)) return { tone: 'warn', title: tr('有零世界没跑完，检出率算不出来。') };
+  const found = full.find(x => (x.rate ?? 0) >= 0.8);
+  if (found) return { tone: 'ok', title: tr('{0} 组数据够用：效应有 {1} 个标准差时，{2} 次里检出 {3} 次。', most, found.effect, found.runs, found.detected) };
+  const top = full[full.length - 1];
+  return { tone: 'warn', title: tr('数据可能不够：效应有 {0} 个标准差时，{1} 次里只检出 {2} 次。', top.effect, top.runs, top.detected) };
 }
 
 export function fmtScore(x: number | null): string { return x === null ? '—' : x.toFixed(3); }

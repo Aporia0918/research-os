@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { ResearchOsClient, type FetchLike } from '../src/api/computer';
-import { analysisKey, debtLine, describeVerdict, examPayload, phase, retake, strip, vouch, type ExamReport, type Task } from '../src/logic/nullworld';
+import { analysisKey, debtLine, describePower, describeVerdict, examPayload, phase, plannedRuns, powerPayload, retake, strip, vouch, type ExamReport, type PowerReport, type Task } from '../src/logic/nullworld';
+import { auditHeadline, describeFinding } from '../src/logic/audit';
 import { book } from '../src/ledger/book';
 import { ExamScreen } from '../src/screens/ExamScreen';
 import { saveComputerSettings } from '../src/settings';
@@ -54,6 +55,25 @@ describe('null-world logic', () => {
     expect('allow' in examPayload(i)).toBe(false);
     expect(analysisKey(v)).toBe(analysisKey(i));
   });
+  it('counts planned runs and words the detection rate from the full-sample rows', () => {
+    const i = { script: '/p/s.py', data: '/p/d.csv', group: 'subject', label: 'af', runs: 19, seed: 0 };
+    expect(plannedRuns(task('queued', { payload: examPayload(i) }))).toBe(20);
+    expect(plannedRuns(task('queued', { kind: 'nullworld.power', payload: powerPayload(i) }))).toBe(2 * 20 * 4);
+    const row = (groups: number, effect: number, detected: number) =>
+      ({ groups, effect, detected, runs: 20, rate: detected / 20, low: 0, high: 1 });
+    const rep = (rows: PowerReport['rows']): PowerReport => ({ rows, features: ['rr'], seed: 0, errors: [] });
+    const ok = describePower(rep([row(30, 0.8, 20), row(60, 0.2, 3), row(60, 0.5, 17), row(60, 0.8, 20)]));
+    expect(ok).toMatchObject({ tone: 'ok', title: expect.stringContaining('60') });
+    expect(ok.title).toContain('0.5');
+    expect(describePower(rep([row(60, 0.2, 1), row(60, 0.8, 9)])).title).toContain('只检出 9');
+    expect(describePower(rep([{ ...row(60, 0.8, 0), rate: null }])).tone).toBe('warn');
+  });
+  it('words rule-check findings by code and keeps unknown codes visible', () => {
+    expect(describeFinding({ code: 'R1.random_split', rule: 'R1', severity: 'red', line: 11 }).what).toContain('同一个人');
+    expect(describeFinding({ code: 'R9.new', rule: 'R9', severity: 'yellow', line: 1 })).toEqual({ what: 'R9.new', fix: '' });
+    expect(auditHeadline({ file: 's.py', status: 'green', findings: [] }).tone).toBe('ok');
+    expect(auditHeadline({ file: 's.py', status: 'red', findings: [] }).tone).toBe('bad');
+  });
   it('approves the exact hash the server showed', async () => {
     const calls: { url: string; body?: string }[] = [];
     const f: FetchLike = async (url, init) => {
@@ -93,7 +113,7 @@ describe('exam screen', () => {
       sent.push(`${init?.method} ${url.replace('http://computer:1', '')}`);
       const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status });
       if (url.endsWith('/null-world/detect')) return json({ data: '/p/d.csv', rows: 300, columns: ['subject', 'af', 'rr'], groups: [{ column: 'subject', score: 2, reason: '' }], labels: [{ column: 'af', score: 2, reason: '' }], features: ['rr'] });
-      if (url.endsWith('/tasks')) return json(state, 202);
+      if (url.endsWith('/tasks')) { state = { ...state, payload: JSON.parse(init!.body as string).payload }; return json(state, 202); }
       if (url.includes('subject-hash')) return json({ hash: 'h' });
       if (url.endsWith('/approvals')) { state = task('succeeded', { result: report('fail', 0.96, Array(19).fill(0.9)) }); return json({}, 201); }
       return json(state);
@@ -176,5 +196,33 @@ describe('exam screen', () => {
     await act(async () => { button(h, '批准运行').click(); }); await flush();
     expect(h.querySelector('[data-testid=exam-debt]')?.textContent).toContain('结论债已还清');
     expect(await book.all()).toHaveLength(1);
+  });
+
+  it('measures the detection rate before the exam', async () => {
+    await saveComputerSettings(preferencesKV, { enabled: true, url: 'http://computer:1' });
+    let state = task('awaiting_approval', { kind: 'nullworld.power' });
+    const created: unknown[] = [];
+    const power: PowerReport = { rows: [{ groups: 60, effect: 0.8, detected: 19, runs: 20, rate: 0.95, low: 0.76, high: 0.99 }], features: ['rr'], seed: 0, errors: [] };
+    vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
+      const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status });
+      if (url.endsWith('/null-world/detect')) return json({ data: '/p/d.csv', rows: 300, columns: ['subject', 'af', 'rr'], groups: [{ column: 'subject', score: 2, reason: '' }], labels: [{ column: 'af', score: 2, reason: '' }], features: ['rr'] });
+      if (url.endsWith('/leak-audit/script')) return json({ file: 's.py', status: 'red', findings: [{ code: 'R1.random_split', rule: 'R1', severity: 'red', line: 11 }] });
+      if (url.endsWith('/tasks')) { created.push(JSON.parse(init!.body as string)); state = { ...state, payload: (created[0] as { payload: Record<string, unknown> }).payload }; return json(state, 202); }
+      if (url.includes('subject-hash')) return json({ hash: 'h' });
+      if (url.endsWith('/approvals')) { state = { ...state, state: 'succeeded', result: power }; return json({}, 201); }
+      return json(state);
+    });
+    const h = await mount();
+    const [script, data] = [...h.querySelectorAll('input')];
+    await type(script, '/p/s.py'); await type(data, '/p/d.csv');
+    await act(async () => { button(h, '认结构').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-audit]')?.textContent).toContain('第 11 行');
+    await act(async () => { button(h, '先测检出率').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-audit]')).toBeNull(); // the rule check sits with the set-up, not the run
+    expect(created[0]).toMatchObject({ kind: 'nullworld.power', payload: { effects: [0.2, 0.5, 0.8], fractions: [0.5, 1] } });
+    expect(h.querySelector('[data-testid=exam-approve]')?.textContent).toContain('160 次');
+    await act(async () => { button(h, '批准运行').click(); }); await flush();
+    expect(h.querySelector('[data-testid=exam-power]')?.textContent).toContain('19/20');
+    expect(button(h, '开始考试')).toBeTruthy();
   });
 });

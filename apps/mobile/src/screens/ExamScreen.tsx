@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { tr } from '../i18n';
 import { ApiError, ResearchOsClient, describeError } from '../api/computer';
 import { newId } from '../local/store';
+import { auditHeadline, describeFinding, type AuditReport } from '../logic/audit';
 import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
-  EXAM_KIND, RUN_CHOICES, analysisKey, debtLine, describeVerdict, examPayload, fmtScore, phase, retake, runsDone, strip, vouch,
-  type Detected, type ExamInput, type ExamReport, type Task,
+  EXAM_KIND, POWER_KIND, RUN_CHOICES, analysisKey, debtLine, describePower, describeVerdict, examPayload, fmtScore, phase,
+  plannedRuns, powerPayload, retake, runsDone, strip, vouch,
+  type Detected, type ExamInput, type ExamReport, type PowerReport, type Task,
 } from '../logic/nullworld';
 import { book, today } from '../ledger/book';
 
@@ -20,6 +22,7 @@ export function ExamScreen() {
   const [script, setScript] = useState('');
   const [data, setData] = useState('');
   const [found, setFound] = useState<Detected | null>(null);
+  const [audit, setAudit] = useState<AuditReport | null>(null);
   const [input, setInput] = useState<ExamInput | null>(null);
   const [task, setTask] = useState<Task | null>(null);
   const [busy, setBusy] = useState(false);
@@ -44,9 +47,9 @@ export function ExamScreen() {
   }, [client, task]);
 
   useEffect(() => { // a finished exam of an AI-written analysis books or settles its 结论债
-    if (!task || !input || !aiWritten || !task.result || phase(task) !== 'done' || booked.current.has(task.id)) return;
+    if (!task || task.kind !== EXAM_KIND || !input || !aiWritten || !task.result || phase(task) !== 'done' || booked.current.has(task.id)) return;
     booked.current.add(task.id);
-    void book.checkup({ key: analysisKey(input), outcome: task.result.verdict.outcome,
+    void book.checkup({ key: analysisKey(input), outcome: (task.result as ExamReport).verdict.outcome,
       question: tr('{0} 在 {1} 上跑出的结论', fileName(input.script), fileName(input.data)) }, today())
       .catch(e => { if (live.current) setError(describeError(e)); });
   }, [task, input, aiWritten]);
@@ -56,12 +59,19 @@ export function ExamScreen() {
     try { await f(); } catch (e) { setError(describeError(e)); } finally { setBusy(false); }
   }
   const detect = () => act(async () => {
-    const d = await client!.detectColumns(data.trim());
+    const [d, a] = await Promise.all([ // the rule check is a bonus: an older computer without it still runs the exam
+      client!.detectColumns(data.trim()),
+      client!.auditScript(script.trim(), []).then(r => (Array.isArray(r?.findings) ? r : null), () => null),
+    ]);
+    setAudit(a);
     await preferencesKV.set(PATHS_KEY, JSON.stringify({ script: script.trim(), data: data.trim() }));
     setFound(d); setTask(null);
     setInput({ script: script.trim(), data: d.data, group: d.groups[0]?.column ?? '', label: d.labels[0]?.column ?? '', runs: RUN_CHOICES[0], seed: 0 });
   });
-  const start = (i: ExamInput) => act(async () => { setInput(i); setTask(await client!.createTask(EXAM_KIND, examPayload(i), newId())); });
+  const start = (i: ExamInput, power = false) => act(async () => {
+    setInput(i);
+    setTask(await client!.createTask(power ? POWER_KIND : EXAM_KIND, power ? powerPayload(i) : examPayload(i), newId()));
+  });
   const approve = () => act(async () => { await client!.approveTask(task!.id); setTask(await client!.task(task!.id)); });
   const cancel = () => act(async () => { setTask(await client!.cancelTask(task!.id)); });
 
@@ -73,6 +83,8 @@ export function ExamScreen() {
     </section>
   );
   const p = task ? phase(task) : null;
+  const power = task?.kind === POWER_KIND;
+  const total = task ? plannedRuns(task) : 0;
   return (
     <section className="exam">
       <h1>{tr('零世界考试')}</h1>
@@ -84,11 +96,14 @@ export function ExamScreen() {
         <input id="exam-data" value={data} onChange={e => setData(e.target.value)} autoCapitalize="off" placeholder="/…/features.csv" />
         <button className="ghost" disabled={busy || !script.trim() || !data.trim()} onClick={detect}>{tr('认结构')}</button>
       </div>}
-      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)} busy={busy}
-        aiWritten={aiWritten} onAiWritten={setAiWritten} />}
+      {audit && found && !task && <Audit report={audit} />}
+      {found && input && !task && <Columns found={found} input={input} onInput={setInput} onStart={() => start(input)}
+        onPower={() => start(input, true)} busy={busy} aiWritten={aiWritten} onAiWritten={setAiWritten} />}
       {task && p === 'approve' && <div className="card" data-testid="exam-approve">
-        <b>{tr('批准电脑运行这次考试？')}</b>
-        <div>{tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', (input?.runs ?? 0) + 1, input?.runs ?? 0)}</div>
+        <b>{power ? tr('批准电脑测检出率？') : tr('批准电脑运行这次考试？')}</b>
+        <div>{power
+          ? tr('电脑会运行你的脚本 {0} 次：在零世界里植入大小不同的效应，看脚本能检出几次。不用真实标签。', total)
+          : tr('电脑会运行你的脚本 {0} 次：真数据 1 次，零世界 {1} 次。', total, total - 1)}</div>
         <div className="muted mono">{String(task.payload.script)}<br />{String(task.payload.data)}</div>
         <div className="muted">{tr('分组列：{0}　标签列：{1}', String(task.payload.group), String(task.payload.label))}</div>
         {Array.isArray(task.payload.allow) && <div data-testid="exam-allow">{tr('你确认是真实测量、不查抄标签的列：{0}', task.payload.allow.join('、'))}</div>}
@@ -96,19 +111,22 @@ export function ExamScreen() {
           <button className="ghost" disabled={busy} onClick={cancel}>{tr('取消')}</button></div>
       </div>}
       {task && p === 'running' && <div className="card" role="status">
-        <b>{tr('正在考试')}</b>
-        <progress max={(input?.runs ?? 0) + 1} value={runsDone(task)} />
-        <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), (input?.runs ?? 0) + 1)}</div>
+        <b>{power ? tr('正在测检出率') : tr('正在考试')}</b>
+        <progress max={total} value={runsDone(task)} />
+        <div className="muted">{tr('已跑完 {0} / {1} 次', runsDone(task), total)}</div>
         <button className="ghost" disabled={busy || task.state === 'cancelling'} onClick={cancel}>{tr('停止')}</button>
       </div>}
-      {task && p === 'done' && task.result && <Result report={task.result} debt={aiWritten} busy={busy}
-        onVouch={input ? (c => start(vouch(input, c))) : undefined} />}
+      {task && p === 'done' && task.result && (power
+        ? <Power report={task.result as PowerReport} />
+        : <Result report={task.result as ExamReport} debt={aiWritten} busy={busy} onVouch={input ? (c => start(vouch(input, c))) : undefined} />)}
       {task && (p === 'failed' || p === 'cancelled') && <div className="card">
         <b>{p === 'cancelled' ? tr('考试已停止') : tr('考试没有完成')}</b>
         {p === 'failed' && <div className="muted">{describeError(new ApiError(422, task.error_code ?? 'http_error', ''))}</div>}
       </div>}
       {task && p !== 'running' && p !== 'approve' && input && <div className="row">
-        <button className="primary" disabled={busy} onClick={() => start(retake(input))}>{tr('复考（换一批零世界）')}</button>
+        {power
+          ? <button className="primary" disabled={busy} onClick={() => start(input)}>{tr('开始考试')}</button>
+          : <button className="primary" disabled={busy} onClick={() => start(retake(input))}>{tr('复考（换一批零世界）')}</button>}
         <button className="ghost" disabled={busy} onClick={() => setTask(null)}>{tr('改设置')}</button>
       </div>}
       {error && <div className="card error" role="alert">{error}</div>}
@@ -122,8 +140,8 @@ function Chips({ label, options, value, onPick }: { label: string; options: stri
   </div>;
 }
 
-function Columns({ found, input, onInput, onStart, busy, aiWritten, onAiWritten }: {
-  found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; busy: boolean;
+function Columns({ found, input, onInput, onStart, onPower, busy, aiWritten, onAiWritten }: {
+  found: Detected; input: ExamInput; onInput: (i: ExamInput) => void; onStart: () => void; onPower: () => void; busy: boolean;
   aiWritten: boolean; onAiWritten: (v: boolean) => void;
 }) {
   const others = (picked: string[]) => found.columns.filter(c => !picked.includes(c));
@@ -140,7 +158,11 @@ function Columns({ found, input, onInput, onStart, busy, aiWritten, onAiWritten 
     <div className="muted">{tr('只打乱标签列，其他列一个数都不改。脚本要在最后打印一行分数，例如 accuracy: 0.81。')}</div>
     <label className="row"><input type="checkbox" checked={aiWritten} onChange={e => onAiWritten(e.target.checked)} />
       {tr('这份分析有 AI 帮写（考完记进账本，考过才算还清）')}</label>
-    <button className="primary" disabled={busy || !input.group || !input.label} onClick={onStart}>{tr('开始考试')}</button>
+    <div className="row">
+      <button className="primary" disabled={busy || !input.group || !input.label} onClick={onStart}>{tr('开始考试')}</button>
+      <button className="ghost" disabled={busy || !input.group || !input.label} onClick={onPower}>{tr('先测检出率')}</button>
+    </div>
+    <div className="muted">{tr('检出率：在没有规律的世界里植入已知大小的效应，看现在的人数能不能把它找出来。')}</div>
   </div>;
 }
 
@@ -175,4 +197,40 @@ function Result({ report, debt, busy, onVouch }: { report: ExamReport; debt: boo
       <div className="muted mono">{tr('种子 {0} · 数据 {1} · 脚本 {2}', report.seed, report.data_sha256.slice(0, 12), report.script_sha256.slice(0, 12))}</div>
     </div>
   </>;
+}
+
+function Power({ report }: { report: PowerReport }) {
+  const v = describePower(report);
+  return <div className={`card verdict-hero ${v.tone}`} data-testid="exam-power">
+    <b>{v.title}</b>
+    <div className="facts">
+      {report.rows.map(r => <PowerLine key={`${r.groups}:${r.effect}`} r={r} />)}
+    </div>
+    <div className="muted">{tr('效应用标准差计：0.2 小，0.5 中，0.8 大。括号里是 95% 区间。植入的特征：{0}', report.features.join(', '))}</div>
+    {report.errors.map((e, i) => <pre key={i} className="answer">{e}</pre>)}
+  </div>;
+}
+
+const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
+function PowerLine({ r }: { r: PowerReport['rows'][number] }) {
+  return <>
+    <span>{tr('{0} 组 · 效应 {1}', r.groups, r.effect)}</span>
+    <b>{`${r.detected}/${r.runs}`} <span className="muted">({pct(r.low)}–{pct(r.high)})</span></b>
+  </>;
+}
+
+function Audit({ report }: { report: AuditReport }) {
+  const h = auditHeadline(report);
+  return <div className={`card verdict-hero ${h.tone}`} data-testid="exam-audit">
+    <b>{h.title}</b>
+    {report.error && <div className="muted mono">{report.error.message}</div>}
+    {report.findings.map((f, i) => {
+      const d = describeFinding(f);
+      return <div key={i} className="plan-item">
+        <span><span className="entry-kind">{tr('第 {0} 行', f.line)}</span> {d.what}</span>
+        {d.fix && <span className="muted">{d.fix}</span>}
+      </div>;
+    })}
+    <div className="muted">{tr('只读脚本、不运行。规则查的是常见写法，查不出不等于没有泄漏，零世界考试会再验一次。')}</div>
+  </div>;
 }
