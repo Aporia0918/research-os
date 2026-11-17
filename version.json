@@ -1,0 +1,28 @@
+{
+  "versionName": "1.4.131",
+  "versionCode": 131,
+  "minSupportedVersionCode": 1,
+  "sha256": "2a1e9bf78765801da4bf3dd3ac9825dcb28528195babfeb1dd46068202581027",
+  "size": 10373802,
+  "apk": [
+    {
+      "url": "https://gcore.jsdelivr.net/gh/Aporia0918/research-os@2e2c716dd1994cdff38e12efc95566336be6690c/researchos-test-131.apk",
+      "priority": 10
+    },
+    {
+      "url": "https://fastly.jsdelivr.net/gh/Aporia0918/research-os@2e2c716dd1994cdff38e12efc95566336be6690c/researchos-test-131.apk",
+      "priority": 20
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Aporia0918/research-os@2e2c716dd1994cdff38e12efc95566336be6690c/researchos-test-131.apk",
+      "priority": 30
+    },
+    {
+      "url": "https://github.com/Aporia0918/research-os/releases/download/test-latest/researchos-test-131.apk",
+      "priority": 40
+    }
+  ],
+  "releaseNotes": "测试版 1.4.131（840c87f）",
+  "publishedAt": "2026-11-17T13:43:00Z",
+  "channel": "test"
+}
