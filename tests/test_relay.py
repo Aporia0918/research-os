@@ -108,3 +108,45 @@ def test_vendor_routed_through_relay_needs_relay_price(relay_svc: Any, conn: sql
     assert tuple(row) == ("anthropic", "relay")
     # unaffected vendors keep their direct adapter
     assert svc.gateway.transport_for("deepseek") == "deepseek" and svc.gateway.transport_for("anthropic") == "relay"
+
+
+def _capture(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+    seen: dict[str, Any] = {}
+
+    def fake_post(url: str, headers: dict[str, str], json: dict[str, Any], timeout: float) -> httpx.Response:
+        seen.update(url=url, body=json)
+        return httpx.Response(
+            200,
+            json={"id": "r", "model": json["model"], "usage": {}, "choices": [{"message": {"content": "ok"}}]},
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    return seen
+
+
+def test_openrouter_renames_models_and_refuses_data_collection(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen = _capture(monkeypatch)
+    relay = RelayProvider("https://openrouter.ai/api/v1", {"deepseek-v4": "deepseek/deepseek-v4"})
+    relay.complete(ChatRequest("deepseek-v4", (Message("user", "hi"),), max_output_tokens=64), KEY)
+    assert seen["url"] == "https://openrouter.ai/api/v1/chat/completions"
+    assert seen["body"]["model"] == "deepseek/deepseek-v4"
+    assert seen["body"]["provider"] == {"data_collection": "deny"}
+    relay.complete(ChatRequest("glm-5.3-flash", (Message("user", "hi"),), max_output_tokens=64), KEY)
+    assert seen["body"]["model"] == "glm-5.3-flash"  # unlisted ids go unchanged
+
+
+def test_other_relays_get_no_openrouter_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen = _capture(monkeypatch)
+    RelayProvider("https://relay.example.org/v1").complete(
+        ChatRequest("gpt-6.1-sol", (Message("user", "hi"),), max_output_tokens=64), KEY
+    )
+    assert "provider" not in seen["body"]
+
+
+def test_relay_models_from_toml_and_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "researchos.toml").write_text('[relay_models]\n"deepseek-v4" = "deepseek/deepseek-v4"\n')
+    assert load_settings(tmp_path).relay_models == {"deepseek-v4": "deepseek/deepseek-v4"}
+    monkeypatch.setenv("RESEARCHOS_RELAY_MODELS", "a=x/a, b = y/b")
+    assert load_settings(tmp_path).relay_models == {"a": "x/a", "b": "y/b"}
