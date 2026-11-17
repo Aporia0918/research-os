@@ -44,6 +44,7 @@
     "badProtocolFactors": "factors must be 1-4 parameters of the plan's search space",
     "badProtocolObjective": "protocol.objective (metric name) is required",
     "badRootAccess": "access must be read or write",
+    "badTableFile": "data must be a table file of at most 50 MB",
     "badSetupToken": "setup token invalid; see <data_dir>/config/setup-token.txt",
     "badStatus": "status must be confirmed or rejected",
     "badSubjectImport": "knowledge_import subject id must be the sha256 of the selected records",

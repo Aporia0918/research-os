@@ -44,6 +44,7 @@
     "badProtocolFactors": "因子必须是计划搜索空间中的 1-4 个参数",
     "badProtocolObjective": "必须填写 protocol.objective(指标名称)",
     "badRootAccess": "访问权限必须是 read 或 write",
+    "badTableFile": "数据必须是不超过 50 MB 的表格文件",
     "badSetupToken": "初始化令牌无效;请查看 <data_dir>/config/setup-token.txt",
     "badStatus": "状态必须是 confirmed 或 rejected",
     "badSubjectImport": "knowledge_import 的对象 ID 必须是所选记录的 sha256",

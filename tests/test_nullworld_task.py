@@ -1,4 +1,5 @@
-"""Null-world exams as tasks: they wait for approval, run only inside read roots and store the report as the result."""
+"""Null-world exams as tasks: they wait for approval, run only inside read roots and store the report as the result.
+The read-only detect route guesses the columns for the person to confirm."""
 
 from __future__ import annotations
 
@@ -107,3 +108,15 @@ def test_allow_reaches_the_exam_and_is_part_of_what_is_approved(
     assert vouched["payload"]["allow"] == ["af_flag"] and vouched["result"]["suspects"] == []
     r = client.post("/api/v1/tasks", json={"kind": "nullworld.exam", "payload": _payload(demo, allow=["a", "a"])})
     assert r.status_code == 422
+
+
+def test_detect_guesses_columns_inside_read_roots_only(client: Client, demo: Path, tmp_path: Path) -> None:
+    r = client.post("/api/v1/null-world/detect", json={"data": str(demo / "ecg_features.csv")})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["groups"][0]["column"] == "subject" and body["labels"][0]["column"] == "af"
+    assert body["features"] == ["rr", "morph"] and body["rows"] > 0
+    outside = tmp_path / "elsewhere.csv"
+    shutil.copy(demo / "ecg_features.csv", outside)
+    r = client.post("/api/v1/null-world/detect", json={"data": str(outside)})
+    assert r.status_code >= 400 and r.json()["code"] == "outside_roots"
