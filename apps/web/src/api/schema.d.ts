@@ -8860,6 +8860,7 @@ export interface operations {
             query: {
                 exam: string;
                 topic?: string | null;
+                board?: string | null;
             };
             header?: never;
             path?: never;

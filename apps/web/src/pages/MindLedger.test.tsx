@@ -58,3 +58,27 @@ it("the board switch shows that board's debts, moves 账账 and the page colours
     expect(localStorage.getItem("ros-board")).toBe("学习");
   } finally { await p.dispose(); }
 });
+
+it("the mastery report asks for the picked board's day and course, lists what to repay first, and prints to PDF", async () => {
+  localStorage.setItem("ros-board", "学习");
+  const report = { exam: "2026-12-01", as_of: "2026-11-17", topic: "高数", board: "学习", total: 3,
+    counts: { own: 1, settled: 1, shaky: 1, untested: 0 }, independence: 0.667,
+    repay_before_exam: [{ id: "b", topic: "高数", question: "什么是导数", weight: "heavy", status: "shaky", attempts: 1, due_on: "2026-11-20" }],
+    not_reachable_before_exam: [] };
+  const get = vi.spyOn(api, "get").mockImplementation((path) =>
+    Promise.resolve(path.startsWith("/mind-ledger/report") ? report : path === "/mind-ledger/recalls" ? [] : debts));
+  const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+  const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");
+  try {
+    expect(p.host.textContent).toContain("Pick a day to see the report.");
+    await p.fill("report-topic", "高数");
+    await p.fill("report-exam", "2026-12-01");
+    await p.flush();
+    expect(get).toHaveBeenCalledWith("/mind-ledger/report?exam=2026-12-01&board=%E5%AD%A6%E4%B9%A0&topic=%E9%AB%98%E6%95%B0", expect.anything());
+    expect(p.host.querySelector("[data-testid=independence]")?.textContent).toBe("67%");
+    expect(p.host.querySelectorAll("[data-testid=report-item]")).toHaveLength(1);
+    expect(p.host.textContent).toContain("still shaky");
+    await p.click("Export PDF");
+    expect(print).toHaveBeenCalledOnce();
+  } finally { await p.dispose(); }
+});

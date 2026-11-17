@@ -6257,6 +6257,23 @@
        ],
        "title": "Topic"
       }
+     },
+     {
+      "name": "board",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 4
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Board"
+      }
      }
     ],
     "responses": {

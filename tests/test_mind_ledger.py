@@ -127,6 +127,9 @@ def test_pre_exam_report(conn: sqlite3.Connection) -> None:
     assert r["independence"] == round(2 / 3, 3)                   # own + settled, no-AI attempts only
     assert [i["id"] for i in r["repay_before_exam"]] == [heavy["id"]]
     assert store.report(conn, "u1", day(2), exam)["total"] == 4
+    _entry(conn, "e", "answer", topic="高数", board="科研")
+    assert store.report(conn, "u1", day(2), exam, board="学习")["total"] == 4    # one board only
+    assert store.report(conn, "u1", day(2), exam, "高数", "科研")["total"] == 1
 
 
 # ---- model-assisted grading through the gateway -----------------------------------------------------------------

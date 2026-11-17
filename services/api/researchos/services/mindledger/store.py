@@ -175,11 +175,15 @@ def record_attempt(conn: sqlite3.Connection, user_id: str, actor: str, entry_id:
             "answer": e["answer"], "next_due": nxt.isoformat() if nxt else None, "settled": nxt is None}
 
 
-def report(conn: sqlite3.Connection, user_id: str, today: date, exam: date, topic: str | None = None) -> dict[str, Any]:
-    """考前真实掌握度报告: independence from no-AI attempts only, plus what to repay before the exam, in order."""
+def report(conn: sqlite3.Connection, user_id: str, today: date, exam: date, topic: str | None = None,
+           board: str | None = None) -> dict[str, Any]:
+    """考前真实掌握度报告: independence from no-AI attempts only, plus what to repay before the exam, in order.
+    Optionally one course (topic) and one board (学习 for an exam, 科研 for a group meeting)."""
     q, args = "SELECT * FROM mind_entries WHERE user_id=? AND dropped_on IS NULL", [user_id]
     if topic:
         q, args = q + " AND topic=?", [*args, topic]
+    if board:
+        q, args = q + " AND board=?", [*args, board]
     entries = rows(conn.execute(q + " ORDER BY created_at", args))
     tried = dict(conn.execute("SELECT entry_id, COUNT(*) FROM mind_attempts WHERE user_id=? GROUP BY entry_id",
                               (user_id,)).fetchall())
@@ -194,6 +198,6 @@ def report(conn: sqlite3.Connection, user_id: str, today: date, exam: date, topi
     todo = sorted((i for i in items if i["due_on"] and i["due_on"] < exam.isoformat()),
                   key=lambda i: (i["due_on"], -rules.WEIGHTS.index(i["weight"])))
     later = [i for i in items if i["due_on"] and i["due_on"] >= exam.isoformat()]
-    return {"exam": exam.isoformat(), "as_of": today.isoformat(), "topic": topic, "total": len(items),
+    return {"exam": exam.isoformat(), "as_of": today.isoformat(), "topic": topic, "board": board, "total": len(items),
             "counts": counts, "independence": rules.independence(i["status"] for i in items),
             "repay_before_exam": todo, "not_reachable_before_exam": later}

@@ -105,3 +105,11 @@
    utilities. In dark they fall back to plain cards and the moving field is off. */
 .dark .jelly-glass { background: var(--card); border: 1px solid var(--border); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .dark .jelly-glass::before, .dark .jl-bg { display: none; }
+
+/* Export to PDF: the browser prints only the mastery report, without the shell, the field or the controls. */
+@media print {
+  body * { visibility: hidden; }
+  [data-print-report], [data-print-report] * { visibility: visible; }
+  [data-print-report] { position: absolute; inset: 0 0 auto; box-shadow: none; backdrop-filter: none; background: white; }
+  [data-print-hide], .jl-bg { display: none !important; }
+}

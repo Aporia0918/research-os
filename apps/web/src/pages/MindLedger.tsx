@@ -1,11 +1,13 @@
 // 思维账本 on the computer, in the same look as the phone: 账账 and the board switch on a jelly hero, then the picked
 // board's open 召回单 (the recalled sentence marked yellow in the AI's answer, the paper's own sentence and page beside
 // it, and where the user used it), then what is due on that board. Repaying stays on the phone.
-import { BookCheck, Undo2 } from "lucide-react";
+import { BookCheck, FileDown, Undo2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { describeError } from "@/api/client";
-import { marked, useDebts, useRecalls, useSettleRecall, type Debt, type Recall } from "@/api/ledger";
+import { marked, useDebts, useRecalls, useReport, useSettleRecall, type Debt, type Mastery, type Recall } from "@/api/ledger";
+import { Field, Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,6 +88,55 @@ function Hero({ board, mine }: { board: keyof typeof BOARD_KEY; mine: Debt[] | n
   );
 }
 
+const MASTERY: Mastery[] = ["own", "settled", "shaky", "untested"];
+
+/** 考前真实掌握度报告 for the picked board: pick the exam (or group meeting) day and, if wanted, one course; print to PDF. */
+function MasteryReport({ board }: { board: keyof typeof BOARD_KEY }) {
+  const { t } = useTranslation();
+  const [exam, setExam] = useState("");
+  const [topic, setTopic] = useState("");
+  const r = useReport(exam, board, topic);
+  return (
+    <Card className="mt-6 grid gap-4 p-5" data-print-report data-testid="report">
+      <div className="grid gap-1">
+        <h2 className="text-title font-semibold">{t("ledger.report.title")}</h2>
+        <p className="text-body-sm text-muted-foreground">{t("ledger.report.howCounted")}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[12rem_1fr_auto] sm:items-end" data-print-hide>
+        <Field label={t("ledger.report.exam")} htmlFor="report-exam"><Input id="report-exam" type="date" value={exam} onChange={(e) => setExam(e.target.value)} /></Field>
+        <Field label={t("ledger.report.topic")} htmlFor="report-topic"><Input id="report-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder={t("ledger.report.allTopics")} /></Field>
+        <Button variant="outline" disabled={!r.data} onClick={() => window.print()}><FileDown />{t("ledger.report.pdf")}</Button>
+      </div>
+      {!exam ? <p className="text-body-sm text-muted-foreground">{t("ledger.report.pickDay")}</p> : (
+        <QueryView q={r}>
+          {(rep) => (
+            <div className="grid gap-4">
+              <p className="text-body-sm text-muted-foreground">{t("ledger.report.asOf", { exam: rep.exam, today: rep.as_of, count: rep.total })}</p>
+              <div className="flex flex-wrap items-end gap-6">
+                <div><span className="text-display font-semibold" data-testid="independence">
+                  {rep.independence === null ? "—" : `${Math.round(rep.independence * 100)}%`}</span>
+                  <span className="ml-2 text-body-sm text-muted-foreground">{t("ledger.report.independence")}</span></div>
+                {MASTERY.map((m) => <div key={m} className="text-body-sm"><span className="text-title font-semibold">{rep.counts[m]}</span>
+                  <span className="ml-1 text-muted-foreground">{t(`ledger.report.status.${m}`)}</span></div>)}
+              </div>
+              {rep.repay_before_exam.length ? (
+                <div className="grid gap-1">
+                  <h3 className="font-medium">{t("ledger.report.repayFirst", { count: rep.repay_before_exam.length })}</h3>
+                  <ol className="list-decimal divide-y pl-5">{rep.repay_before_exam.map((i) => (
+                    <li key={i.id} className="py-1.5" data-testid="report-item"><span className="mr-2 text-caption text-muted-foreground">{i.due_on}</span>
+                      {i.question}<span className="ml-2 text-caption text-muted-foreground">{t(`ledger.report.status.${i.status}`)}</span></li>))}</ol>
+                </div>
+              ) : <p className="text-body-sm">{t("ledger.report.nothingBefore")}</p>}
+              {rep.not_reachable_before_exam.length ? <p className="text-body-sm text-muted-foreground">
+                {t("ledger.report.later", { count: rep.not_reachable_before_exam.length })}</p> : null}
+            </div>
+          )}
+        </QueryView>
+      )}
+    </Card>
+  );
+}
+
 export function MindLedgerPage() {
   const { t } = useTranslation();
   const [board] = useBoard();
@@ -115,6 +166,7 @@ export function MindLedgerPage() {
           );
         }}
       </QueryView>
+      <MasteryReport board={board} />
     </>
   );
 }

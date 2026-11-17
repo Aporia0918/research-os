@@ -117,6 +117,6 @@ def repay(entry_id: str, data: AttemptIn, request: Request, p: Principal = Depen
 
 
 @router.get("/report")
-def report(exam: date, topic: str | None = Query(None, max_length=80), p: Principal = Depends(principal),
-           conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
-    return store.report(conn, p.user_id, date.today(), exam, topic)
+def report(exam: date, topic: str | None = Query(None, max_length=80), board: str | None = Query(None, max_length=4),
+           p: Principal = Depends(principal), conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    return store.report(conn, p.user_id, date.today(), exam, topic, board)

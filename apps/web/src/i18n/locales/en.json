@@ -925,6 +925,29 @@
     "mascot": "Zhangzhang, the ledger's mascot",
     "owed": "due on this board",
     "redCount_one": "{{count}} couldn't be explained",
-    "redCount_other": "{{count}} couldn't be explained"
+    "redCount_other": "{{count}} couldn't be explained",
+    "report": {
+      "title": "Real mastery before the exam",
+      "howCounted": "Counts only the times you explained it without AI. Pick the exam or group-meeting day.",
+      "exam": "Exam day",
+      "topic": "Course",
+      "allTopics": "All courses",
+      "pdf": "Export PDF",
+      "pickDay": "Pick a day to see the report.",
+      "asOf_one": "As of {{today}}, for {{exam}}: {{count}} entry.",
+      "asOf_other": "As of {{today}}, for {{exam}}: {{count}} entries.",
+      "independence": "can do alone",
+      "status": {
+        "own": "own idea",
+        "settled": "explained well",
+        "shaky": "still shaky",
+        "untested": "not explained yet"
+      },
+      "repayFirst_one": "Repay {{count}} before the exam, in this order",
+      "repayFirst_other": "Repay {{count}} before the exam, in this order",
+      "nothingBefore": "Nothing left to repay before that day.",
+      "later_one": "{{count}} more falls due after that day.",
+      "later_other": "{{count}} more fall due after that day."
+    }
   }
 }

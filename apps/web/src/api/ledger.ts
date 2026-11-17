@@ -13,8 +13,22 @@ export interface Recall {
   question: string; answer: string; used_in: string; created_at: string;
 }
 
+export type Mastery = "own" | "settled" | "shaky" | "untested";
+export interface ReportItem { id: string; topic: string; question: string; weight: string | null; status: Mastery; attempts: number; due_on: string | null }
+/** 考前真实掌握度报告: independence counts only explanations given without AI. */
+export interface Report {
+  exam: string; as_of: string; topic: string | null; board: Board | null; total: number; counts: Record<Mastery, number>;
+  independence: number | null; repay_before_exam: ReportItem[]; not_reachable_before_exam: ReportItem[];
+}
+
 export const useDebts = () => useQuery({ queryKey: ["mind", "due"], queryFn: ({ signal }) => api.get<Debt[]>("/mind-ledger/due", signal) });
 export const useRecalls = () => useQuery({ queryKey: ["mind", "recalls"], queryFn: ({ signal }) => api.get<Recall[]>("/mind-ledger/recalls", signal) });
+
+export function useReport(exam: string, board: Board, topic: string) {
+  const q = new URLSearchParams({ exam, board, ...(topic.trim() ? { topic: topic.trim() } : {}) });
+  return useQuery({ queryKey: ["mind", "report", exam, board, topic.trim()], enabled: !!exam,
+    queryFn: ({ signal }) => api.get<Report>(`/mind-ledger/report?${q}`, signal) });
+}
 
 export function useSettleRecall() {
   const qc = useQueryClient();
