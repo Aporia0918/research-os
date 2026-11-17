@@ -26,6 +26,9 @@ import { fromShared } from '../me/shareIn';
 import { refreshReminders } from '../remind';
 import { risk } from '../rules/care';
 import { CareNote } from './CareNote';
+import { LinkList } from './PaperExtras';
+import { linksFor } from '../local/paperExtras';
+import type { PaperLink } from '../rules/paperLinks';
 
 /** Opened from outside the ledger: text shared in from another app, or a tapped reminder. `at` makes each one new. */
 export type LedgerIntent = { kind: 'share'; text: string; at: number } | { kind: 'due'; entryId: string; at: number };
@@ -67,6 +70,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   const [said, setSaid] = useState('');
   const [note, setNote] = useState('');
   const [care, setCare] = useState(false);
+  const [links, setLinksShown] = useState<PaperLink[]>([]);
   const [quiz, setQuiz] = useState<Entry[]>([]);
   const [fresh, setFresh] = useState<Entry | null>(null); // just booked: 「这一步你讲给我听？」
   const [endNow, setEndNow] = useState(false);
@@ -127,6 +131,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
 
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
+  useEffect(() => { if (board === '科研' && course) void linksFor(preferencesKV, course).then(setLinksShown); else setLinksShown([]); }, [board, course]);
   const switcher = <BoardSwitch board={board} onPick={pickBoard} name={boardName} className="seg" />;
   /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
   async function checkNow(e: Entry, attempt: string) {
@@ -199,6 +204,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   const dueShown = course ? dueList.filter(e => (e.topic.trim() || NO_TOPIC) === course) : dueList;
   if (view === 'due') return (
     <section>{back}
+      {links.length > 0 && <div className="card" data-testid="course-links"><h2>{tr('这篇论文附带的代码和数据')}</h2><LinkList links={links} /></div>}
       <DueView entries={dueShown} exam={exam || undefined} title={course ? tr('讲给我听 · {0}', course) : tr('讲给我听')}
         head={left !== null && <p className="muted" data-testid="countdown">{tr('离那天还有 {0} 天，这 {1} 笔还没讲过，到时可能被问到。', left, report!.repayBeforeExam.length)}</p>}
         done={async m => { setMoment(m); await refresh(); }} />

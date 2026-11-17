@@ -1,4 +1,5 @@
-// 文献对照 (plan 2.4): the papers on this phone's shelf, 查重提醒 for a paragraph of your own draft, and 综述矛盾点 between
+// 文献 (plan 2.4; 板块修改总结 merged 文献管理 in): the papers on this phone's shelf with their code and data links and
+// GB/T 7714 references, 查重提醒 for a paragraph of your own draft, and 综述矛盾点 between
 // two papers. Rules only, every hit is a sentence found on its page; what to do about it is the user's call. A
 // contradiction can go into the 科研 book as a debt to explain: "these two disagree; which holds, and why?"
 import { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { newId } from '../local/store';
 import { loadShelf, unshelve, type Shelved } from '../local/shelf';
 import { conflicts, sameAs, type Conflict, type Same } from '../rules/overlap';
 import { preferencesKV } from '../storage/kv';
+import { PaperLinks, RefExport } from './PaperExtras';
 
 const clip = (s: string, n = 220) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
@@ -32,15 +34,19 @@ export function PapersScreen() {
 
   return (
     <section data-testid="papers">
-      <h1>{tr('文献对照')}</h1>
+      <h1>{tr('文献')}</h1>
       <div className="card">
         <h2>{tr('手机上的论文')}</h2>
         {shelf.length === 0 && <p className="muted">{tr('还没有导入论文。在「提问」里导入，最多留最近 {0} 篇。', 5)}</p>}
         <ul className="plain">{shelf.map(p => (
-          <li key={p.versionId} className="row"><span>{tr('《{0}》，{1} 页', p.name, p.pages.length)}</span>
-            <button className="ghost" onClick={() => void remove(p.versionId)}>{tr('移出')}</button></li>
+          <li key={p.versionId} className="paper-item">
+            <div className="row"><span className="file-name">{tr('《{0}》，{1} 页', p.name, p.pages.length)}</span>
+              <button className="ghost" onClick={() => void remove(p.versionId)}>{tr('移出')}</button></div>
+            <PaperLinks paper={p} />
+          </li>
         ))}</ul>
       </div>
+      {shelf.length > 0 && <RefExport shelf={shelf} />}
 
       <div className="card">
         <h2>{tr('查重提醒')}</h2>

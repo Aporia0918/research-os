@@ -29,7 +29,7 @@ export interface Manifest {
   signature?: { scheme?: string; keyId?: string };
 }
 export type UpdateCode = 'no_source' | 'bad_source' | 'offline' | 'timeout' | 'http' | 'bad_json' | 'bad_manifest'
-  | 'size_mismatch' | 'sha_mismatch' | 'download_failed' | 'download_unreachable' | 'not_android' | 'install_failed';
+  | 'size_mismatch' | 'sha_mismatch' | 'slow' | 'download_failed' | 'download_unreachable' | 'not_android' | 'install_failed';
 export class UpdateError extends Error {
   constructor(public code: UpdateCode, public status = 0) { super(code); this.name = 'UpdateError'; }
 }
@@ -211,21 +211,38 @@ export async function fetchManifestFromSources(
 }
 
 /** One mirror attempt: must check size then sha256 and delete the file on mismatch. */
-export type MirrorResult = { ok: true; path: string } | { ok: false; code: UpdateCode };
+export type MirrorResult = { ok: true; path: string } | { ok: false; code: UpdateCode; rate?: number };
 export type Progress = (loaded: number, total: number) => void;
-export type Downloader = (url: string, size: number, sha256: string, onProgress?: Progress) => Promise<MirrorResult>;
+/** minRate (bytes/s, 0 = off): a mirror still slower than this after a few seconds gives up with code 'slow' and its rate. */
+export type Downloader = (url: string, size: number, sha256: string, onProgress?: Progress, minRate?: number) => Promise<MirrorResult>;
+/** 100 KB/s: a 9 MB APK in about 90 s. Slower than that, the next mirror is worth trying (mainland China, 2026-11-17). */
+export const MIN_MIRROR_RATE = 100 * 1024;
 export function percent(loaded: number, total: number): number {
   return total > 0 ? Math.max(0, Math.min(100, Math.floor(loaded * 100 / total))) : 0;
 }
 
-/** Try mirrors in priority order; first verified file wins. Never returns an unverified path. */
+/**
+ * Try mirrors in priority order; first verified file wins. Never returns an unverified path. A mirror that trickles
+ * below MIN_MIRROR_RATE is left for the next one; if every mirror failed and some were only slow, the fastest of those
+ * is tried once more to the end, so a slow network still gets the update.
+ */
 export async function downloadVerified(m: Manifest, dl: Downloader, onProgress?: Progress): Promise<{ path: string; url: string }> {
   let worst: UpdateCode | null = null;
+  const slow: { url: string; rate: number }[] = [];
+  const tryOne = async (url: string, minRate: number): Promise<MirrorResult> => {
+    try { return await dl(url, m.size, m.sha256, onProgress, minRate); } catch { return { ok: false, code: 'offline' }; }
+  };
   for (const mirror of m.apk) {
-    let r: MirrorResult;
-    try { r = await dl(mirror.url, m.size, m.sha256, onProgress); } catch { r = { ok: false, code: 'offline' }; }
+    const r = await tryOne(mirror.url, MIN_MIRROR_RATE);
     if (r.ok) return { path: r.path, url: mirror.url };
+    if (r.code === 'slow') { slow.push({ url: mirror.url, rate: r.rate ?? 0 }); continue; }
     if (!worst || r.code === 'size_mismatch' || r.code === 'sha_mismatch') worst = r.code;
+  }
+  if (slow.length) {
+    const best = slow.reduce((a, b) => (b.rate > a.rate ? b : a));
+    const r = await tryOne(best.url, 0);
+    if (r.ok) return { path: r.path, url: best.url };
+    if (!r.ok && (r.code === 'size_mismatch' || r.code === 'sha_mismatch')) worst = r.code;
   }
   // Every mirror failed. A wrong file is reported as such; anything else means none could be reached.
   throw new UpdateError(worst === 'size_mismatch' || worst === 'sha_mismatch' ? worst : 'download_unreachable');

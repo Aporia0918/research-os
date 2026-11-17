@@ -21,8 +21,19 @@ final class UpdateDownload {
         return v instanceof Number ? ((Number) v).longValue() : -1L;
     }
 
-    /** Returns null when the file at {@code out} is the expected APK, otherwise an UpdateCode for JS. */
+    /** How long a mirror is watched before its speed is judged. */
+    static final long JUDGE_AFTER_MS = 8000;
+
     static String run(String url, long size, String sha256, File out, Progress progress) {
+        return run(url, size, sha256, out, progress, 0);
+    }
+
+    /**
+     * Returns null when the file at {@code out} is the expected APK, otherwise an UpdateCode for JS. With
+     * {@code minBytesPerSec} above 0, a mirror still under that speed after JUDGE_AFTER_MS is given up as
+     * "slow:<bytes per second>", so the next mirror gets its turn instead of a trickle holding the whole update.
+     */
+    static String run(String url, long size, String sha256, File out, Progress progress, long minBytesPerSec) {
         if (size <= 0 || sha256 == null || !sha256.matches("[0-9a-f]{64}")) return "bad_manifest";
         File dir = out.getParentFile();
         HttpURLConnection c = null;
@@ -36,6 +47,7 @@ final class UpdateDownload {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             long n = 0;
             int lastPct = -1;
+            final long start = System.currentTimeMillis();
             try (InputStream in = c.getInputStream(); FileOutputStream fo = new FileOutputStream(out)) {
                 byte[] buf = new byte[64 * 1024];
                 int r;
@@ -44,6 +56,11 @@ final class UpdateDownload {
                     if (n > size) break;
                     md.update(buf, 0, r);
                     fo.write(buf, 0, r);
+                    long ms = System.currentTimeMillis() - start;
+                    if (minBytesPerSec > 0 && ms >= JUDGE_AFTER_MS && n < size && n * 1000 / ms < minBytesPerSec) {
+                        fo.close();
+                        return fail("slow:" + (n * 1000 / ms), out);
+                    }
                     int pct = (int) (n * 100 / size);
                     if (pct != lastPct && progress != null) {
                         lastPct = pct;

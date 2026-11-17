@@ -27,6 +27,7 @@ public class UpdateInstallerPlugin extends Plugin {
         // which made every update read size -1 and fail as size_mismatch (1.4.111 → 1.4.112).
         final long size = UpdateDownload.sizeOf(call.getData().opt("size"));
         final String sha = call.getString("sha256", "");
+        final long minRate = Math.max(0, UpdateDownload.sizeOf(call.getData().opt("minRate")));
         new Thread(() -> {
             File out = new File(new File(getContext().getCacheDir(), "updates"), "update.apk");
             String code = UpdateDownload.run(url, size, sha, out, (loaded, total) -> {
@@ -34,7 +35,7 @@ public class UpdateInstallerPlugin extends Plugin {
                 p.put("loaded", loaded);
                 p.put("total", total);
                 notifyListeners("downloadProgress", p);
-            });
+            }, minRate);
             JSObject ret = new JSObject();
             ret.put("ok", code == null);
             if (code == null) ret.put("path", out.getAbsolutePath());

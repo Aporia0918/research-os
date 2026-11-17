@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import {
   AUTO_INTERVAL_MS, DEFAULT_MANIFEST_URL, DEFAULT_RELEASE_BASE, UpdateError, decide, describeUpdateError,
-  downloadVerified, fetchDownloader, fetchManifest, isAssetName, loadMirrorPrefix, loadSource, manualAllowed,
+  downloadVerified, MIN_MIRROR_RATE, fetchDownloader, fetchManifest, isAssetName, loadMirrorPrefix, loadSource, manualAllowed,
   markAutoCheck, parseManifest, releaseUrl, saveMirrorPrefix, saveSource, shouldAutoCheck, sha256Hex,
   withMirrorPrefix, type Manifest, UPDATE_SOURCES, UPDATE_TIMEOUT_MS, sourceList, fetchManifestFromSources, percent,
 } from '../src/update/manifest';
@@ -264,5 +264,28 @@ describe('T7 1.4: 10 s hard timeout, ordered sources (GitHub only), download pro
     await downloadVerified(parseManifest(JSON.stringify(manifest())), fetchDownloader(), (l, t) => seen.push(percent(l, t)));
     expect(seen.length).toBeGreaterThan(0); expect(seen.at(-1)).toBe(100);
     expect(percent(50, 200)).toBe(25); expect(percent(1, 0)).toBe(0);
+  });
+});
+
+describe('a slow mirror does not hold the update', () => {
+  const m = (urls: string[]) => ({ ...parseManifest(JSON.stringify(manifest())), apk: urls.map((url, i) => ({ url, priority: i })) });
+  it('moves on from a trickling mirror, and comes back to the fastest slow one when nothing else works', async () => {
+    const asked: [string, number][] = [];
+    const dl = async (url: string, _s: number, _h: string, _p?: unknown, minRate = 0) => {
+      asked.push([url, minRate]);
+      if (url === 'https://a/x.apk') return { ok: false as const, code: 'slow' as const, rate: 20000 };
+      if (url === 'https://b/x.apk') return { ok: true as const, path: 'p' };
+      return { ok: false as const, code: 'http' as const };
+    };
+    expect(await downloadVerified(m(['https://a/x.apk', 'https://b/x.apk']), dl)).toEqual({ path: 'p', url: 'https://b/x.apk' });
+    expect(asked).toEqual([['https://a/x.apk', MIN_MIRROR_RATE], ['https://b/x.apk', MIN_MIRROR_RATE]]);
+    asked.length = 0;
+    const dl2 = async (url: string, _s: number, _h: string, _p?: unknown, minRate = 0) => {
+      asked.push([url, minRate]);
+      if (minRate === 0) return { ok: true as const, path: 'q' };
+      return { ok: false as const, code: 'slow' as const, rate: url === 'https://c/x.apk' ? 80000 : 30000 };
+    };
+    expect(await downloadVerified(m(['https://a/x.apk', 'https://c/x.apk', 'https://d/x.apk']), dl2)).toEqual({ path: 'q', url: 'https://c/x.apk' });
+    expect(asked.at(-1)).toEqual(['https://c/x.apk', 0]);
   });
 });

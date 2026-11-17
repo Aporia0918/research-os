@@ -308,3 +308,13 @@ input[type=search] { width: 100%; margin-bottom: 12px; }
 .care p { margin: 0; }
 @media (max-width: 360px) { .collage { grid-template-columns: minmax(0, 1fr); } .drop-card { width: 60%; justify-self: center; } }
 @media (prefers-reduced-motion: reduce) { .drop-card, .shape-past { rotate: 0deg; } }
+
+/* 科研 merges: data files on a record, a paper's links and its reference. Long names and links wrap, never widen the page. */
+.file-name, .link-url { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.link-kind { flex: none; font-size: .78em; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: rgb(var(--w) / .45); color: var(--deep); }
+.paper-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px dashed rgb(var(--w) / .7); }
+.paper-item:first-child { border-top: 0; }
+.paper-part { display: flex; flex-direction: column; gap: 6px; }
+.paper-part .row input { flex: 1; min-width: 0; }
+.ref-line { overflow-wrap: anywhere; font-size: .9em; }
+.data-files { display: flex; flex-direction: column; gap: 4px; }
