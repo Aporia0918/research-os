@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">论文实验助手 测试版</string>
-    <string name="title_activity_main">论文实验助手 测试版</string>
+    <string name="app_name">思维账本</string>
+    <string name="title_activity_main">思维账本</string>
 </resources>

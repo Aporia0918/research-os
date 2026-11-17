@@ -12,7 +12,7 @@ export function getLang(): Lang { return current; }
 export function setLang(l: Lang): void {
   current = l === 'en' ? 'en' : 'zh';
   if (typeof document !== 'undefined') document.documentElement.lang = current === 'en' ? 'en' : 'zh-CN';
-  if (typeof document !== 'undefined') document.title = tr('论文实验助手');
+  if (typeof document !== 'undefined') document.title = tr('思维账本');
   listeners.forEach(f => f(current));
 }
 export function onLang(f: (l: Lang) => void): () => void { listeners.add(f); return () => { listeners.delete(f); }; }

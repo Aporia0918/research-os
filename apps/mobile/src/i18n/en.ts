@@ -245,7 +245,7 @@ export const EN: Record<string, string> = {
   "默认中文;只由这里决定,不跟随手机语言。": "Chinese by default; set only here, never by the phone language.",
   // demo bundle data shown in the UI (src/demo/bundle.json)
   "EEGNet(Lawhern 等,2018,公开论文,arXiv:1611.08024)": "EEGNet (Lawhern et al., 2018, public open-access paper, arXiv:1611.08024)",
-  "论文实验助手": "Paper Lab Assistant",
+  "思维账本": "Mind Ledger",
   "还没有填模型密钥,先用规则模式。": "No model key yet; using rule-only mode.",
   "还没有填模型地址(Base URL),先用规则模式。": "No model address (Base URL) yet; using rule-only mode.",
   "模型地址必须以 http:// 或 https:// 开头。": "The model address must start with http:// or https://.",
