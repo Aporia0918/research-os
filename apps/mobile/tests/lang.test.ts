@@ -9,11 +9,13 @@ import { LANG_KEY, getLang, loadLang, saveLang, setLang, tr, fmtDate } from '../
 import { memoryKV } from '../src/storage/kv';
 import { ERROR_ZH, describeError, ApiError } from '../src/api/computer';
 import { App } from '../src/App';
+import { preferencesKV } from '../src/storage/kv';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const flush = () => act(async () => { await new Promise(r => setTimeout(r, 20)); });
 let root: Root | null = null; let host: HTMLElement | null = null;
 async function mount() {
+  await preferencesKV.set('profile.v1', JSON.stringify({ who: 'college', slots: [], remind: false })); // past the first-open welcome
   host = document.createElement('div'); document.body.appendChild(host);
   root = createRoot(host);
   await act(async () => { root!.render(createElement(App)); });

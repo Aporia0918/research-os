@@ -30,3 +30,12 @@ const clip = (s: string, n = 18) => (s.length > n ? `${s.slice(0, n)}…` : s);
 /** Praise that names what was said well, never a score. */
 export const praise = (g: Grade): string =>
   g.hits.length ? tr('讲顺了。你把「{0}」讲出来了，这笔还上了。', clip(g.points[g.hits[0]])) : tr('讲顺了，这笔还上了。');
+
+const FIRST_SYSTEM = '用户第一次用思维账本，刚刚不看资料讲了一段自己在学的东西。用一两句中文，先具体说出讲得清楚的一处，再说一处可以再想想的地方。语气像朋友，不打分，不说对错，不给完整答案。';
+/** The first explanation on first open: the user's own model says what was clear and what to think over; none without a key. */
+export async function firstFeedback(said: string): Promise<string | null> {
+  const [s, key] = await Promise.all([loadModelSettings(preferencesKV), loadKey(preferencesKV)]);
+  if (!key || !s.baseUrl) return null;
+  try { return (await chat(forJob(s, 'grade'), key, [{ role: 'system', content: FIRST_SYSTEM }, { role: 'user', content: said }])).trim() || null; }
+  catch { return null; }
+}

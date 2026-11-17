@@ -15,6 +15,13 @@ import { Icon, type IconName } from './icons';
 import { JellyDemo } from './jelly/JellyDemo';
 import { Backdrop } from './jelly/Backdrop';
 import { jellyPress } from './jelly/spring';
+import { Welcome } from './screens/Welcome';
+import { loadProfile, saveProfile, type Profile } from './me/profile';
+import { onShared } from './me/shareIn';
+import { onTap } from './remind/native';
+import { refreshReminders } from './remind';
+import { book, today } from './ledger/book';
+import type { LedgerIntent } from './screens/LedgerScreen';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
@@ -29,6 +36,25 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
 
 export function App() {
   const [tab, setTab] = useState<Tab>('ledger');
+  /** undefined while loading; null = first open, show the welcome. */
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  useEffect(() => { void loadProfile(preferencesKV).then(setProfile); }, []);
+  /** Text shared in from another app, or a tapped reminder: the ledger opens on it. */
+  const [intent, setIntent] = useState<LedgerIntent | null>(null);
+  useEffect(() => {
+    const offShare = onShared(text => { setTab('ledger'); setIntent({ kind: 'share', text, at: Date.now() }); });
+    const offTap = onTap(async t => {
+      if (t.action === 'open') { setTab('ledger'); setIntent({ kind: 'due', entryId: t.entryId, at: Date.now() }); return; }
+      await (t.action === 'later' ? book.snooze(t.entryId, today()) : book.drop(t.entryId, today()));
+      await refreshReminders();
+    });
+    return () => { offShare(); offTap(); };
+  }, []);
+  async function welcomed(p: Profile, board: '学习' | '科研') {
+    await saveProfile(preferencesKV, p);
+    await preferencesKV.set('mindledger.board.v1', board);
+    setProfile(p); void refreshReminders();
+  }
   useEffect(() => { if (tab === 'research') setBoardTheme('科研'); }, [tab]); // 账本 sets its own board's colours
   useEffect(() => jellyPress(PRESSABLE), []);
   const [researchStart, setResearchStart] = useState<'exam' | null>(null);
@@ -58,6 +84,7 @@ export function App() {
   const chooseLang = (l: Lang) => { setLang(l); void saveLang(preferencesKV, l); };
   const toggleDemo = (on: boolean) => { setDemo(on); void saveDemo(preferencesKV, on); };
   if (jelly) return <JellyDemo onExit={() => setJelly(false)} />;
+  if (profile === null) return <div className="app" data-lang={lang}><Backdrop /><main className="screen"><Welcome onDone={(p, b) => void welcomed(p, b)} /></main></div>;
   return (
     <div className="app" data-lang={lang}>
       <Backdrop />
@@ -69,7 +96,7 @@ export function App() {
         </div>
       )}
       <main className="screen">
-        {tab === 'ledger' && <LedgerScreen onGo={go} />}
+        {tab === 'ledger' && profile !== undefined && <LedgerScreen onGo={go} intent={intent} />}
         {tab === 'ask' && <AskScreen demo={demo} />}
         {tab === 'research' && <ResearchScreen demo={demo} start={researchStart} />}
         {tab === 'enhanced' && enhanced && <EnhancedScreen />}

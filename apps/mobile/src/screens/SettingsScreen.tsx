@@ -5,6 +5,7 @@ import { loadComputerSettings, saveComputerSettings, DEFAULT_COMPUTER_URL, type 
 import { ResearchOsClient, describeError } from '../api/computer';
 import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
+import { MeCard } from './MeCard';
 import { book, today } from '../ledger/book';
 import { DEFAULT_MODEL_SETTINGS, OPENROUTER_BASE_URL, clearKey, hasKey, loadKey, loadModelSettings, saveKey, saveModelSettings, type Job, type KeyHeader, type ModelSettings } from '../model/settings';
 import { chat, describeModelError, listModels } from '../model/direct';
@@ -63,6 +64,7 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer, onJelly
     <section>
       <h1>{tr('设置')}</h1>
       {onJelly && <button className="ghost" data-testid="open-jelly" onClick={onJelly}>{tr('看账账和果冻界面演示')}</button>}
+      <MeCard />
       <div className="card" data-testid="lang-switch">
         <div><b>{tr('界面语言')}</b></div>
         <div className="row" role="radiogroup" aria-label={tr('界面语言')}>

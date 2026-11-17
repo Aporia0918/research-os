@@ -18,6 +18,11 @@ import { balanceOn, streak } from '../ledger/insight';
 import { DueView } from './ledger/DueView';
 import { BalanceView } from './ledger/BalanceView';
 import { importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
+import { fromShared } from '../me/shareIn';
+import { refreshReminders } from '../remind';
+
+/** Opened from outside the ledger: text shared in from another app, or a tapped reminder. `at` makes each one new. */
+export type LedgerIntent = { kind: 'share'; text: string; at: number } | { kind: 'due'; entryId: string; at: number };
 
 const EXAM_KEY = 'mindledger.exam.v1';
 /** 先自己说 / 提示 / 思路 / 完整答案, with the cost said once in plain words (plan 2.2: 代价看得见但不吓人). */
@@ -45,7 +50,7 @@ async function remote(): Promise<LedgerRemote | null> {
   return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue() };
 }
 
-export function LedgerScreen({ onGo }: { onGo?: (to: 'ask' | 'exam') => void } = {}) {
+export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => void; intent?: LedgerIntent | null }) {
   const [board, setBoard] = useState<Board>('科研');
   useEffect(() => setBoardTheme(board), [board]);
   const [exam, setExam] = useState('');
@@ -73,7 +78,28 @@ export function LedgerScreen({ onGo }: { onGo?: (to: 'ask' | 'exam') => void } =
     setRecalled((await book.recalled()).filter(ofBoard(b)));
     setQuiz((await book.quizDue(today(), end)).filter(ofBoard(b)));
     setReport(e ? await book.report(today(), e, b) : null);
+    void refreshReminders(); // the next reminders follow the book: a debt repaid or dropped is never asked about
   }
+  /** The reminder's debt opens first in 讲给我听, even if it was not due yet. */
+  const [focus, setFocus] = useState<Entry | null>(null);
+  useEffect(() => {
+    if (!intent) return;
+    if (intent.kind === 'share') {
+      const s = fromShared(intent.text);
+      const b = board === '生活' ? '学习' : board;
+      if (b !== board) pickBoard(b);
+      setDraft(d => ({ ...d, question: s.question, answer: s.answer, ownIdea: '', citation: false }));
+      setNote(tr('你当时自己是怎么想的？写一句再记，这笔会轻一档。')); setView('add');
+      return;
+    }
+    void book.all().then(es => {
+      const e = es.find(x => x.id === intent.entryId);
+      if (!e || e.board === '生活') return;
+      if (e.board !== board) pickBoard(e.board);
+      setFocus(e); setCourse(null); setView('due');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per intent
+  }, [intent]);
   function pickBoard(b: Board) { setBoard(b); setNote(''); setFresh(null); setView('home'); void preferencesKV.set(BOARD_KEY, b); void refresh(exam, endNow, b); }
   useEffect(() => {
     void book.trialStart().then(async s => { if (s) await book.opened(today()); });
@@ -152,7 +178,8 @@ export function LedgerScreen({ onGo }: { onGo?: (to: 'ask' | 'exam') => void } =
   const status = note && <p className="note" role="status">{note}</p>;
 
   // Sub-pages: one job each, reached from the home screen. Nothing here is on the home screen itself.
-  const dueShown = course ? due.filter(e => (e.topic.trim() || NO_TOPIC) === course) : due;
+  const dueList = focus && focus.dueOn && !focus.dropped && !due.some(e => e.id === focus.id) ? [focus, ...due] : focus ? [...due.filter(e => e.id === focus.id), ...due.filter(e => e.id !== focus.id)] : due;
+  const dueShown = course ? dueList.filter(e => (e.topic.trim() || NO_TOPIC) === course) : dueList;
   if (view === 'due') return (
     <section>{back}
       <DueView entries={dueShown} exam={exam || undefined} title={course ? tr('讲给我听 · {0}', course) : tr('讲给我听')}
@@ -165,7 +192,7 @@ export function LedgerScreen({ onGo }: { onGo?: (to: 'ask' | 'exam') => void } =
   );
   if (view === 'add') return (
     <section>{back}
-      <h1>{tr('记一笔')}</h1>
+      <h1>{tr('记一笔')}</h1>{status}
       <div className="card">
         <input value={draft.topic} data-testid="topic" placeholder={board === '学习' ? tr('哪门课（比如高数）') : tr('哪篇论文或哪个课题')} onChange={x => setDraft({ ...draft, topic: x.target.value })} />
         {topics.length > 0 && <div className="chips" role="group" aria-label={board === '学习' ? tr('最近的课') : tr('最近的论文和课题')}>{topics.map(t => (

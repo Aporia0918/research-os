@@ -3,7 +3,8 @@ import { Book } from './ledger';
 import { preferencesKV } from '../storage/kv';
 
 export const book = new Book(preferencesKV);
-export const today = (): string => new Date().toISOString().slice(0, 10);
+/** The user's own calendar day (local time), so a debt due tomorrow is not due at 8 in the morning in China. */
+export const today = (): string => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
 /** Copy text for the user; falls back to a selected textarea where the clipboard API is refused. */
 export async function copyText(text: string): Promise<void> {

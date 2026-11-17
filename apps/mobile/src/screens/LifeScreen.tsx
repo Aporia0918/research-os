@@ -11,6 +11,7 @@ import { forJob, loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
 import { ZZ, Zhangzhang, type ZzState } from '../jelly/Zhangzhang';
+import { isMinor, lifeLocked, loadProfile, restDue, saveProfile, type Profile } from '../me/profile';
 
 export const lifeBook = new LifeBook(preferencesKV);
 const OUTWARD_AFTER = 8; // messages in one sitting before it asks, once, whether a friend has heard this
@@ -42,6 +43,11 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
   const [mood, setMood] = useState<ZzState>('wave');
   useEffect(() => { if (mood !== 'wave' && mood !== 'smile') return; const t = setTimeout(() => setMood('life'), 2200); return () => clearTimeout(t); }, [mood]);
 
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [since, setSince] = useState(() => Date.now());
+  const [rest, setRest] = useState<number | null>(null);
+  useEffect(() => { void loadProfile(preferencesKV).then(setProfile); }, []);
+  useEffect(() => { const t = setInterval(() => setRest(restDue(since, Date.now(), isMinor(profile))), 60000); return () => clearInterval(t); }, [since, profile]);
   async function refresh() { setWeek(await lifeBook.week(today())); setReviewOn(await lifeBook.reviewOn()); }
   useEffect(() => { void refresh(); }, []);
 
@@ -79,6 +85,15 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
   async function toggleReview() { await lifeBook.setReview(!reviewOn); await refresh(); }
 
   const avatar = <img className="avatar" src={ZZ.life.img} alt="" draggable={false} />;
+  if (lifeLocked(profile)) return (
+    <section className="life">
+      <div className="card" data-testid="life-guardian">
+        <h2>{tr('先请监护人看一下')}</h2>
+        <p>{tr('不满 14 岁用生活板块，要先让爸爸妈妈或其他监护人同意。学习板块不受影响。')}</p>
+        <button className="primary" onClick={() => { const p = { ...profile!, guardian: true }; void saveProfile(preferencesKV, p).then(() => setProfile(p)); }}>{tr('监护人已同意')}</button>
+      </div>
+    </section>
+  );
   return (
     <section className="life">
       <div className="hero-wrap">
@@ -86,8 +101,15 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
         <div className="card hero life-hero">
           <h2>{tr('账账')}</h2>
           <p className="muted">{tr('陪你聊聊生活里的小事，主意还是你自己拿。这里说的话只留在这次聊天里，不进学习和科研的账，也不会被拿来出题。')}</p>
+          <p className="ai-note" data-testid="life-ai-note">{tr('我是 AI，不是真人。')}</p>
         </div>
       </div>
+      {rest !== null && (
+        <div className="card" role="note" data-testid="life-rest">
+          <p>{tr('我们已经聊了 {0} 分钟，起来走走、喝口水吧，也可以找身边的人说说话。', rest)}</p>
+          <button className="ghost" onClick={() => { setSince(Date.now()); setRest(null); }}>{tr('好')}</button>
+        </div>
+      )}
       {reviewOn && week && week.own + week.ai > 0 && (
         <div className="card" data-testid="life-week">
           <h2>{tr('这周的生活账')}</h2>

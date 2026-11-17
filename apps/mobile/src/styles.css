@@ -223,3 +223,5 @@ details.card.more > summary { color: var(--deep); }
 .walk li { animation: walk-in .3s ease both; }
 @keyframes walk-in { from { opacity: 0; translate: 0 6px; } }
 details > ul li { display: grid; gap: 2px; margin-bottom: 6px; }
+.ai-note { margin: 4px 0 0; font-size: .8rem; font-weight: 700; color: var(--deep); }
+.welcome { padding-top: 12px; } .welcome .hero h1 { padding-right: 120px; }
