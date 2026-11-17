@@ -29,7 +29,7 @@ export interface Manifest {
   signature?: { scheme?: string; keyId?: string };
 }
 export type UpdateCode = 'no_source' | 'bad_source' | 'offline' | 'timeout' | 'http' | 'bad_json' | 'bad_manifest'
-  | 'size_mismatch' | 'sha_mismatch' | 'download_failed' | 'not_android' | 'install_failed';
+  | 'size_mismatch' | 'sha_mismatch' | 'download_failed' | 'download_unreachable' | 'not_android' | 'install_failed';
 export class UpdateError extends Error {
   constructor(public code: UpdateCode, public status = 0) { super(code); this.name = 'UpdateError'; }
 }
@@ -41,14 +41,15 @@ export function describeUpdateError(e: unknown): string {
     case 'no_source': return tr('未配置更新源:请先在设置里填更新地址。');
     case 'bad_source': return tr('更新地址必须以 http:// 或 https:// 开头。');
     case 'offline':
-    case 'timeout': return tr('暂时连不上更新服务器，稍后再试');
+    case 'timeout': return tr('检查新版本时连不上更新服务器。可以稍后再试，或打开代理再试。');
+    case 'download_unreachable': return tr('下载安装包时几个地址都连不上，没有安装。可以稍后再试，或用浏览器打开下面的地址手动下载。');
     case 'http': return tr('更新源出错(错误代码 {0})。', s);
     case 'bad_json': return tr('更新信息格式不对,看不懂,已停止更新。');
     case 'bad_manifest': return tr('更新信息缺少必要内容,已停止更新。');
     case 'size_mismatch': return tr('下载的安装包大小不对,已删除,没有安装。');
     case 'sha_mismatch': return tr('下载的安装包校验值(sha256)不一致,可能被改动或损坏,已删除,没有安装。');
     case 'not_android': return tr('只有在安卓手机上才能安装更新。');
-    case 'install_failed': return tr('没能打开系统安装界面,请允许本应用“安装未知应用”后重试。');
+    case 'install_failed': return tr('还没打开系统安装界面。请在系统设置里允许本应用“安装未知应用”，回来点「继续安装」。');
     default: return tr('所有下载地址都失败了,没有安装。');
   }
 }
@@ -188,16 +189,22 @@ export function sourceList(userSource: string, sources: readonly UpdateSource[] 
   if (!u || u === DEFAULT_MANIFEST_URL) return builtIn;
   return [u];
 }
-/** Try each source in order, each with its own hard timeout; first valid version.json wins. */
+/**
+ * Ask every source at once, each with its own hard timeout, and take the newest valid version.json.
+ * A CDN copy can lag behind GitHub (or the other way round), so the highest versionCode wins; on a tie the earlier
+ * source in the list wins. When none answers, the error of the first source is reported.
+ */
 export async function fetchManifestFromSources(
-  urls: string[], f: typeof fetch = fetch, timeoutMs = UPDATE_TIMEOUT_MS, opts: ResolveOpts = {},
+  urls: readonly string[], f: typeof fetch = fetch, timeoutMs = UPDATE_TIMEOUT_MS, opts: ResolveOpts = {},
 ): Promise<{ manifest: Manifest; url: string }> {
   if (!urls.length) throw new UpdateError('no_source');
-  let last: unknown = new UpdateError('offline');
-  for (const url of urls) {
-    try { return { manifest: await fetchManifest(url, f, timeoutMs, opts), url }; } catch (e) { last = e; }
-  }
-  throw last;
+  const got = await Promise.allSettled(urls.map(u => fetchManifest(u, f, timeoutMs, opts)));
+  let best: { manifest: Manifest; url: string } | null = null;
+  got.forEach((r, i) => {
+    if (r.status === 'fulfilled' && (!best || r.value.versionCode > best.manifest.versionCode)) best = { manifest: r.value, url: urls[i] };
+  });
+  if (best) return best;
+  throw (got[0] as PromiseRejectedResult).reason;
 }
 
 /** One mirror attempt: must check size then sha256 and delete the file on mismatch. */
@@ -210,14 +217,15 @@ export function percent(loaded: number, total: number): number {
 
 /** Try mirrors in priority order; first verified file wins. Never returns an unverified path. */
 export async function downloadVerified(m: Manifest, dl: Downloader, onProgress?: Progress): Promise<{ path: string; url: string }> {
-  let last: UpdateCode = 'download_failed';
+  let worst: UpdateCode | null = null;
   for (const mirror of m.apk) {
     let r: MirrorResult;
     try { r = await dl(mirror.url, m.size, m.sha256, onProgress); } catch { r = { ok: false, code: 'offline' }; }
     if (r.ok) return { path: r.path, url: mirror.url };
-    last = r.code;
+    if (!worst || r.code === 'size_mismatch' || r.code === 'sha_mismatch') worst = r.code;
   }
-  throw new UpdateError(last);
+  // Every mirror failed. A wrong file is reported as such; anything else means none could be reached.
+  throw new UpdateError(worst === 'size_mismatch' || worst === 'sha_mismatch' ? worst : 'download_unreachable');
 }
 
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
@@ -277,14 +285,14 @@ export function manualAllowed(lastManual: number, now: number): boolean { return
  * (success or failure); never downloads or installs — it only reports that an update exists.
  */
 export async function autoCheckUpdate(kv: KV, now: number, localCode: number, channel: string, f: typeof fetch = fetch,
-  opts: { source?: string; everyStart?: boolean } = {}): Promise<Manifest | null> {
-  const src = opts.source ?? await loadSource(kv);
+  opts: { sources?: readonly string[]; everyStart?: boolean } = {}): Promise<Manifest | null> {
+  const src = opts.sources ? opts.sources.join(' ') : await loadSource(kv);
   if (!src.trim()) return null;
   if (!opts.everyStart && !(await shouldAutoCheck(kv, now))) return null;
   await markAutoCheck(kv, now);
   try {
     const prefix = await loadMirrorPrefix(kv);
-    const { manifest } = await fetchManifestFromSources(opts.source ? [src] : sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
+    const { manifest } = await fetchManifestFromSources(opts.sources ?? sourceList(src), f, UPDATE_TIMEOUT_MS, { mirrorPrefix: prefix });
     const d = decide(manifest, localCode, channel);
     return d.kind === 'update' ? d.manifest : null;
   } catch { return null; }

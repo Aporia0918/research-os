@@ -5,8 +5,9 @@ import java.nio.file.Files;
 
 /**
  * Runs the app's own update download code on a desktop JVM against a published build:
- *   java UpdateDownloadCheck <apk url> <size> <sha256>
+ *   java UpdateDownloadCheck <apk url> <size> <sha256> [mirror url ...]
  * Checks the Integer size that broke 1.4.111, the real download, and that bad size or sha is caught and deleted.
+ * Each extra mirror is downloaded and verified too; a mirror that fails is printed as a warning, not a failure.
  */
 public final class UpdateDownloadCheck {
     public static void main(String[] a) throws Exception {
@@ -30,6 +31,12 @@ public final class UpdateDownloadCheck {
         String other = sha.charAt(0) == '0' ? "1" + sha.substring(1) : "0" + sha.substring(1);
         check("sha_mismatch".equals(UpdateDownload.run(url, size, other, bad, null)) && !bad.exists(),
                 "wrong sha256 is caught and the file deleted");
+        for (int i = 3; i < a.length; i++) {
+            File m = tmp();
+            String got = UpdateDownload.run(a[i], size, sha, m, null);
+            System.out.println(got == null ? "ok   mirror " + a[i] : "::warning::mirror " + a[i] + " failed: " + got);
+            if (m.exists()) Files.delete(m.toPath());
+        }
         System.out.println("update download check passed");
     }
 

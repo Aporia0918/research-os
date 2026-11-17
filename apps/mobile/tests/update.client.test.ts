@@ -1,5 +1,6 @@
 // In-app update client against a LOCAL test server only (no hosting account). 非真机: native download/install not exercised.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { TEST_MANIFEST_URL, TEST_MANIFEST_URLS } from '../src/update/version';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createHash } from 'node:crypto';
@@ -99,7 +100,7 @@ describe('T4 fetch manifest from local server; failure paths in Chinese', () => 
   const cases: [string, string, RegExp][] = [
     ['', 'no_source', /未配置更新源/], ['ftp://x/v.json', 'bad_source', /http:\/\//],
     ['/v/broken.json', 'bad_json', /格式不对/], ['/v/500.json', 'http', /错误代码 500/],
-    ['/v/slow.json', 'timeout', /暂时连不上更新服务器，稍后再试/], ['http://127.0.0.1:9/v.json', 'offline', /暂时连不上更新服务器/],
+    ['/v/slow.json', 'timeout', /检查新版本时连不上更新服务器/], ['http://127.0.0.1:9/v.json', 'offline', /检查新版本时连不上更新服务器/],
   ];
   for (const [u, code, zh] of cases) it(`${code}`, async () => {
     const url = u.startsWith('/') ? base + u : u;
@@ -132,6 +133,14 @@ describe('T5 download: size then sha256, mirrors in priority order', () => {
     expect(r.url).toBe(`${base}/apk/good`);
     expect(hits.slice(start)).toEqual(['/apk/tampered', '/apk/good']);
     expect(store.size).toBe(1); // only the verified file is kept
+  });
+  it('every mirror unreachable -> download_unreachable; a wrong file is still reported as wrong', async () => {
+    const down = parseManifest(JSON.stringify(manifest({ apk: [{ url: 'http://127.0.0.1:9/a.apk', priority: 1 }, { url: 'http://127.0.0.1:9/b.apk', priority: 2 }] })));
+    const e = await downloadVerified(down, fetchDownloader()).catch(x => x);
+    expect(e.code).toBe('download_unreachable'); expect(describeUpdateError(e)).toMatch(/下载安装包时.*连不上.*手动下载/);
+    setLang('en'); expect(describeUpdateError(e)).not.toMatch(/[\u4e00-\u9fff]/); setLang('zh');
+    const mixed = parseManifest(JSON.stringify(manifest({ apk: [{ url: `${base}/apk/tampered`, priority: 1 }, { url: 'http://127.0.0.1:9/b.apk', priority: 2 }] })));
+    expect((await downloadVerified(mixed, fetchDownloader()).catch(x => x)).code).toBe('sha_mismatch');
   });
 });
 
@@ -216,6 +225,23 @@ describe('T7 1.4: 10 s hard timeout, ordered sources (GitHub only), download pro
     expect(r.url).toBe(`${base}/v/ok.json`); expect(r.manifest.versionCode).toBe(2);
     const e = await fetchManifestFromSources([`${base}/v/slow.json`], fetch, 300).catch(x => x);
     expect(e.code).toBe('timeout');
+  });
+  it('asks every source at once and takes the newest version.json (a CDN copy may lag)', async () => {
+    const at = (code: number) => JSON.stringify({ ...manifest(), versionCode: code });
+    const f = (async (u: string) => {
+      if (u.includes('down')) throw new Error('offline');
+      await new Promise(r => setTimeout(r, u.includes('slow') ? 80 : 5));
+      return new Response(at(u.includes('new') ? 9 : 8));
+    }) as unknown as typeof fetch;
+    const r = await fetchManifestFromSources(['https://down/v.json', 'https://cdn-old/v.json', 'https://slow-new/v.json'], f, 1000);
+    expect(r.url).toBe('https://slow-new/v.json'); expect(r.manifest.versionCode).toBe(9);
+    const tie = await fetchManifestFromSources(['https://a-old/v.json', 'https://b-old/v.json'], f, 1000);
+    expect(tie.url).toBe('https://a-old/v.json');
+    expect((await fetchManifestFromSources(['https://down/1', 'https://down/2'], f, 1000).catch(x => x)).code).toBe('offline');
+  });
+  it('test builds look at jsDelivr copies first and GitHub last', () => {
+    expect(TEST_MANIFEST_URLS.at(-1)).toBe(TEST_MANIFEST_URL);
+    expect(TEST_MANIFEST_URLS.slice(0, -1).every(u => /^https:\/\/\w+\.jsdelivr\.net\/gh\/Aporia0918\/research-os@test-builds\/version\.json$/.test(u))).toBe(true);
   });
   it('reports download progress up to 100%', async () => {
     const seen: number[] = [];

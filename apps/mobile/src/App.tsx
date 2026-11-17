@@ -75,7 +75,7 @@ export function App() {
     let live = true;
     const t = setTimeout(() => {
       // A test build looks at every start: new test builds come often and the check is one small file.
-      void autoCheckUpdate(preferencesKV, Date.now(), CURRENT.code, CURRENT.channel, (...a) => fetch(...a), TEST_BUILD ? { source: CURRENT.source, everyStart: true } : {}).then(m => { if (live && m) setNewVer(m.versionName); });
+      void autoCheckUpdate(preferencesKV, Date.now(), CURRENT.code, CURRENT.channel, (...a) => fetch(...a), TEST_BUILD ? { sources: CURRENT.sources, everyStart: true } : {}).then(m => { if (live && m) setNewVer(m.versionName); });
     }, STARTUP_CHECK_DELAY_MS);
     return () => { live = false; clearTimeout(t); };
   }, []);
