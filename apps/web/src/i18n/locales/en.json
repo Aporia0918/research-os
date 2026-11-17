@@ -30,6 +30,9 @@
     "ref": " (ref {{id}})"
   },
   "apiErrors": {
+    "mindEmptyQuestion": "an entry needs the question",
+    "mindEntryNotFound": "entry not found",
+    "mindNothingToRepay": "this entry has nothing left to repay",
     "aiBusy": "another AI call is in progress; try again shortly",
     "aiOutcomeUnknown": "the AI call timed out and may have been billed; cost kept as 'unknown' until reconciled",
     "aiOutputRejected": "no allowed model produced a valid answer",
@@ -290,7 +293,7 @@
   },
   "devices": {
     "creatingCode": "Creating code…",
-    "qrAlt": "QR code with the pairing address",
+    "qrAlt": "Pairing QR code; scanning it fills in the code",
     "validUntil": "Valid until {{time}} · single use",
     "noLan": "No LAN address configured yet — see docs/OPS.md#ipad to enable HTTPS on your network.",
     "pairTitle": "Pair a device",

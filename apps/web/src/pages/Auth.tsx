@@ -10,6 +10,7 @@ import type { AuthState } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
+import { codeFromHash } from "@/lib/pairLink";
 import { newKey } from "@/lib/utils";
 
 function Shell({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
@@ -99,7 +100,7 @@ export function LoginPage({ onPair }: { onPair: () => void }) {
 
 export function PairPage({ onBack }: { onBack?: () => void }) {
   const { t } = useTranslation();
-  const [f, setF] = useState({ code: "", device_name: defaultDevice() });
+  const [f, setF] = useState(() => ({ code: codeFromHash(window.location.hash), device_name: defaultDevice() }));
   const s = useSubmit((k) => authCalls.pair(f, k));
   return (
     <Shell icon={<MonitorSmartphone />} title={t("auth.pairTitle")}

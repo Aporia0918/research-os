@@ -85,6 +85,10 @@ class Gateway:
                                               "reason": f"model/prompt not certified ({cert}); run the eval suite"})
         return st
 
+    def domestic(self, vendor: str) -> bool:
+        """Served from mainland China: a listed domestic vendor reached directly, never through the relay."""
+        return vendor in self.settings.domestic_vendors and self.transport_for(vendor) != "relay"
+
     def location(self, provider: str) -> str:
         """Where a provider's content goes: "local" only for an in-process provider that declares it (mock) or a
         provider the owner listed in trusted_local_providers; the relay is always cloud (review #48)."""
@@ -97,13 +101,16 @@ class Gateway:
 
     def _pick(self, conn: sqlite3.Connection, alias: str, prompt: PromptTemplate, evidence_bearing: bool,
               pol: router.Policy, force_top: bool, reasons: dict[str, str],
-              exclude_provider: str | None = None, egress_block: str = "") -> catalog.AliasStatus | None:
+              exclude_provider: str | None = None, egress_block: str = "",
+              domestic_only: bool = False) -> catalog.AliasStatus | None:
         for cand in (alias, *router.SIBLINGS.get(alias, ())):
             st = self.alias_status(conn, cand, prompt, evidence_bearing)
             if st is None:
                 reasons[cand] = "unknown alias"
             elif egress_block and self.location(st.provider) != "local":
                 reasons[cand] = egress_block
+            elif domestic_only and not self.domestic(st.provider):
+                reasons[cand] = f"{st.provider} is not a domestic vendor called directly; this content stays in China"
             elif st.provider == exclude_provider:
                 reasons[cand] = f"same provider as the writer ({exclude_provider}); independent check needs another"
             elif not router.tier_allowed(st.tier, pol, force_top):
@@ -121,8 +128,9 @@ class Gateway:
              validate: Validator, project_id: str | None = None, task_id: str | None = None,
              trace_id: str | None = None, force_top: bool = False, evidence_bearing: bool = False,
              max_output_tokens: int = 1200, exclude_provider: str | None = None,
-             data_refs: Sequence[egress.DataRef] = ()) -> GatewayResult:
-        """`data_refs`: datasets / plans / runs whose content the variables carry (egress gate, ADR-159)."""
+             data_refs: Sequence[egress.DataRef] = (), domestic_only: bool = False) -> GatewayResult:
+        """`data_refs`: datasets / plans / runs whose content the variables carry (egress gate, ADR-159).
+        `domestic_only`: only domestic vendors called directly (no relay, no escalation abroad)."""
         pol, bud = self.policy(conn)
         system, user = prompt.render(**variables)
         messages = (Message("system", system), Message("user", user))
@@ -132,10 +140,11 @@ class Gateway:
         call_ids: list[str] = []
         escalated = False
         for level, alias in enumerate(route):
-            st = self._pick(conn, alias, prompt, evidence_bearing, pol, force_top, reasons, exclude_provider, block)
+            st = self._pick(conn, alias, prompt, evidence_bearing, pol, force_top, reasons, exclude_provider, block,
+                            domestic_only)
             if st is None and level == 0:  # both routine providers down -> emergency fallback (never default)
                 st = self._pick(conn, router.EMERGENCY, prompt, evidence_bearing, pol, False, reasons,
-                                exclude_provider, block)
+                                exclude_provider, block, domestic_only)
             if st is None:
                 if not escalated:
                     break  # premium is escalation-only: an unconfigured routine model never jumps to premium

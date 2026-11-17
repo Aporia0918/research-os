@@ -90,6 +90,9 @@ class Settings:
     # Egress gate (ADR-159/162): provider names the owner trusts as LOCAL inference (e.g. an Ollama endpoint on this
     # machine whose downstream processing the owner controls). Everything else is cloud; the relay never counts.
     trusted_local_providers: list[str] = field(default_factory=list)
+    # Vendors whose servers are in mainland China, called directly (not through the relay). Calls marked domestic_only
+    # (思维账本 content by default) may use only these; with none usable they fall back to the no-model grader.
+    domestic_vendors: list[str] = field(default_factory=lambda: ["deepseek", "zhipu", "qwen"])
     # One-click update (ADR-223): only on an explicit "Check for updates" click, never at startup. The feed is the
     # latest release's latest.json; the mirror prefix (e.g. "https://ghfast.top/") is prepended to the feed and the
     # installer URL; the UI choice (config/update.json) overrides it. Timeout applies per connect/read.

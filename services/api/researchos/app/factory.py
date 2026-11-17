@@ -27,6 +27,7 @@ from ..api.routers import (
     leak_audit,
     library,
     literature,
+    mindledger,
     mobile,
     mobile_hypotheses,
     nullworld,
@@ -122,7 +123,7 @@ def create_app(settings: Settings | None = None, svc: Services | None = None) ->
     app.add_middleware(SecurityMiddleware, settings=svc.settings)
     for r in (core.router, auth.router, projects.router, tasks.router, knowledge.router, research.router,
               gateway_admin.router, experiments.router, canary.router, extensions.router, literature.router,
-              reviews.router, library.router, effects.router, nullworld.router, leak_audit.router,
+              reviews.router, library.router, effects.router, nullworld.router, leak_audit.router, mindledger.router,
               deep_research.router, docs.router, update.router, diagnostics.router, mobile.router,
               mobile_hypotheses.router):
         app.include_router(r)

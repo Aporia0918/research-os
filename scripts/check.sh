@@ -42,5 +42,7 @@ echo "== pytest ==";        $PY/python -m pytest -q -p no:warnings
 if [ -d apps/web/node_modules ]; then
   echo "== web lint/typecheck/test/build =="
   (cd apps/web && pnpm run -s lint && pnpm run -s typecheck && pnpm run -s test && pnpm run -s build)
+  echo "== mind-ledger extension (node --test, jsdom from apps/web) =="
+  node --test apps/extension/test/*.test.mjs
 fi
 echo "ALL GATES PASSED"

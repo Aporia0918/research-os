@@ -30,6 +30,9 @@
     "ref": "(参考号 {{id}})"
   },
   "apiErrors": {
+    "mindEmptyQuestion": "这笔账需要写上题目",
+    "mindEntryNotFound": "找不到这笔账",
+    "mindNothingToRepay": "这笔账已经还清,没有要还的了",
     "aiBusy": "另一个 AI 调用正在进行,请稍后再试",
     "aiOutcomeUnknown": "AI 调用超时,可能已经计费;费用在核对前记为“未知”",
     "aiOutputRejected": "没有任何允许的模型给出有效回答",
@@ -290,7 +293,7 @@
   },
   "devices": {
     "creatingCode": "正在生成配对码…",
-    "qrAlt": "包含配对地址的二维码",
+    "qrAlt": "配对二维码,扫码后自动填好配对码",
     "validUntil": "有效期至 {{time}} · 仅可使用一次",
     "noLan": "尚未配置局域网地址——参见 docs/OPS.md#ipad,在你的网络中启用 HTTPS。",
     "pairTitle": "配对设备",
