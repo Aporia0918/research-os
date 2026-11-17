@@ -80,3 +80,16 @@ jobs:
           gh release delete test-latest --yes --cleanup-tag 2>/dev/null || true
           gh release create test-latest "$out/$apk" "$out/version.json" --prerelease --target "$GITHUB_SHA" \
             --title "测试版 1.4.$code" --notes "思维账本测试版，自动打包，未在真机验证。装好后 App 会自己检查这里有没有新版。"
+
+      - name: Check the published APK with the app's own update download code
+        # Runs UpdateDownload.java on the runner's JVM against the asset and version.json just published,
+        # so a size or checksum problem shows here instead of on the phone.
+        if: github.ref == 'refs/heads/integrate/whole-app'
+        run: |
+          set -eu
+          export JAVA_HOME="$JAVA_HOME_17_X64" PATH="$JAVA_HOME_17_X64/bin:$PATH"
+          v="$RUNNER_TEMP/release/version.json"; d="$RUNNER_TEMP/update-check"
+          javac -d "$d" android/app/src/main/java/dev/paperlab/assistant/UpdateDownload.java \
+            scripts/update-check/UpdateDownloadCheck.java
+          java -cp "$d" dev.paperlab.assistant.UpdateDownloadCheck \
+            "$(jq -r '.apk[0].url' "$v")" "$(jq -r .size "$v")" "$(jq -r .sha256 "$v")"
