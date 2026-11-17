@@ -4,6 +4,7 @@ import type { Chunk } from '../rules/compare';
 import { methodSegments } from '../rules/questions';
 import type { PaperRef } from '../logic/papers';
 import { LAST_PAPER_KEY } from '../logic/papers';
+import { shelve } from './shelf';
 
 export const LOCAL_DOC_KEY = 'paper.localDocument.v2';
 export interface LocalPaper { ref: PaperRef; doc: PdfText; chunks: Chunk[] }
@@ -43,6 +44,7 @@ function repairContinuationSections(doc: PdfText, chunks: Chunk[]): void {
 export async function savePaper(kv: KV, paper: LocalPaper): Promise<void> {
   await kv.set(LOCAL_DOC_KEY, JSON.stringify(paper));
   await kv.set(LAST_PAPER_KEY, JSON.stringify(paper.ref));
+  await shelve(kv, { versionId: paper.ref.versionId, name: paper.ref.name, pages: paperPages(paper) });
 }
 export async function loadPaper(kv: KV): Promise<LocalPaper | null> {
   const raw = await kv.get(LOCAL_DOC_KEY);

@@ -5,14 +5,16 @@ import { PlanScreen } from './PlanScreen';
 import { LogScreen } from './LogScreen';
 import { ExamScreen } from './ExamScreen';
 import { GuideScreen } from './GuideScreen';
+import { PapersScreen } from './PapersScreen';
 
 /** Research tools sit behind one tab, each one tap away. Each is a place a debt comes from or gets repaid. */
-type Part = 'plan' | 'log' | 'exam' | 'guide';
+type Part = 'plan' | 'log' | 'exam' | 'guide' | 'papers';
 const PARTS: { id: Part; label: string; note: string; icon: IconName }[] = [
   { id: 'exam', label: '零世界', note: '高分是真的，还是脚本偷看了答案', icon: 'exam' },
   { id: 'plan', label: '计划', note: '从论文方法生成实验步骤', icon: 'plan' },
   { id: 'log', label: '记录', note: '拍照、录音、记下实验过程', icon: 'log' },
   { id: 'guide', label: '指导', note: '下一步做什么', icon: 'guide' },
+  { id: 'papers', label: '文献对照', note: '查重提醒，两篇论文说法相反的地方', icon: 'list' },
 ];
 
 export function ResearchScreen({ demo, start = null }: { demo: boolean; start?: Part | null }) {
@@ -24,6 +26,7 @@ export function ResearchScreen({ demo, start = null }: { demo: boolean; start?: 
       {part === 'log' && <LogScreen demo={demo} />}
       {part === 'exam' && <ExamScreen />}
       {part === 'guide' && <GuideScreen demo={demo} />}
+      {part === 'papers' && <PapersScreen />}
     </>
   );
   return (
