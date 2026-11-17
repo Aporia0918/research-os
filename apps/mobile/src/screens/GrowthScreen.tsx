@@ -3,6 +3,7 @@
 // report, and a debt from a month ago. No chat and no ledger of its own; the old 生活账 stays readable.
 import { useEffect, useState, type ReactNode } from 'react';
 import { tr } from '../i18n';
+import { Drops } from './Drops';
 import { book, today } from '../ledger/book';
 import { LifeBook, type Decision } from '../ledger/life';
 import { DEADLINE_KINDS, FOCUS_MINUTES, GrowthBook, growthWeek, monthAgo, parseSteps, pullDays, STEP_MAX, upcoming,
@@ -216,11 +217,6 @@ function Steps({ d, onChange }: { d: Deadline; onChange: (g: Growth) => void }) 
 }
 
 /** A few still water drops on a card's rim: decoration only, never in the way of a tap. */
-const DROPS = [['8%', '-6px', 9], ['84%', '12%', 6], ['92%', '78%', 11], ['18%', '96%', 5]] as const;
-function Drops({ n }: { n: number }) {
-  return <>{DROPS.slice(0, n).map(([left, top, size], i) => <i key={i} className="water" aria-hidden="true" style={{ left, top, width: size, height: size }} />)}</>;
-}
-
 function Settings({ reviewOn, onChange }: { reviewOn: boolean; onChange: () => void }) {
   const [old, setOld] = useState<Decision[]>([]);
   useEffect(() => { void lifeBook.all().then(setOld); }, []);
