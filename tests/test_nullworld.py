@@ -259,3 +259,19 @@ def test_blind_test_catches_structure_leaks_and_target_leaks() -> None:
     s = blind["score"](rows)
     assert s["leaks_caught"]["hits"] == 2 and s["leaks_caught_by_naive_shuffle"]["hits"] == 0
     assert s["false_alarms_on_clean"]["hits"] == 0
+
+
+# ---------- study negative control ----------
+
+
+def test_study_control_keeps_subjects_together() -> None:
+    from researchos.services.execution.datasets import _null_world
+
+    groups = [f"s{i // 4}" for i in range(40)]
+    y = [i // 4 % 2 for i in range(40)]  # one label per subject: a row shuffle would split subjects
+    out = _null_world(y, groups, 3)
+    assert {g: {out[i] for i, h in enumerate(groups) if h == g} for g in groups} == {
+        g: {out[groups.index(g)]} for g in groups
+    }
+    assert sorted(out) == sorted(y) and all(type(v) is int for v in out)
+    assert _null_world(y, groups, 3) == out

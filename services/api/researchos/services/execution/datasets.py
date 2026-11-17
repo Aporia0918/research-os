@@ -21,6 +21,7 @@ from ...contracts.errors import ApiError, not_found
 from ...kernel.db import Row, jdump, new_id, row, tx, utcnow
 from ...kernel.events import emit
 from ..gateway import egress_index
+from ..nullworld.worlds import layout, null_labels
 
 
 def _sha_file(p: Path) -> str:
@@ -140,8 +141,9 @@ def materialize(ds: Row, split: dict[str, Any], splits: tuple[str, ...], out_dir
     for s in splits:
         idx = np.array(rows_for.get(s, []), dtype=int)
         arrays = {k: v[idx] for k, v in data.items()}
-        if s == "train" and shuffle_train_seed is not None:  # shuffled-label negative control
-            arrays["y"] = np.random.default_rng(shuffle_train_seed).permutation(arrays["y"])
+        if s == "train" and shuffle_train_seed is not None:  # negative control: a null world, not a row shuffle
+            y = arrays["y"]
+            arrays["y"] = np.array(_null_world(y.tolist(), [groups[i] for i in idx], shuffle_train_seed), dtype=y.dtype)
         np.savez(out_dir / f"{s}.npz", **arrays)
         ids[s] = [str(x) for x in data["sample_id"][idx]]
     split_hash = hashlib.sha256(jdump({"split": split, "dataset": ds["manifest_sha256"]}).encode()).hexdigest()
@@ -151,3 +153,11 @@ def materialize(ds: Row, split: dict[str, Any], splits: tuple[str, ...], out_dir
         "overlapping_windows": bool(m.get("overlapping_windows")),
         "group_key": m.get("group_key"),
     }
+
+
+def _null_world(y: list[Any], groups: list[str], seed: int) -> list[Any]:
+    """Shuffle labels the way the null-world exam does: keep each subject's labels together, so memorising subjects
+    cannot beat chance. A plain row shuffle would let subject leakage pass the control."""
+    labels = [str(v) for v in y]
+    back = dict(zip(labels, y, strict=True))
+    return [back[v] for v in null_labels(labels, groups, layout(labels, groups).mode, random.Random(seed))]

@@ -75,7 +75,8 @@ def test_full_protocol_on_planted_surface(
     rev = client.get(f"/api/v1/plans/{study['pid']}/revisions/{screen['revision']}").json()
     assert rev["content"]["space"]["dropout"]["low"] == rev["content"]["space"]["dropout"]["high"]
     assert rev["approved_by_revision"] == 1
-    assert st["data"]["control"]["passed"] and st["data"]["winners_curse"] > 0
+    assert st["data"]["control"]["passed"] and len(st["data"]["control"]["runs"]) == 3  # three null worlds
+    assert st["data"]["winners_curse"] > 0
     assert len(st["data"]["confirm"]) == 3 and all(c["n"] == 5 and "d11" in c for c in st["data"]["confirm"])
     surf = st["data"]["surface"]
     assert "association" in surf["note"] and surf["n"] > 20
