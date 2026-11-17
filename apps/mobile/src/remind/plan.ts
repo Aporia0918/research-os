@@ -1,6 +1,7 @@
 // 按课表推送 (plan 2.4 ⑦): due debts come up gently at the user's free times, never in class or at night. At most one
 // debt per time slot and two a day; 生活 never pushes. Worked out on the phone from the book; nothing leaves it.
 import { addDays, type Entry } from '../ledger/ledger';
+import { tr } from '../i18n';
 
 export const MAX_A_DAY = 2;
 const NIGHT_FROM = '22:00', MORNING = '07:00';
@@ -34,4 +35,24 @@ export function planReminders(entries: Entry[], slots: string[], now: string, da
     }
   }
   return out;
+}
+
+/** Deadline reminders get ids from here up, so they never collide with debt reminders or the focus alarm. */
+export const DEADLINE_ID = 910000;
+type Due = { id: string; title: string; on: string; done?: string; steps?: { done?: boolean }[] };
+
+/**
+ * 温和提醒 (成长空间): one note the day before each open deadline within `days`, at the last free time of that day, never
+ * at night. It says what is left of the steps, so the evening before is a small to-do, not an alarm.
+ */
+export function deadlineReminders(ds: Due[], slots: string[], now: string, days = 14): Reminder[] {
+  const t = [...new Set(slots)].filter((x) => x >= MORNING && x < NIGHT_FROM).sort().pop() ?? '19:00';
+  const last = addDays(now.slice(0, 10), days);
+  return ds.filter((d) => !d.done && d.on <= last).flatMap((d, i) => {
+    const at = `${addDays(d.on, -1)}T${t}`;
+    if (at <= now) return [];
+    const left = (d.steps ?? []).filter((s) => !s.done).length;
+    return [{ id: DEADLINE_ID + i, entryId: '', at, title: tr('明天截止：{0}', clip(d.title || tr('未命名'), 16)),
+      body: left ? tr('还剩 {0} 个小步骤，今晚做一个就好。', left) : tr('今晚花几分钟看一眼就好。') }];
+  });
 }

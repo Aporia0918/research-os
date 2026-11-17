@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
-// 成长空间 (the 生活 board renamed): the 主意账 in its own table, deadlines that pull a course's debts forward, the weekly
-// growth report, and the screen behind the 成长空间 tab (no chat).
+// 成长空间 (the 生活 board renamed): the old 主意账 still readable, deadlines that pull a course's debts forward and break
+// into small steps, the weekly growth report, and the screen behind the 成长空间 tab (no chat, no ledger of its own).
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { LifeBook, monday } from '../src/ledger/life';
-import { GrowthBook, growthWeek, monthAgo, pullDays, upcoming } from '../src/ledger/growth';
+import { GrowthBook, growthWeek, monthAgo, parseSteps, pullDays, upcoming } from '../src/ledger/growth';
 import { Book, type Entry } from '../src/ledger/ledger';
 import { memoryKV } from '../src/storage/kv';
+import { DEADLINE_ID, deadlineReminders } from '../src/remind/plan';
 import { LedgerScreen } from '../src/screens/LedgerScreen';
 
 describe('主意账', () => {
@@ -49,7 +50,30 @@ describe('截止日和成长周报', () => {
     expect((await book.all())[0].dueOn! < '2026-11-20').toBe(true);
   });
 
-  it('the week counts repayments, new debts, focus that led to explaining, deadlines met and who decided', async () => {
+  it('breaks a deadline into at most six short steps, written only when confirmed, each tickable', async () => {
+    expect(parseSteps('1. 读第一篇摘要\n- 读第二篇\n\n• 写三句问题\n4、整理笔记\n5) a\n6. b\n7. c')).toEqual(
+      ['读第一篇摘要', '读第二篇', '写三句问题', '整理笔记', 'a', 'b'].map(text => ({ text })));
+    expect(parseSteps('x'.repeat(50))[0].text).toHaveLength(40);
+    const g = new GrowthBook(memoryKV());
+    await g.addDeadline({ id: 'a', title: '组会读三篇', course: '', kind: '其他', on: '2026-11-21' });
+    await g.setSteps('a', parseSteps('读第一篇\n读第二篇'));
+    const c = await g.toggleStep('a', 1);
+    expect(c.deadlines[0].steps).toEqual([{ text: '读第一篇' }, { text: '读第二篇', done: true }]);
+  });
+
+  it('reminds gently the evening before an open deadline, at the last free time, with the steps left', () => {
+    const ds = [
+      { id: 'a', title: '组会读三篇', on: '2026-11-20', steps: [{ text: 'x', done: true }, { text: 'y' }] },
+      { id: 'b', title: '交过了', on: '2026-11-19', done: '2026-11-18' },
+      { id: 'c', title: '今天截止', on: '2026-11-17' },
+      { id: 'd', title: '很远', on: '2027-03-01' },
+    ];
+    const rs = deadlineReminders(ds, ['12:10', '17:40', '23:30'], '2026-11-17T09:00');
+    expect(rs).toEqual([{ id: DEADLINE_ID, entryId: '', at: '2026-11-19T17:40', title: '明天截止：组会读三篇', body: '还剩 1 个小步骤，今晚做一个就好。' }]);
+    expect(deadlineReminders(ds.slice(0, 1), [], '2026-11-17T09:00')[0].at).toBe('2026-11-19T19:00');
+  });
+
+  it('the week counts repayments, new debts, thought-first, focus that led to explaining, deadlines met and next week', async () => {
     const g = new GrowthBook(memoryKV());
     await g.focused('2026-11-17', 25);
     await g.focused('2026-11-18', 25);
@@ -57,12 +81,13 @@ describe('截止日和成长周报', () => {
     await g.addDeadline({ id: 'a', title: '作业', course: '', kind: '作业', on: '2026-11-19' });
     const c = await g.finish('a', '2026-11-19');
     const es = [
-      { board: '学习', createdOn: '2026-11-16', tries: [{ on: '2026-11-17', ok: true }] },
+      { board: '学习', createdOn: '2026-11-16', ownIdea: '我猜是换元', tries: [{ on: '2026-11-17', ok: true }] },
+      { board: '学习', createdOn: '2026-11-17', ownIdea: '', dueOn: '2026-11-24', tries: [] },
       { board: '科研', createdOn: '2026-11-01', tries: [{ on: '2026-11-18', ok: false }] },
       { board: '学习', createdOn: '2026-10-18', tries: [{ on: '2026-10-19', ok: true }], question: '一个月前的那笔', answer: 'a' },
-    ] as Entry[];
-    const w = growthWeek(c, es, { from: '', to: '', own: 2, ai: 1, balance: 3, named: 'x' }, '2026-11-20');
-    expect(w).toMatchObject({ repaid: 1, booked: 1, focus: 2, focusRepaid: 1, due: 1, done: 1, own: 2, ai: 1 });
+    ] as unknown as Entry[];
+    const w = growthWeek(c, es, '2026-11-20');
+    expect(w).toMatchObject({ repaid: 1, booked: 2, thoughtFirst: 1, focus: 2, focusRepaid: 1, due: 1, done: 1, nextDebts: 1 });
     expect(monthAgo(es, '2026-11-18')?.question).toBe('一个月前的那笔');
   });
 });
@@ -105,9 +130,13 @@ describe('成长空间 screen', () => {
     await click(button(h, '记下'));
     expect(h.querySelector('[data-testid=deadlines]')!.textContent).toContain('高数第 5 章作业');
 
-    await click(button(h, '我自己定了一件事'));
-    type(h.querySelector('[data-testid=decide] input'), '选课题方向');
-    await click(button(h, '记下'));
-    expect(h.querySelector('[data-testid=growth-week]')!.textContent).toContain('这周你自己拿了 1 个主意，0 个交给了 AI。');
+    await click(button(h, '拆成小步'));
+    type(h.querySelector('[aria-label=小步骤，一行一个]'), '做 5.1 的三道题\n对答案找错的地方');
+    await click(button(h, '写进去'));
+    const steps = h.querySelectorAll<HTMLInputElement>('[data-testid=deadlines] .step input');
+    expect(steps).toHaveLength(2);
+    await act(async () => { steps[0].click(); }); await flush();
+    expect(h.querySelector<HTMLInputElement>('[data-testid=deadlines] .step input')!.checked).toBe(true);
+    expect(button(h, '我自己定了一件事')).toBeUndefined();
   });
 });

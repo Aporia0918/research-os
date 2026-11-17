@@ -246,3 +246,65 @@ input[type=search] { width: 100%; margin-bottom: 12px; }
 .mm-node { fill: rgb(var(--w) / .7); stroke: color-mix(in srgb, var(--c2) 60%, transparent); stroke-width: 1.5; }
 .mm-node.mm-miss { fill: transparent; stroke: var(--line); }
 .mm-text { fill: var(--text); font-size: 11.5px; }
+
+/* 成长空间: the jelly collage (owner's reference 2026-11-17). Clear cards of different sizes, rims and clarity, shaped
+ * like pebbles, a drop and squashed gummies; asymmetric two-column layout; only the small secondary cards lean 2–4°.
+ * Shape comes from the thick white rim, the rainbow ring and a wet highlight, with a little mint settling at the bottom.
+ * Warm apricot leads (the board's accent), lavender only as a glow in the background. No heavy shadows. */
+.growth { position: relative; }
+.growth::before {
+  content: ""; position: absolute; inset: -60px -40px auto auto; width: 70%; height: 340px; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(206 190 255 / .32), transparent 70%);
+}
+.collage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 16px 10px; align-items: start; }
+.collage > * { margin-bottom: 0; min-width: 0; }
+.collage > .shape-deadlines, .collage > .shape-week, .collage > .shape-past { grid-column: 1 / -1; }
+.pebble {
+  --clear: .16; --sink: 20%;
+  background:
+    radial-gradient(120% 60% at 22% 0%, rgb(var(--w) / .55), transparent 55%),
+    linear-gradient(to top, color-mix(in srgb, #8ce2c4 var(--sink), transparent), transparent 48%),
+    rgb(var(--w) / var(--clear));
+  box-shadow: inset 0 0 0 1px rgb(var(--w) / .5), inset 0 2px 14px rgb(var(--w) / .75), inset 0 -8px 16px -10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.pebble::after {
+  content: ""; position: absolute; left: 12%; top: 7px; width: 30%; height: 10px; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(rgb(var(--w) / .95), rgb(var(--w) / 0)); filter: blur(1px); rotate: -6deg;
+}
+.shape-focus { border-width: 2.5px; border-radius: 52px 36px 58px 40px / 44px 54px 38px 56px; --clear: .2; padding: 20px 18px; }
+.drop-card {
+  border-width: 3px; aspect-ratio: 1; border-radius: 50% 50% 46% 54% / 60% 56% 44% 40%; --clear: .1; --sink: 26%;
+  rotate: -3deg; margin-top: 18px; align-items: center; justify-content: center; gap: 0; padding: 10px;
+}
+.drop-num { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--deep); font-variant-numeric: tabular-nums; }
+.drop-mark { position: absolute; right: 22%; top: 24%; font-weight: 800; color: var(--accent); }
+.drop-sub { font-size: .78rem; color: var(--muted); }
+.shape-deadlines { border-radius: 30px 46px 28px 42px / 40px 26px 48px 30px; --clear: .26; border-width: 1.5px; }
+.shape-week { border-radius: 56px 30px 48px 34px / 34px 54px 30px 50px; --clear: .14; border-width: 2.5px; margin-inline: 6px -4px; }
+.shape-past { border-radius: 42px 24px 42px 24px; --clear: .2; rotate: 2deg; margin: -6px 18px 0 10px; padding: 14px 16px; font-size: .94em; }
+.growth .more { border-radius: 24px 34px 24px 34px; --clear: .12; margin-top: 16px; }
+.water {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle at 32% 30%, rgb(var(--w) / 1) 0 22%, rgb(var(--w) / .25) 45%, color-mix(in srgb, #8ce2c4 30%, transparent) 100%);
+  box-shadow: inset 0 -1px 2px rgb(var(--w) / .9), 0 1px 1px color-mix(in srgb, var(--c2) 35%, transparent);
+}
+.deadline { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px dashed rgb(var(--w) / .7); }
+.deadline:first-of-type { border-top: 0; }
+.deadline-row { display: flex; align-items: center; gap: 10px; }
+.dl-left {
+  flex: none; min-width: 3.2em; text-align: center; padding: 4px 8px; border-radius: 18px 14px 18px 12px; font-weight: 700;
+  background: rgb(var(--w) / .45); color: var(--deep);
+}
+.dl-left.soon { color: color-mix(in srgb, var(--accent) 80%, #6b2a14); background: color-mix(in srgb, var(--accent) 22%, rgb(var(--w) / .4)); }
+.dl-name { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.dl-name .muted { font-size: .8em; }
+.dl-done { flex: none; min-width: 44px; min-height: 44px; border-radius: 50%; }
+.steps { display: flex; flex-direction: column; gap: 4px; padding-left: 4px; }
+.step { gap: 8px; align-items: center; font-size: .92em; }
+.step input { width: 20px; height: 20px; accent-color: var(--accent); }
+.step input:checked + * , .step:has(input:checked) { color: var(--muted); text-decoration: line-through; }
+.steps textarea { min-height: 96px; }
+.focus-clock { font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; margin: 0; }
+.care p { margin: 0; }
+@media (max-width: 360px) { .collage { grid-template-columns: minmax(0, 1fr); } .drop-card { width: 60%; justify-self: center; } }
+@media (prefers-reduced-motion: reduce) { .drop-card, .shape-past { rotate: 0deg; } }

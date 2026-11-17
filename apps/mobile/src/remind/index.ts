@@ -2,7 +2,8 @@
 import { book } from '../ledger/book';
 import { loadProfile } from '../me/profile';
 import { preferencesKV } from '../storage/kv';
-import { planReminders } from './plan';
+import { deadlineReminders, planReminders } from './plan';
+import { GrowthBook } from '../ledger/growth';
 import { schedule } from './native';
 
 /** Local "YYYY-MM-DDTHH:MM": reminders are set by the clock on the user's wall, not UTC. */
@@ -13,5 +14,7 @@ export function localNow(d = new Date()): string {
 
 export async function refreshReminders(): Promise<void> {
   const p = await loadProfile(preferencesKV);
-  await schedule(p?.remind ? planReminders(await book.all(), p.slots, localNow()) : []);
+  if (!p?.remind) { await schedule([]); return; }
+  const now = localNow();
+  await schedule([...planReminders(await book.all(), p.slots, now), ...deadlineReminders((await new GrowthBook(preferencesKV).get()).deadlines, p.slots, now)]);
 }

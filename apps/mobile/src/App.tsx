@@ -29,7 +29,7 @@ import type { LedgerIntent } from './screens/LedgerScreen';
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
 /** Everything a finger presses on the real pages squashes and springs back like the jelly demo. */
-const PRESSABLE = 'button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip';
+const PRESSABLE = 'button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip, .pebble';
 /** One main line on the surface: borrow (提问), repay and read the report (账本). Research tools sit in one tab. */
 type Tab = 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([

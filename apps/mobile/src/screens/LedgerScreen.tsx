@@ -24,6 +24,8 @@ import { shareFile } from '../backup/native';
 import { boardName, importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
 import { fromShared } from '../me/shareIn';
 import { refreshReminders } from '../remind';
+import { risk } from '../rules/care';
+import { CareNote } from './CareNote';
 
 /** Opened from outside the ledger: text shared in from another app, or a tapped reminder. `at` makes each one new. */
 export type LedgerIntent = { kind: 'share'; text: string; at: number } | { kind: 'due'; entryId: string; at: number };
@@ -64,6 +66,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   const [due, setDue] = useState<Entry[]>([]);
   const [said, setSaid] = useState('');
   const [note, setNote] = useState('');
+  const [care, setCare] = useState(false);
   const [quiz, setQuiz] = useState<Entry[]>([]);
   const [fresh, setFresh] = useState<Entry | null>(null); // just booked: 「这一步你讲给我听？」
   const [endNow, setEndNow] = useState(false);
@@ -127,6 +130,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   const switcher = <BoardSwitch board={board} onPick={pickBoard} name={boardName} className="seg" />;
   /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
   async function checkNow(e: Entry, attempt: string) {
+    setCare(risk(attempt)); if (risk(attempt)) return;
     const g = await book.checkNow(e.id, attempt, today(), exam || undefined, attempt.trim() ? await modelAsk() : undefined);
     setNote(g?.passed ? tr('讲顺了。到日子再讲一次，记得更牢。')
       : g ? tr('还差这些没讲到：{0}。这一笔标红，排在考前清单最前面。', missedOf(g))
@@ -165,6 +169,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   async function copy(text: string, done: string) { await copyText(text); setNote(done); }
   async function add() {
     if (board === '生活') return;
+    setCare(risk(`${draft.question}\n${draft.ownIdea}\n${draft.answer}`)); if (risk(`${draft.question}\n${draft.ownIdea}\n${draft.answer}`)) return;
     const cite = board === '科研' && draft.citation;
     const e = cite ? await book.addCitation({ clientId: newId(), claim: draft.question, topic: draft.topic, ai: draft.ai, usedIn: draft.usedIn }, today())
       : await book.add({ clientId: newId(), board, topic: draft.topic, question: draft.question, answer: draft.answer, ownIdea: draft.ownIdea,
@@ -187,7 +192,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
     } catch { setNote(tr('没能导出，请再试一次。')); }
   }
   const back = <button className="back" onClick={() => { setView('home'); setCourse(null); }}>{tr('‹ 账本')}</button>;
-  const status = note && <p className="note" role="status">{note}</p>;
+  const status = care ? <CareNote /> : note && <p className="note" role="status">{note}</p>;
 
   // Sub-pages: one job each, reached from the home screen. Nothing here is on the home screen itself.
   const dueList = focus && focus.dueOn && !focus.dropped && !due.some(e => e.id === focus.id) ? [focus, ...due] : focus ? [...due.filter(e => e.id === focus.id), ...due.filter(e => e.id !== focus.id)] : due;

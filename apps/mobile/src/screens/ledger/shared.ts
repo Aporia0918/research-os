@@ -6,6 +6,7 @@ import { forJob, loadKey, loadModelSettings } from '../../model/settings';
 import { preferencesKV } from '../../storage/kv';
 import { loadPaper, paperPages } from '../../local/paperStore';
 import type { Source } from '../../rules/recall';
+import { SPLIT_SYSTEM } from '../../ledger/growth';
 
 const GRADE_SYSTEM = '根据参考答案列出正确回答必须包含的 2 到 6 个要点，再按从 0 开始的序号列出作答在实质上讲到了哪些。不要判断通过与否。只回复 JSON：' + '{"points":[],"hits":[]}';
 
@@ -42,3 +43,11 @@ export async function firstFeedback(said: string): Promise<string | null> {
 
 /** What a board is called on screen: the 生活 board shows as 成长空间 (owner 2026-11-17); stored data keeps 生活. */
 export const boardName = (b: Entry['board']): string => tr(b === '生活' ? '成长空间' : b);
+
+/** 任务拆解: the user's own model suggests small steps for one deadline; '' without a key or on failure (the user writes them). */
+export async function splitSteps(task: string): Promise<string> {
+  const [s, key] = await Promise.all([loadModelSettings(preferencesKV), loadKey(preferencesKV)]);
+  if (!key || !s.baseUrl) return '';
+  try { return (await chat(forJob(s, 'grade'), key, [{ role: 'system', content: SPLIT_SYSTEM }, { role: 'user', content: task }])).trim(); }
+  catch { return ''; }
+}

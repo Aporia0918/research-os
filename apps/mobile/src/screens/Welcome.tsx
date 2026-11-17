@@ -9,6 +9,8 @@ import { newId } from '../local/store';
 import { fromShared } from '../me/shareIn';
 import { preset, WHO, type Profile, type Who } from '../me/profile';
 import { firstFeedback } from './ledger/shared';
+import { risk } from '../rules/care';
+import { CareNote } from './CareNote';
 
 export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '科研') => void }) {
   const [who, setWho] = useState<Who | null>(null);
@@ -17,6 +19,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
   const [reply, setReply] = useState('');
   const [busy, setBusy] = useState(false);
   const [zz, setZz] = useState<ZzState>('wave');
+  const [care, setCare] = useState(false);
   const p = who ? preset(who) : null;
   const research = who === 'research';
   const profile = (): Profile => ({ who: who ?? 'other', slots: p?.slots ?? [], remind: p?.remind ?? false });
@@ -24,6 +27,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
 
   function pick(w: Who) { setWho(w); setZz('smile'); setStep('talk'); }
   async function talk() {
+    setCare(risk(said)); if (risk(said)) return;
     setBusy(true); setZz('think');
     const q = fromShared(said).question || said.trim();
     await book.add({ clientId: newId(), board: research ? '科研' : '学习', question: q, ownIdea: said.trim(), helpLevel: 'own' }, today());
@@ -47,6 +51,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
           {step === 'talk' && <>
             <h1>{research ? tr('最近在读哪篇论文、跑哪个分析？') : tr('最近在学什么？')}</h1>
             <p>{research ? tr('挑一个结论，不看资料讲给我听听？') : tr('挑一个讲给我听听？不用讲全，讲到哪算哪。')}</p>
+            {care && <CareNote />}
             <textarea value={said} placeholder={tr('可以用输入法的语音随口讲')} onChange={x => setSaid(x.target.value)} />
             <div className="row">
               <button className="primary" disabled={busy || !said.trim()} onClick={() => void talk()}>{busy ? tr('处理中…') : tr('讲完了')}</button>

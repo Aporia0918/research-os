@@ -15,6 +15,8 @@ import type { Entry } from '../ledger/ledger';
 import { askDebts } from '../rules/understand';
 import { importStages, resetImportTimings, timed } from '../perf/timing';
 import { PhotoAsk } from './PhotoAsk';
+import { risk } from '../rules/care';
+import { CareNote } from './CareNote';
 
 export function AskScreen({ demo }: { demo: boolean }) {
   const [q, setQ] = useState('');
@@ -23,6 +25,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
   const [answer, setAnswer] = useState<typeof demoAnswer | null>(null);
   const [info, setInfo] = useState('');
   const [error, setError] = useState('');
+  const [care, setCare] = useState(false);
   const [saved, setSaved] = useState<LocalPaper | null>(null);
   const [local, setLocal] = useState<LocalAnswer | null>(null);
   const [booked, setBooked] = useState<Entry[] | null>(null); // 理解债 the last model answer booked
@@ -78,6 +81,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
   function round(stage: string): number { return importStages.find(s => s.stage === stage)?.ms ?? 0; }
   async function submit() {
     setBooked(null);
+    setCare(risk(q)); if (risk(q)) return;
     if (demo) { setAnswer(demoAnswer); setInfo(tr('演示:示例问题的预先保存回答。')); return; } // a saved sample: never booked
     if (!saved) return;
     setBusy(true); setError(''); setAnswer(null); setLocal(null);
@@ -123,6 +127,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
       {!demo && <div className="muted">{tr('模型请求最多等 20 秒。没有密钥或请求失败时,会直接在手机上给出相关原文段落。相近匹配要你自己判断,系统分不出真假。')}</div>}
     </div>
     {info && <div className="card muted" role="status" data-testid="import-ready">{info}</div>}
+    {care && <CareNote />}
     {error && <div className="card error">{error}</div>}
     <div id="import-timings" data-testid="import-timings" hidden />
     {local && <div className="card" data-testid="local-answer">
