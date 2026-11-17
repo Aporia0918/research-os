@@ -1676,3 +1676,38 @@ Format: id — decision — reason — consequence. Changing a frozen core contr
   only in launcher.log and the dump step's sed removes it. `compileall` (non-zero on any syntax error) has nothing
   to fail on in the dev venv's site-packages or the 262 app .py files. No other defect found that could be proved
   without a Mac; nothing else changed.
+- **ADR-272: Android app endpoints and opt-in in-app origins.**
+  `POST /api/v1/mobile/logs` stores an experiment log entry (text, or one photo/voice attachment checked by MIME
+  allowlist + magic bytes, max 10 MB, text max 5000 chars); owner-scoped; idempotent by the Idempotency-Key and by
+  UNIQUE(user, client_id) so offline retries never duplicate (migration 0018). `POST /api/v1/mobile/compare`
+  compares a log entry with a paper: the deterministic path (no model) extracts number+unit parameters (ranges too)
+  and reports match / mismatch / not_found per parameter, each match/mismatch quoting a sentence that is written
+  through `evidence.create`, so the page citation is proven to be on that page; an item that cannot be anchored is
+  reported as not_found, never as an uncited claim. `use_model=true` goes through the gateway and falls back to the
+  deterministic result (method `deterministic_fallback`) when no model is configured. New setting
+  `mobile_app_origins` (env `RESEARCHOS_MOBILE_APP_ORIGINS`, default OFF) adds only `https://localhost` and
+  `capacitor://localhost` to the Origin allowlist; it never adds 0.0.0.0 or a public origin and sessions still come
+  only from a pairing code. Tests: `tests/test_mobile_api.py`.
+- **ADR-273: minimal pre-experiment plan from a paper's method text.**
+  `POST /api/v1/mobile/plans` drafts a plan of variables / controls / materials-equipment from the method sentences
+  (deterministic keyword + number-unit rules; one sentence -> one category, controls > materials > variables; max 10
+  per category). Every paper item quotes its sentence through `evidence.create`, so its page citation is proven;
+  a sentence that cannot be anchored is dropped. `use_model=true` goes through the gateway and falls back to the
+  rules (`deterministic_fallback`) when no model is configured. State draft -> confirmed (migration 0019,
+  `mobile_plans`): `PUT /plans/{id}/items` replaces items only while draft (409 `plan_confirmed` after), edited
+  items keep their citation and are flagged `edited`, user-added items carry no citation; `POST /plans/{id}/confirm`
+  is the explicit user action and stores `confirmed_at` + device (confirming again keeps the first timestamp).
+  No accumulation across plans. Tests: `tests/test_mobile_plan.py`.
+- **ADR-274: CITATION_TRISTATE — citation check reports three states, never
+  "unsupported".** A rule test on 40 sentences written by someone else (20 paraphrases, 20 false claims; two arXiv
+  papers) found 0/20 paraphrases and judged one false claim supported ("336 records from 328 unique patients" vs
+  "each of the 336 records from a different patient"). So a word-overlap rule cannot say "no support". Verdicts are
+  now `exact_match` (coverage >= 0.6, unchanged; numbers must agree BOTH ways and no added absolute words; anchored as
+  Evidence), `near_match` (best sentence coverage >= 0.4, or >= 0.6 with a difference: page + original text as a
+  candidate only, not anchored, `needs_confirmation`; `POST /guidance/{id}/confirm` returns 409
+  `guidance_match_unconfirmed` until each is `confirm_match` / `reject_match`), and `cannot_check` (rule mode cannot
+  check paraphrases; this does not mean the claim has no support). The 0.4 band is a design choice: "at least 40% of
+  the claim's content words in one sentence"; in the pooled 40-sentence run the best coverage spread 0.18-0.60
+  (median about 0.33), so 0.4 sends roughly the top third to the user and the rest to cannot_check. It was not
+  fitted to that set's answers. The reverse-number rule was prompted by that one false claim. Tests:
+  `tests/test_mobile_guidance.py`.
