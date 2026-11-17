@@ -23,7 +23,6 @@
     "@capacitor/preferences": "^6.0.4",
     "@capacitor/share": "^6.0.3",
     "@capawesome/capacitor-file-picker": "^6.2.0",
-    "capacitor-voice-recorder": "^6.0.3",
     "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

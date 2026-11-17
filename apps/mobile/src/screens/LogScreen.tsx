@@ -1,7 +1,6 @@
 import { tr, trObj, fmtDate } from '../i18n';
 import { useEffect, useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LogQueue, type LogEntry } from '../storage/queue';
 import { preferencesKV } from '../storage/kv';
 import { pageLabel, type CompareResult } from '../logic/types';
@@ -20,7 +19,6 @@ const queue = new LogQueue(preferencesKV);
 export function LogScreen({ demo = false }: { demo?: boolean }) {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [note, setNote] = useState('');
-  const [recording, setRecording] = useState(false);
   const [msg, setMsg] = useState('');
   const refresh = async () => setEntries(await queue.all());
   useEffect(() => { void refresh(); }, []);
@@ -32,21 +30,6 @@ export function LogScreen({ demo = false }: { demo?: boolean }) {
       await queue.add({ kind: 'photo', note, media: photo.webPath ?? photo.path, mimeType: `image/${photo.format}` });
       setNote(''); await refresh(); setMsg(tr('照片已保存在这台手机上。'));
     } catch (e) { setMsg(tr('相机出错:{0}', (e as Error).message)); }
-  }
-
-  async function toggleVoice() {
-    setMsg('');
-    try {
-      if (!recording) {
-        const perm = await VoiceRecorder.requestAudioRecordingPermission();
-        if (!perm.value) { setMsg(tr('没有麦克风权限。')); return; }
-        await VoiceRecorder.startRecording(); setRecording(true);
-      } else {
-        const r = await VoiceRecorder.stopRecording(); setRecording(false);
-        await queue.add({ kind: 'voice', note, media: r.value.recordDataBase64, mimeType: r.value.mimeType, durationMs: r.value.msDuration });
-        setNote(''); await refresh(); setMsg(tr('语音已保存在这台手机上。'));
-      }
-    } catch (e) { setRecording(false); setMsg(tr('录音出错:{0}', (e as Error).message)); }
   }
 
   // Only this screen's feedback is held; the document and every calculation stay on the phone.
@@ -71,7 +54,7 @@ export function LogScreen({ demo = false }: { demo?: boolean }) {
     <section>
       <h1>{tr('实验记录')}</h1>
       <div className="demo-banner" role="note">{tr(DEMO_LABEL)}</div>
-      <div className="card muted">{tr('演示:一条示例日志与')} {tr(demoPaper.name)} {tr('的对照。演示模式下不能录制。')}</div>
+      <div className="card muted">{tr('演示:一条示例日志与')} {tr(demoPaper.name)} {tr('的对照。演示模式下不能新增记录。')}</div>
       <div className="card entry">
         <div className="entry-kind">{tr('文字')}</div>
         <div><div>{demoLog.text}</div><div className="muted">{fmtDate(demoLog.captured_at)} {tr('· 示例')}</div>
@@ -94,7 +77,6 @@ export function LogScreen({ demo = false }: { demo?: boolean }) {
         <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder={tr('你做了什么?例如:带通滤波 0.5–40 Hz')} aria-label={tr('记录内容')} />
         <div className="row">
           <button className="primary" onClick={takePhoto}>{tr('拍照')}</button>
-          <button className={recording ? 'primary danger' : 'primary'} onClick={toggleVoice}>{recording ? tr('停止') : tr('录音')}</button>
           <button className="ghost" onClick={saveText}>{tr('保存文字')}</button>
           <div className="muted">{tr('记录只保存在这台手机上,可以与已导入论文在本机对照。')}</div>
         </div>

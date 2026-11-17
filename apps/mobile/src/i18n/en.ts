@@ -874,4 +874,5 @@ export const EN: Record<string, string> = {
   "导图：{0}": "Map: {0}",
   "摘要全文": "Full recap",
   "好的": "OK",
+  "的对照。演示模式下不能新增记录。": " comparison. New entries are off in demo mode.",
 };
