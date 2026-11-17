@@ -1,5 +1,5 @@
 import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } from './i18n';
-import { setBoardTheme } from './look';
+import { applyBoard } from '@jelly/theme';
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
@@ -13,8 +13,8 @@ import { autoCheckUpdate } from './update/manifest';
 import { CURRENT, TEST_BUILD } from './update/version';
 import { Icon, type IconName } from './icons';
 import { JellyDemo } from './jelly/JellyDemo';
-import { Backdrop } from './jelly/Backdrop';
-import { jellyPress } from './jelly/spring';
+import { Backdrop } from '@jelly/Backdrop';
+import { jellyPress } from '@jelly/spring';
 import { Welcome } from './screens/Welcome';
 import { loadProfile, saveProfile, type Profile } from './me/profile';
 import { onShared } from './me/shareIn';
@@ -55,7 +55,7 @@ export function App() {
     await preferencesKV.set('mindledger.board.v1', board);
     setProfile(p); void refreshReminders();
   }
-  useEffect(() => { if (tab === 'research') setBoardTheme('科研'); }, [tab]); // 账本 sets its own board's colours
+  useEffect(() => { if (tab === 'research') applyBoard('科研'); }, [tab]); // 账本 sets its own board's colours
   useEffect(() => jellyPress(PRESSABLE), []);
   const [researchStart, setResearchStart] = useState<'exam' | null>(null);
   /** From the ledger home straight into 提问 or 科研 → 零世界. */

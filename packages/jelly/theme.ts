@@ -1,6 +1,6 @@
-// The three light themes of 思维账本 (owner's spec, 2026-11-17). Switching board changes only these colours; the
-// components stay the same. The colours are CSS custom properties registered as <color> in jelly.css, so a switch fades
-// over 400 ms instead of jumping.
+// The three light themes of 思维账本 (owner's spec, 2026-11-17), shared by the phone and desktop apps. Switching board
+// changes only these colours; the components stay the same. They go on <html>, so every page and every jelly surface
+// takes them; only the moving field behind fades (jelly.css), everything else switches at once.
 import type { CSSProperties } from 'react';
 
 export type Board = '生活' | '学习' | '科研';
@@ -17,4 +17,12 @@ export const THEMES: Record<Board, Theme> = {
 /** The theme as CSS variables, set once on the page root; every jelly reads them. */
 export function themeVars(t: Theme): CSSProperties {
   return { '--bg-a': t.bgA, '--bg-b': t.bgB, '--c1': t.c1, '--c2': t.c2, '--deep': t.deep, '--accent': t.accent, '--ink': t.ink } as CSSProperties;
+}
+
+/** Puts the board's colours on <html> and marks it with data-board. */
+export function applyBoard(board: Board): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.dataset.board = board;
+  for (const [k, v] of Object.entries(themeVars(THEMES[board]))) root.style.setProperty(k, String(v));
 }

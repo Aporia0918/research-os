@@ -4,11 +4,11 @@ import { createElement, act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { springStep, type SpringSpec } from '../src/jelly/spring';
+import { springStep, type SpringSpec } from '@jelly/spring';
 import { beat } from '../src/jelly/JellySurface';
 import { JellyDemo } from '../src/jelly/JellyDemo';
 import { ZZ, ZZ_FILES, Zhangzhang, type ZzState } from '../src/jelly/Zhangzhang';
-import { THEMES } from '../src/jelly/theme';
+import { THEMES } from '@jelly/theme';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root | null = null; let host: HTMLElement | null = null;
@@ -49,7 +49,7 @@ describe('jelly spring', () => {
 
 describe('账账', () => {
   it('uses all 16 pictures, none left out', () => {
-    const files = readdirSync(join(__dirname, '../src/jelly/zhangzhang'));
+    const files = readdirSync(join(__dirname, '../../../packages/jelly/zhangzhang'));
     expect(files).toHaveLength(16);
     for (const f of files) expect(ZZ_FILES.some(u => u.includes(f.replace('.png', '')))).toBe(true);
   });
@@ -82,7 +82,7 @@ describe('smooth switching', () => {
   });
   it('board colours are not faded across the whole page, only on the background field', () => {
     const page = readFileSync(join(__dirname, '../src/styles.css'), 'utf8');
-    const jelly = readFileSync(join(__dirname, '../src/jelly/jelly.css'), 'utf8');
+    const jelly = readFileSync(join(__dirname, '../../../packages/jelly/jelly.css'), 'utf8');
     expect(page).not.toMatch(/transition:\s*--/);
     expect(page).not.toMatch(/\)\s*fixed;/); // no fixed body background, which repaints on every scroll
     const fades = [...jelly.matchAll(/^([^{\n]*)\{[^}]*transition:\s*--/gm)].map(m => m[1].trim());

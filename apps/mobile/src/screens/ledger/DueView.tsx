@@ -11,7 +11,7 @@ import { loadKey, loadModelSettings } from '../../model/settings';
 import { describeModelError } from '../../model/direct';
 import { readHandwriting } from '../../logic/photoAsk';
 import { preferencesKV } from '../../storage/kv';
-import type { Moment } from '../../jelly/mood';
+import type { Moment } from '@jelly/mood';
 import { importedPaper, missed, modelAsk, praise, redTag } from './shared';
 
 interface Props {

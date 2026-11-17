@@ -11,7 +11,6 @@
   --lift-small: 0 12px 18px -12px color-mix(in srgb, var(--c2) 70%, transparent);
   --field: rgb(255 255 255 / .55); --bg: var(--bg-a);
   --ok: #1f9a62; --bad: #e0554d; --warn: #9a6a00; --warn-bg: rgb(245 180 40 / .16); --bad-bg: rgb(255 143 134 / .16);
-  --jelly: blur(5px) saturate(150%);
   font-size: 17px; color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -24,25 +23,17 @@ body {
 h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 14px; }
 h2 { font-size: 1.05rem; margin: 4px 0; }
 
-/* surfaces: the jelly recipe (spec ①–④, ⑥): blur 5px + saturate 150%, c1 tint, c2 pool at the bottom, top gloss, a white
- * rim with white inner glow, lilac left / pink right inner edges, a faint iridescent ring, and the c2 light cast below. */
+/* surfaces: the jelly recipe (packages/jelly/jelly.css), here on the app's own surface classes */
 .card, .tabbar, .demo-banner, .orb, .tile, .alert, .seg, .ghost, .chip, .course-row {
-  position: relative; isolation: isolate;
-  background:
-    linear-gradient(to bottom, rgb(255 255 255 / .38), rgb(255 255 255 / 0) 22%),
-    radial-gradient(ellipse 78% 58% at 50% 100%, color-mix(in srgb, var(--c2) 38%, transparent), transparent),
-    linear-gradient(var(--glass), var(--glass));
-  border: 1.5px solid rgb(255 255 255 / .9);
-  box-shadow: inset 0 0 16px rgb(255 255 255 / .7), inset 9px 0 12px -6px rgb(196 178 255 / .28), inset -9px 0 12px -6px rgb(255 196 224 / .2),
-    0 12px 18px -10px color-mix(in srgb, var(--c2) 45%, transparent);
-  backdrop-filter: var(--jelly); -webkit-backdrop-filter: var(--jelly);
+  position: relative; isolation: isolate; background: var(--jelly-fill); border: var(--jelly-rim);
+  box-shadow: var(--jelly-glow), var(--jelly-cast); backdrop-filter: var(--jelly-blur); -webkit-backdrop-filter: var(--jelly-blur);
 }
 /* Small pieces skip the live blur: each blurred surface is one more full render pass on every frame while the field
  * behind drifts, and at chip size the blur reads the same as a denser clear fill. */
 .orb, .ghost, .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background-color: rgb(255 255 255 / .34); }
 .card::before, .tile::before, .orb::before, .tabbar::before, .alert::before, .seg::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2.5px; opacity: .5; pointer-events: none; z-index: -1;
-  background: conic-gradient(from 200deg, #c4b2ff, #b8f3ff, #c9ffe4, #fff4c4, #ffc4e0, #c4b2ff);
+  background: var(--jelly-ring);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

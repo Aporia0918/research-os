@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
 import { Icon, type IconName } from '../icons';
 import { JellySurface } from './JellySurface';
-import { BOARDS, THEMES, themeVars, type Board } from './theme';
+import { BOARDS, THEMES, themeVars, type Board } from '@jelly/theme';
 import { ZZ, Zhangzhang, type ZzState } from './Zhangzhang';
-import { RESIDENT } from './mood';
-import { Backdrop } from './Backdrop';
+import { RESIDENT } from '@jelly/mood';
+import { Backdrop } from '@jelly/Backdrop';
 
 const STATES: ZzState[] = ['idle', 'wave', 'smile', 'write', 'dun', 'paid', 'think', 'confused', 'sleepy', 'hug', 'lens'];
 const TAB_ICON: Record<Board, IconName> = { 生活: 'guide', 学习: 'ledger', 科研: 'research' };

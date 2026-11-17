@@ -1,6 +1,6 @@
 // 思维账本 first screen: the pre-exam report on top, today's repayments, then booking a new debt. Works with no key
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
-import { setBoardTheme } from '../look';
+import { applyBoard } from '@jelly/theme';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { tr } from '../i18n';
 import { countdown, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
@@ -12,7 +12,7 @@ import { preferencesKV } from '../storage/kv';
 import { LifeScreen } from './LifeScreen';
 import { Icon, type IconName } from '../icons';
 import { Zhangzhang } from '../jelly/Zhangzhang';
-import { homeMood, type Moment } from '../jelly/mood';
+import { homeMood, type Moment } from '@jelly/mood';
 import { courses, recentTopics, NO_TOPIC } from '../ledger/courses';
 import { balanceOn, streak } from '../ledger/insight';
 import { DueView } from './ledger/DueView';
@@ -53,7 +53,7 @@ async function remote(): Promise<LedgerRemote | null> {
 
 export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => void; intent?: LedgerIntent | null }) {
   const [board, setBoard] = useState<Board>('科研');
-  useEffect(() => setBoardTheme(board), [board]);
+  useEffect(() => applyBoard(board), [board]);
   const [exam, setExam] = useState('');
   const [report, setReport] = useState<Report | null>(null);
   const [due, setDue] = useState<Entry[]>([]);

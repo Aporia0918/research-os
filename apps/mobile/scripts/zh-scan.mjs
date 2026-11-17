@@ -37,7 +37,8 @@ const SKIP_ATTR = new Set(['className', 'data-testid', 'role', 'type', 'key', 'v
 const files = [];
 const URL_ALLOWED = /^https:\/\/(?:github\.com\/Aporia0918\/(?:paper-lab-assistant-releases\/releases\/latest\/download|research-os\/releases\/(?:download\/test-latest\/version\.json|tag\/test-latest))|\$\{h\}\.jsdelivr\.net\/gh\/Aporia0918\/research-os@tb-\$\{code \+ k\}\/version\.json)$/;
 const STORAGE_TEMPLATE = /^(?:plan|guidance|hypotheses)\.\$\{\w+\}\.v1$/;
-(function walk(d) { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(f) && !p.endsWith(join('i18n', 'en.ts')) && files.push(p); } })('src');
+function walk(d) { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(f) && !p.endsWith(join('i18n', 'en.ts')) && files.push(p); } }
+walk('src'); walk('../../packages/jelly'); // the shared look (账账, board colours) is on screen too
 // src/i18n/en.ts is the English locale and is deliberately excluded: this scan covers the zh locale only.
 
 const PROTOCOL = new Set(['GET', 'POST', 'PUT', 'DELETE', 'Content-Type', 'Idempotency-Key']);

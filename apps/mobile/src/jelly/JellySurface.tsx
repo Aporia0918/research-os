@@ -4,7 +4,7 @@
 // follows the finger (screen blend) ⑥ a c2 light spot cast under the bottom edge. Cards drift their corners and float;
 // a press squashes from the bottom edge to 1.06 / 0.9 and the release springs back (dampingRatio 0.32, stiffness 380).
 import { useRef, type CSSProperties, type HTMLAttributes, type PointerEvent, type ReactNode } from 'react';
-import { PRESS_RELEASE, PRESS_SHAPE, useSquash } from './spring';
+import { PRESS_RELEASE, PRESS_SHAPE, useSquash } from '@jelly/spring';
 
 /** Idle beat for the n-th card: 6–9 s periods that never line up between neighbours. */
 export function beat(n: number): { dur: number; delay: number } {
