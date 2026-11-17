@@ -29,6 +29,34 @@
     color-scheme: dark;
   }
 }
+/* 学习 and 科研: a dark sci-fi console. Cold blue light, thin lit lines, a faint grid behind the glass. */
+:root[data-look="scifi"] {
+  --accent: #38e1ff; --accent-2: #7b6bff; --accent-soft: rgba(56, 225, 255, .12); --on-accent: #031018;
+  --text: #e3f3ff; --muted: #86a0c0; --line: rgba(120, 200, 255, .14);
+  --glass: rgba(10, 22, 46, .55); --glass-strong: rgba(14, 30, 60, .74);
+  --rim: rgba(110, 215, 255, .34); --rim-low: rgba(0, 0, 0, .5);
+  --sheen: linear-gradient(180deg, rgba(140, 230, 255, .13), rgba(140, 230, 255, 0) 38%);
+  --lift: 0 20px 44px -18px rgba(0, 0, 0, .85), 0 0 26px -8px rgba(56, 225, 255, .3);
+  --lift-small: 0 10px 22px -10px rgba(0, 0, 0, .8), 0 0 16px -4px rgba(56, 225, 255, .35);
+  --field: rgba(120, 200, 255, .07); --bg: #040915;
+  --blob-a: rgba(0, 130, 255, .34); --blob-b: rgba(110, 70, 255, .3); --blob-c: rgba(0, 210, 200, .16);
+  --ok: #4fe3a1; --bad: #ff6b81; --warn: #ffcf5a; --warn-bg: rgba(255, 207, 90, .1); --bad-bg: rgba(255, 107, 129, .12);
+  color-scheme: dark;
+}
+/* 生活: warm and soft. Cream, peach and apricot light. */
+:root[data-look="warm"] {
+  --accent: #f2734f; --accent-2: #ffa95c; --accent-soft: rgba(242, 115, 79, .12); --on-accent: #fff;
+  --text: #4a2c20; --muted: #8e6a5a; --line: rgba(150, 90, 60, .12);
+  --glass: rgba(255, 250, 244, .58); --glass-strong: rgba(255, 252, 248, .8);
+  --rim: rgba(255, 255, 255, .95); --rim-low: rgba(210, 150, 110, .22);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 46%);
+  --lift: 0 22px 44px -18px rgba(205, 110, 60, .34), 0 3px 10px rgba(205, 110, 60, .08);
+  --lift-small: 0 10px 22px -10px rgba(205, 110, 60, .38), 0 2px 4px rgba(205, 110, 60, .08);
+  --field: rgba(255, 255, 255, .7); --bg: #fff3e8;
+  --blob-a: rgba(255, 178, 140, .55); --blob-b: rgba(255, 214, 150, .5); --blob-c: rgba(255, 160, 190, .32);
+  --ok: #2e8a4f; --bad: #c4452f; --warn: #94600a; --warn-bg: rgba(245, 180, 40, .16); --bad-bg: rgba(230, 90, 60, .1);
+  color-scheme: light;
+}
 * { box-sizing: border-box; }
 body {
   margin: 0; color: var(--text); font-family: system-ui, -apple-system, "PingFang SC", "Noto Sans SC", "Segoe UI", Roboto, sans-serif;
@@ -179,3 +207,21 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .bubble.me { justify-self: end; text-align: left; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-bottom-right-radius: 6px; }
 .bubble.helper { background: var(--glass-strong); border: 1px solid var(--rim); border-bottom-left-radius: 6px; }
 .helper-says { display: flex; gap: 6px; align-items: flex-end; }
+
+/* sci-fi details: grid, glowing numbers, thin lines */
+body { transition: background-color .4s ease; }
+:root[data-look="scifi"] body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(56, 225, 255, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 225, 255, .055) 1px, transparent 1px);
+  background-size: 28px 28px; -webkit-mask-image: radial-gradient(90% 70% at 50% 30%, #000, transparent);
+  mask-image: radial-gradient(90% 70% at 50% 30%, #000, transparent);
+}
+.app { position: relative; }
+:root[data-look="scifi"] .big { filter: drop-shadow(0 0 14px rgba(56, 225, 255, .45)); }
+:root[data-look="scifi"] h1 { letter-spacing: .04em; }
+:root[data-look="scifi"] .card, :root[data-look="scifi"] .tile { border-radius: 18px; }
+:root[data-look="scifi"] .hero { border-color: rgba(56, 225, 255, .5); }
+:root[data-look="scifi"] .orb { background: radial-gradient(circle at 35% 28%, rgba(140, 230, 255, .35), transparent 50%), var(--glass); }
+/* warm details: rounder, softer */
+:root[data-look="warm"] .card { border-radius: 30px; }
+:root[data-look="warm"] .bubble.helper { background: #fffaf3; }

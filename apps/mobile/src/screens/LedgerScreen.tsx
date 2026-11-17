@@ -1,5 +1,6 @@
 // 思维账本 first screen: the pre-exam report on top, today's repayments, then booking a new debt. Works with no key
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
+import { setLook } from '../look';
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
 import { countdown, type Ask, type Book, type Entry, type Grade, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
@@ -55,6 +56,7 @@ async function remote(): Promise<LedgerRemote | null> {
 
 export function LedgerScreen() {
   const [board, setBoard] = useState<Board>('科研');
+  useEffect(() => setLook(board === '生活' ? 'warm' : 'scifi'), [board]);
   const [exam, setExam] = useState('');
   const [report, setReport] = useState<Report | null>(null);
   const [due, setDue] = useState<Entry[]>([]);

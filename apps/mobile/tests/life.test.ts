@@ -139,9 +139,11 @@ describe('生活 screen', () => {
   it('the ledger screen switches boards; 生活 shows the chat, not the debts', async () => {
     const h = await mount(createElement(LedgerScreen));
     expect(h.querySelector('[data-testid=ledger-hero]')).not.toBeNull();
+    expect(document.documentElement.dataset.look).toBe('scifi');
     await act(async () => { [...h.querySelectorAll<HTMLButtonElement>('[data-testid=board-switch] button')].find(b => b.textContent === '生活')!.click(); });
     await flush();
     expect(h.querySelector('[data-testid=life-chat]')).not.toBeNull();
+    expect(document.documentElement.dataset.look).toBe('warm');
     expect(h.querySelector('[data-testid=ledger-hero]')).toBeNull();
   });
 });

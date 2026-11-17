@@ -1,4 +1,5 @@
 import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } from './i18n';
+import { setLook } from './look';
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
@@ -23,6 +24,7 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
 
 export function App() {
   const [tab, setTab] = useState<Tab>('ledger');
+  useEffect(() => { if (tab !== 'ledger') setLook('scifi'); }, [tab]);
   const [demo, setDemo] = useState(false);
   useEffect(() => { void loadDemo(preferencesKV).then(setDemo); }, []);
   const [lang, setLangState] = useState<Lang>(getLang());
