@@ -102,7 +102,10 @@ describe('生活 screen', () => {
   it('a risk message gets the fixed care message at once, with no model call and nothing to record', async () => {
     const model: LifeModel = { reply: vi.fn(async () => '嗯'), flag: vi.fn(async () => false) };
     const h = await mount(createElement(LifeScreen, { model }));
+    expect(h.querySelector('[data-testid=life-hello]')?.textContent).toContain('我是小账');
+    expect(h.querySelector('.helper-head [data-testid=mascot]')?.getAttribute('data-mood')).toBe('happy');
     await say(h, '我决定了，不想活了');
+    expect(h.querySelector('.helper-head [data-testid=mascot]')?.getAttribute('data-mood')).toBe('worried');
     expect(h.querySelector('[data-testid=life-care]')?.textContent).toContain('12356');
     expect(model.reply).not.toHaveBeenCalled();
     expect(h.querySelector('[data-testid=life-record]')).toBeNull();
@@ -120,7 +123,7 @@ describe('生活 screen', () => {
   it('a decision is offered as one line to record; the week card counts it', async () => {
     const h = await mount(createElement(LifeScreen, { model: null }));
     await say(h, '我想好了，明天社团活动请半天假');
-    expect(h.textContent).toContain('我在听。');
+    expect(h.textContent).toContain('收到。');
     const card = h.querySelector('[data-testid=life-record]');
     expect(card?.textContent).toContain('记一笔：自己拿的主意');
     type(card!.querySelector('input'), '请半天假');

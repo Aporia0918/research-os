@@ -1,6 +1,6 @@
-// 生活板块 (plan 2.2, 2.4 ⑩): a friend who listens first, a light ledger of who made each decision, and the fixed care
+// 生活板块 (plan 2.2, 2.4 ⑩): 小账 (see Mascot), a small companion that greets you, asks first and leaves the decision to you, a light ledger of who made each decision, and the fixed care
 // message when a message speaks of self-harm, suicide or harming someone. The chat lives in memory only; the ledger keeps
-// one line per decision in its own table. Without a model the friend only listens; the care message never needs one.
+// one line per decision in its own table. Without a model the helper only asks back; the care message never needs one.
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
 import { LifeBook, TITLE_MAX, type Decision, type Week } from '../ledger/life';
@@ -10,6 +10,7 @@ import { chat } from '../model/direct';
 import { forJob, loadKey, loadModelSettings } from '../model/settings';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
+import { Mascot, type Mood } from './Mascot';
 
 export const lifeBook = new LifeBook(preferencesKV);
 const OUTWARD_AFTER = 8; // messages in one sitting before it asks, once, whether a friend has heard this
@@ -37,6 +38,7 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
   const [reviewOn, setReviewOn] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [note, setNote] = useState('');
+  const [mood, setMood] = useState<Mood>('happy');
 
   async function refresh() { setWeek(await lifeBook.week(today())); setReviewOn(await lifeBook.reviewOn()); }
   useEffect(() => { void refresh(); }, []);
@@ -46,7 +48,7 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
     if (!said) return;
     setText(''); setNote('');
     const mine = [...turns, { who: 'me' as const, text: said }];
-    const care = () => { setPending(null); setTurns([...mine, { who: 'friend', text: tr(CARE), care: true }]); };
+    const care = () => { setPending(null); setMood('worried'); setTurns([...mine, { who: 'friend', text: tr(CARE), care: true }]); };
     if (risk(said)) { care(); return; } // the word list first: no model, nothing recorded
     setTurns(mine);
     const kind = decision(said);
@@ -54,11 +56,14 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
     const m = model === undefined ? await configuredModel() : model;
     let reply = tr(LISTEN);
     if (m) {
+      setMood('thinking');
       const history = mine.filter((t) => !t.care).map((t) => ({ role: t.who === 'me' ? 'user' as const : 'assistant' as const, content: t.text }));
       const [flagged, first] = await Promise.all([m.flag(said).catch(() => false), m.reply(history).catch(() => tr(LISTEN))]);
+      reply = flagged ? '' : unsafe(first) ? await m.reply(history).then((r) => (unsafe(r) ? tr(LISTEN) : r)).catch(() => tr(LISTEN)) : first;
+      setMood('idle');
       if (flagged) { care(); return; }
-      reply = unsafe(first) ? await m.reply(history).then((r) => (unsafe(r) ? tr(LISTEN) : r)).catch(() => tr(LISTEN)) : first;
     }
+    setMood('idle');
     const asked = mine.filter((t) => t.who === 'me').length === OUTWARD_AFTER;
     setTurns([...mine, { who: 'friend', text: reply }, ...(asked ? [{ who: 'friend' as const, text: tr(OUTWARD) }] : [])]);
   }
@@ -66,7 +71,7 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
   async function record() {
     if (!pending) return;
     const d = await lifeBook.add(pending.kind, pending.title, today(), newId());
-    if (d) { setNote(d.kind === 'own' ? tr('记下了：自己拿的主意。') : tr('记下了：交给 AI 拿的主意。')); setPending(null); await refresh(); }
+    if (d) { setMood('happy'); setNote(d.kind === 'own' ? tr('记下了：自己拿的主意。') : tr('记下了：交给 AI 拿的主意。')); setPending(null); await refresh(); }
   }
   async function clear() { await lifeBook.clear(); setClearing(false); setNote(tr('生活这本账清空了。学习和科研的账没有动。')); await refresh(); }
   async function toggleReview() { await lifeBook.setReview(!reviewOn); await refresh(); }
@@ -83,12 +88,21 @@ export function LifeScreen({ model }: { model?: LifeModel | null }) {
         </div>
       )}
       <div className="card" data-testid="life-chat">
-        <h2>{tr('生活')}</h2>
-        <p className="muted">{tr('这里说的话只留在这次聊天里，不进学习和科研的账，也不会被拿来出题。')}</p>
-        {turns.map((t, i) => (
-          <p key={i} className={t.care ? 'care' : t.who === 'me' ? 'me' : undefined} data-testid={t.care ? 'life-care' : undefined}
-            style={{ whiteSpace: 'pre-line' }}>{t.who === 'me' ? tr('我：') : ''}{t.text}</p>
-        ))}
+        <div className="helper-head">
+          <Mascot size={76} mood={mood} id="head" />
+          <div>
+            <h2>{tr('小账')}</h2>
+            <p className="muted">{tr('陪你聊聊生活里的小事，主意还是你自己拿。这里说的话只留在这次聊天里，不进学习和科研的账，也不会被拿来出题。')}</p>
+          </div>
+        </div>
+        <div className="chat">
+          <div className="helper-says" data-testid="life-hello"><Mascot size={30} id="hello" /><p className="bubble helper">{tr('嗨，我是小账。今天过得怎么样？大事小事都可以跟我说说。')}</p></div>
+          {turns.map((t, i) => t.care
+            ? <p key={i} className="care" data-testid="life-care" style={{ whiteSpace: 'pre-line' }}>{t.text}</p>
+            : t.who === 'me'
+              ? <p key={i} className="bubble me">{t.text}</p>
+              : <div key={i} className="helper-says"><Mascot size={30} id={`t${i}`} /><p className="bubble helper" style={{ whiteSpace: 'pre-line' }}>{t.text}</p></div>)}
+        </div>
         <textarea value={text} placeholder={tr('想说什么都可以')} onChange={(x) => setText(x.target.value)} />
         <button disabled={!text.trim()} onClick={() => void send()}>{tr('说完了')}</button>
         <div role="group">
