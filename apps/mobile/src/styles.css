@@ -21,7 +21,7 @@ body {
   background: var(--bg-a); min-height: 100vh; -webkit-tap-highlight-color: transparent;
 }
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-.screen { flex: 1; padding: calc(env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right)) 128px max(16px, env(safe-area-inset-left)); }
+.screen { flex: 1; padding: calc(env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 112px) max(16px, env(safe-area-inset-left)); }
 h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 14px; }
 h2 { font-size: 1.05rem; margin: 4px 0; }
 
@@ -125,7 +125,8 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 /* floating tab bar */
 .tabbar {
   position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right));
-  bottom: calc(env(safe-area-inset-bottom) + 12px); display: flex; padding: 6px; border-radius: 30px; z-index: 10;
+  bottom: calc(env(safe-area-inset-bottom) + 12px); display: flex; padding: 6px; border-radius: 30px; z-index: 50;
+  transform: translateZ(0); will-change: transform; /* its own layer: stays put while the page scrolls under it */
   border-radius: 999px;
 }
 .tab { position: relative; flex: 1; min-width: 0; background: none; border-radius: 22px; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: .72rem; min-height: 56px; padding: 6px 2px; }
@@ -247,67 +248,67 @@ input[type=search] { width: 100%; margin-bottom: 12px; }
 .mm-node.mm-miss { fill: transparent; stroke: var(--line); }
 .mm-text { fill: var(--text); font-size: 11.5px; }
 
-/* 成长空间: the jelly collage (owner's reference 2026-11-17). Clear cards of different sizes, rims and clarity, shaped
- * like pebbles, a drop and squashed gummies; asymmetric two-column layout; only the small secondary cards lean 2–4°.
- * Shape comes from the thick white rim, the rainbow ring and a wet highlight, with a little mint settling at the bottom.
- * Warm apricot leads (the board's accent), lavender only as a glow in the background. No heavy shadows. */
+/* 成长空间: the jelly collage (owner's reference 2026-11-17, redone after the owner's look on a phone). Cards you can
+ * almost see through, of clearly different sizes and shapes (pebble, drop, squashed gummy, cashew), placed off-centre.
+ * No drawn rim: an edge is only a soft inner glow, a faint rainbow and a wet highlight, so it fades into the background.
+ * No live blur here either: it made scrolling heavy and the bottom bar lag on the phone. Warm apricot leads. */
 .growth { position: relative; }
-.growth::before {
-  content: ""; position: absolute; inset: -60px -40px auto auto; width: 70%; height: 340px; z-index: -1; pointer-events: none;
-  background: radial-gradient(closest-side, rgb(206 190 255 / .32), transparent 70%);
-}
-.collage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 16px 10px; align-items: start; }
-.collage > * { margin-bottom: 0; min-width: 0; }
-.collage > .shape-deadlines, .collage > .shape-week, .collage > .shape-past { grid-column: 1 / -1; }
-.pebble {
-  --clear: .16; --sink: 20%;
+.growth .card {
+  border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; --clear: .07; --sink: 16%;
   background:
-    radial-gradient(120% 60% at 22% 0%, rgb(var(--w) / .55), transparent 55%),
-    linear-gradient(to top, color-mix(in srgb, #8ce2c4 var(--sink), transparent), transparent 48%),
+    radial-gradient(90% 55% at 24% 4%, rgb(var(--w) / .5), transparent 60%),
+    radial-gradient(70% 45% at 50% 108%, color-mix(in srgb, #8ce2c4 var(--sink), transparent), transparent 70%),
+    radial-gradient(60% 40% at 92% 30%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
     rgb(var(--w) / var(--clear));
-  box-shadow: inset 0 0 0 1px rgb(var(--w) / .5), inset 0 2px 14px rgb(var(--w) / .75), inset 0 -8px 16px -10px color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: inset 0 0 0 1px rgb(var(--w) / .22), inset 0 0 26px 2px rgb(var(--w) / .6), inset 0 -14px 26px -16px color-mix(in srgb, #8ce2c4 55%, transparent);
 }
-.pebble::after {
-  content: ""; position: absolute; left: 12%; top: 7px; width: 30%; height: 10px; border-radius: 50%; pointer-events: none;
-  background: linear-gradient(rgb(var(--w) / .95), rgb(var(--w) / 0)); filter: blur(1px); rotate: -6deg;
+.growth .card::before { opacity: .22; filter: blur(1.5px); padding: 3px; }
+.growth .card::after {
+  content: ""; position: absolute; left: 14%; top: 8px; width: 34%; height: 12px; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(rgb(var(--w) / .9), rgb(var(--w) / 0)); filter: blur(2px); rotate: -5deg; z-index: -1;
 }
-.shape-focus { border-width: 2.5px; border-radius: 52px 36px 58px 40px / 44px 54px 38px 56px; --clear: .2; padding: 20px 18px; }
+.growth .hero { border-radius: 62px 44px 70px 40px / 46px 58px 42px 64px; --clear: .1; }
+.collage { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px 10px; align-items: start; }
+.collage > * { margin-bottom: 0; min-width: 0; }
+.shape-focus { grid-column: 1 / span 4; border-radius: 58% 42% 52% 48% / 46% 54% 46% 54%; padding: 26px 24px; --clear: .09; }
 .drop-card {
-  border-width: 3px; aspect-ratio: 1; border-radius: 50% 50% 46% 54% / 60% 56% 44% 40%; --clear: .1; --sink: 26%;
-  rotate: -3deg; margin-top: 18px; align-items: center; justify-content: center; gap: 0; padding: 10px;
+  grid-column: 5 / span 2; align-self: center; aspect-ratio: 1; border-radius: 50% 50% 48% 52% / 62% 60% 40% 38%; --clear: .05; --sink: 24%;
+  align-items: center; justify-content: center; gap: 0; padding: 8px; margin-top: 28px;
 }
-.drop-num { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--deep); font-variant-numeric: tabular-nums; }
-.drop-mark { position: absolute; right: 22%; top: 24%; font-weight: 800; color: var(--accent); }
-.drop-sub { font-size: .78rem; color: var(--muted); }
-.shape-deadlines { border-radius: 30px 46px 28px 42px / 40px 26px 48px 30px; --clear: .26; border-width: 1.5px; }
-.shape-week { border-radius: 56px 30px 48px 34px / 34px 54px 30px 50px; --clear: .14; border-width: 2.5px; margin-inline: 6px -4px; }
-.shape-past { border-radius: 42px 24px 42px 24px; --clear: .2; rotate: 2deg; margin: -6px 18px 0 10px; padding: 14px 16px; font-size: .94em; }
-.growth .more { border-radius: 24px 34px 24px 34px; --clear: .12; margin-top: 16px; }
+.drop-num { font-size: 2.4rem; font-weight: 800; line-height: 1; color: var(--deep); font-variant-numeric: tabular-nums; }
+.drop-mark { position: absolute; right: 20%; top: 22%; font-weight: 800; color: var(--accent); }
+.drop-sub { font-size: .74rem; color: var(--muted); }
+.shape-deadlines { grid-column: 1 / -1; border-radius: 34px 64px 30px 56px / 52px 30px 60px 34px; --clear: .12; padding: 20px 18px; }
+.shape-week { grid-column: 2 / -1; border-radius: 70px 36px 64px 42px / 44px 66px 38px 62px; --clear: .06; padding: 22px 22px 22px 26px; }
+.shape-past { grid-column: 1 / span 5; border-radius: 30px 46px 52px 26px / 40px 30px 46px 34px; --clear: .09; padding: 16px 18px; font-size: .94em; }
+.growth .more { border-radius: 26px 40px 26px 40px; --clear: .05; margin-top: 18px; width: 82%; margin-left: auto; }
 .water {
   position: absolute; border-radius: 50%; pointer-events: none; z-index: 1;
   background: radial-gradient(circle at 32% 30%, rgb(var(--w) / 1) 0 22%, rgb(var(--w) / .25) 45%, color-mix(in srgb, #8ce2c4 30%, transparent) 100%);
-  box-shadow: inset 0 -1px 2px rgb(var(--w) / .9), 0 1px 1px color-mix(in srgb, var(--c2) 35%, transparent);
+  box-shadow: inset 0 -1px 2px rgb(var(--w) / .9);
 }
-.deadline { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px dashed rgb(var(--w) / .7); }
+.deadline { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid rgb(var(--w) / .35); }
 .deadline:first-of-type { border-top: 0; }
 .deadline-row { display: flex; align-items: center; gap: 10px; }
 .dl-left {
   flex: none; min-width: 3.2em; text-align: center; padding: 4px 8px; border-radius: 18px 14px 18px 12px; font-weight: 700;
-  background: rgb(var(--w) / .45); color: var(--deep);
+  background: rgb(var(--w) / .35); color: var(--deep);
 }
-.dl-left.soon { color: color-mix(in srgb, var(--accent) 80%, #6b2a14); background: color-mix(in srgb, var(--accent) 22%, rgb(var(--w) / .4)); }
+.dl-left.soon { color: color-mix(in srgb, var(--accent) 80%, #6b2a14); background: color-mix(in srgb, var(--accent) 18%, rgb(var(--w) / .3)); }
 .dl-name { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
 .dl-name .muted { font-size: .8em; }
 .dl-done { flex: none; min-width: 44px; min-height: 44px; border-radius: 50%; }
 .steps { display: flex; flex-direction: column; gap: 4px; padding-left: 4px; }
 .step { gap: 8px; align-items: center; font-size: .92em; }
 .step input { width: 20px; height: 20px; accent-color: var(--accent); }
-.step input:checked + * , .step:has(input:checked) { color: var(--muted); text-decoration: line-through; }
+.step:has(input:checked) { color: var(--muted); text-decoration: line-through; }
 .steps textarea { min-height: 96px; }
 .focus-clock { font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; margin: 0; }
 .care p { margin: 0; }
-@media (max-width: 360px) { .collage { grid-template-columns: minmax(0, 1fr); } .drop-card { width: 60%; justify-self: center; } }
-@media (prefers-reduced-motion: reduce) { .drop-card, .shape-past { rotate: 0deg; } }
+@media (max-width: 360px) {
+  .shape-focus, .shape-week, .shape-past { grid-column: 1 / -1; }
+  .drop-card { grid-column: 2 / span 4; width: 60%; justify-self: center; margin-top: 0; }
+}
 
 /* 科研 merges: data files on a record, a paper's links and its reference. Long names and links wrap, never widen the page. */
 .file-name, .link-url { flex: 1; min-width: 0; overflow-wrap: anywhere; }

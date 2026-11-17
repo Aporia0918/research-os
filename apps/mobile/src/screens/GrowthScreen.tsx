@@ -70,7 +70,7 @@ export function GrowthScreen({ switcher, onRepay }: { switcher: ReactNode; onRep
       {note && <p className="note" role="status">{note}</p>}
       <div className="collage">
       <FocusCard day={day} onDone={setG} onRepay={async () => { setG(await growthBook.repaidAfterFocus(day)); repay(); }} onMood={setZz} />
-      <div className="card pebble drop-card" aria-label={tr('这周讲顺 {0} 笔', gw.repaid)} data-testid="week-drop">
+      <div className="card drop-card" aria-label={tr('这周讲顺 {0} 笔', gw.repaid)} data-testid="week-drop">
         <Drops n={2} />
         <span className="drop-num">{gw.repaid}</span>
         <span className="drop-mark" aria-hidden="true">✓</span>
@@ -78,7 +78,7 @@ export function GrowthScreen({ switcher, onRepay }: { switcher: ReactNode; onRep
       </div>
       <Deadlines g={g} courses={courses} day={day} onChange={x => { setG(x); void refreshReminders(); }} />
       {reviewOn && (
-        <div className="card pebble shape-week" data-testid="growth-week">
+        <div className="card shape-week" data-testid="growth-week">
           <Drops n={3} />
           <h2>{tr('成长周报')}</h2>
           <p>{tr('这周独立讲清了 {0} 笔，新记 {1} 笔，其中 {2} 笔先写了自己的想法。', gw.repaid, gw.booked, gw.thoughtFirst)}</p>
@@ -87,7 +87,7 @@ export function GrowthScreen({ switcher, onRepay }: { switcher: ReactNode; onRep
         </div>
       )}
       {past && (
-        <div className="card pebble shape-past" data-testid="month-ago">
+        <div className="card shape-past" data-testid="month-ago">
           <h2>{tr('那年今日')}</h2>
           <p className="muted">{tr('一个月前的今天，你讲清了这一笔：')}</p>
           <p><b>{past.question}</b></p>
@@ -120,7 +120,7 @@ function FocusCard({ day, onDone, onRepay, onMood }: { day: string; onDone: (g: 
   }
   async function stop() { setEnd(null); await focusAlarm(null, '', ''); }
   return (
-    <div className="card pebble shape-focus" data-testid="focus">
+    <div className="card shape-focus" data-testid="focus">
       <Drops n={1} />
       <h2>{tr('专注一段')}</h2>
       {end !== null ? (
@@ -153,7 +153,7 @@ function Deadlines({ g, courses, day, onChange }: { g: Growth; courses: string[]
   const list = upcoming(g.deadlines, day);
   async function add() { onChange(await growthBook.addDeadline({ id: newId(), ...d })); setD(blank); setAdding(false); }
   return (
-    <div className="card pebble shape-deadlines" data-testid="deadlines">
+    <div className="card shape-deadlines" data-testid="deadlines">
       <h2>{tr('截止日')}</h2>
       {list.length === 0 && <p className="muted">{tr('作业、实验报告、考试、组会都可以记在这里。考试和组会一周内到，那门课的账会自动排到前面。')}</p>}
       {list.map(x => (
@@ -225,7 +225,7 @@ function Settings({ reviewOn, onChange }: { reviewOn: boolean; onChange: () => v
   const [old, setOld] = useState<Decision[]>([]);
   useEffect(() => { void lifeBook.all().then(setOld); }, []);
   return (
-    <details className="card pebble more">
+    <details className="card more">
       <summary>{tr('成长空间的设置')}</summary>
       <button className="ghost" onClick={() => void lifeBook.setReview(!reviewOn).then(onChange)}>{reviewOn ? tr('不看成长周报') : tr('看成长周报')}</button>
       {old.length > 0 && (
