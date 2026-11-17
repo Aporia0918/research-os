@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 账账 on a soft mint glow; the PNG layers are 108dp, the mascot sits inside the 66dp safe circle. -->
+<!-- The owner's picture: 账账 hugging a star in a bubble. The picture is opaque, so the whole 108dp square is the
+     background layer (the bubble fills the 72dp the launcher shows); the foreground layer is empty. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>

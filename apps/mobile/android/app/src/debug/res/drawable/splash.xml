@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Test build launch screen: plain mint, no picture. -->
+<!-- Test build launch screen: the icon's bubble picture, centred on the picture's own pale pink-lilac. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item><color android:color="#D2F8EC"/></item>
+    <item><color android:color="#F3E9EE"/></item>
+    <item android:width="200dp" android:height="200dp" android:gravity="center" android:drawable="@drawable/splash_zz"/>
 </layer-list>
