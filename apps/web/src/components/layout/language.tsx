@@ -17,7 +17,7 @@ export function LanguageSelect() {
   const lng = useLanguage();
   return (
     <Field label={t("language.label")} htmlFor="ui-language" hint={t("language.description")}>
-      <select id="ui-language" className="h-11 w-fit rounded-md border bg-card px-3" value={lng}
+      <select id="ui-language" className="h-11 w-fit jelly-field rounded-[14px] px-3" value={lng}
         onChange={(e) => { if (isLanguage(e.target.value)) setLanguage(e.target.value); }}>
         {LANGUAGES.map((l) => <option key={l} value={l} lang={l}>{t(`language.${l}`)}</option>)}
       </select>

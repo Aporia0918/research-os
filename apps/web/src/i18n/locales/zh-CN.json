@@ -199,7 +199,11 @@
     "offline": "离线",
     "toLight": "切换到浅色主题",
     "toDark": "切换到深色主题",
-    "toggleTheme": "切换主题"
+    "toggleTheme": "切换主题",
+    "brand": "思维账本",
+    "boardStudy": "学习",
+    "boardResearch": "科研",
+    "board": "板块"
   },
   "shortcuts": {
     "title": "键盘快捷键",

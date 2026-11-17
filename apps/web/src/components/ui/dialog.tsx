@@ -6,10 +6,10 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
-const overlay = "fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] data-[state=open]:animate-in";
+const overlay = "fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--ink)_24%,transparent)] backdrop-blur-sm data-[state=open]:animate-in";
 const panel =
   "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 " +
-  "rounded-xl border bg-card p-6 shadow-lg";
+  "jelly-glass rounded-[26px] p-6";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;

@@ -53,7 +53,7 @@ export function ResearchPlanning({ pid }: { pid: string }) {
   } });
   const gaps = useMutation({ mutationFn: async () => ({ pid, out: await api.post<GapMap>("/claims/gap-map", { project_id: pid, axes: parseAxes(axes) }, { idempotencyKey: newKey() }) }) });
   const feasOut = forProject(feas.data, pid); const gapOut = forProject(gaps.data, pid);
-  const sel = "h-11 rounded-md border bg-card px-3";
+  const sel = "h-11 jelly-field rounded-[14px] px-3";
   return <Card>
     <CardHeader><CardTitle>{t("planning.title")}</CardTitle><CardDescription>{t("planning.description")}</CardDescription></CardHeader>
     <CardContent className="grid gap-4">

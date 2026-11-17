@@ -1,14 +1,17 @@
-// The board (学习 / 科研 / 生活) the desktop app wears: its colours go on <html> (packages/jelly/theme.ts), and the
-// choice is remembered on this computer. 科研 is the default here, since the desktop app is where research happens.
+// The board the desktop app wears, 学习 or 科研 (生活 stays on the phone): its colours go on <html>
+// (packages/jelly/theme.ts), and the choice is remembered on this computer. 科研 is the default here, since the desktop
+// app is where research happens.
 import { useEffect, useSyncExternalStore } from "react";
-import { applyBoard, BOARDS, type Board } from "@jelly/theme";
+import { applyBoard, type Board } from "@jelly/theme";
+
+export const DESK_BOARDS: Board[] = ["学习", "科研"];
 
 const KEY = "ros-board";
 const subs = new Set<() => void>();
 let current: Board = read();
 
 function read(): Board {
-  try { const v = localStorage.getItem(KEY); return BOARDS.includes(v as Board) ? (v as Board) : "科研"; } catch { return "科研"; }
+  try { const v = localStorage.getItem(KEY); return DESK_BOARDS.includes(v as Board) ? (v as Board) : "科研"; } catch { return "科研"; }
 }
 
 export function setBoard(b: Board): void {

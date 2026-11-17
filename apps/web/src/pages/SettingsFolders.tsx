@@ -49,7 +49,7 @@ export function FoldersCard() {
         }}>
           <Input id="folder-path" className="min-w-0 flex-1 font-mono" value={path} onChange={(e) => setPath(e.target.value)}
             placeholder={t("folders.pathPlaceholder")} aria-label={t("folders.path")} />
-          <select className="h-9 rounded-md border bg-background px-2 text-body-sm" value={access} aria-label={t("folders.access")}
+          <select className="jelly-field h-9 rounded-full px-3 text-body-sm" value={access} aria-label={t("folders.access")}
             onChange={(e) => setAccess(e.target.value as FileRoot["access"])}>
             <option value="read">{t("folders.read")}</option><option value="write">{t("folders.write")}</option>
           </select>

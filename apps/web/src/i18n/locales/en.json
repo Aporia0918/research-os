@@ -199,7 +199,11 @@
     "offline": "Offline",
     "toLight": "Switch to light theme",
     "toDark": "Switch to dark theme",
-    "toggleTheme": "Toggle theme"
+    "toggleTheme": "Toggle theme",
+    "brand": "Mind Ledger",
+    "boardStudy": "Study",
+    "boardResearch": "Research",
+    "board": "Board"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

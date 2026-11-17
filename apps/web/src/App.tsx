@@ -33,7 +33,7 @@ const page = (el: ReactNode) => <Suspense fallback={<Skeleton className="h-24" /
 const router = createHashRouter([
   {
     path: "/", element: <AppShell />, children: [
-      { index: true, element: <Navigate to="/projects" replace /> },
+      { index: true, element: <Navigate to="/ledger" replace /> },
       { path: "projects", element: page(<ProjectsPage />) },
       { path: "projects/:id", element: page(<ProjectDetailPage />) },
       { path: "projects/:id/docs/:docId", element: page(<DocEditorPage />) },

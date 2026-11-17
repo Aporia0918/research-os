@@ -9,13 +9,13 @@
      <html>; these tokens follow it, so every page changes colour with the board. */
   --background: var(--bg-a);
   --foreground: var(--ink);
-  --card: rgb(255 255 255 / .5);
+  --card: rgb(var(--w) / .5);
   --card-foreground: var(--ink);
-  --muted: color-mix(in srgb, var(--c1) 55%, white);
+  --muted: color-mix(in srgb, var(--c1) 55%, rgb(var(--w)));
   --muted-foreground: color-mix(in srgb, var(--ink) 66%, var(--bg-a));
   --primary: var(--deep);
   --primary-foreground: oklch(0.99 0 0);
-  --accent: color-mix(in srgb, var(--c2) 26%, white);
+  --accent: color-mix(in srgb, var(--c2) 26%, rgb(var(--w)));
   --accent-foreground: var(--deep);
   --destructive: oklch(0.55 0.20 27);
   --destructive-foreground: oklch(0.985 0 0);
@@ -28,23 +28,14 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.012 255);
-  --foreground: oklch(0.95 0.005 250);
-  --card: oklch(0.21 0.014 255);
-  --card-foreground: var(--foreground);
-  --muted: oklch(0.25 0.014 255);
-  --muted-foreground: oklch(0.70 0.015 250);
-  --primary: oklch(0.70 0.12 255);
-  --primary-foreground: oklch(0.17 0.012 255);
-  --accent: oklch(0.28 0.03 255);
-  --accent-foreground: oklch(0.90 0.03 255);
-  --destructive: oklch(0.65 0.19 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --success: oklch(0.70 0.13 155);
+  /* Dark: the phone's dark jelly. theme.tsx marks <html> data-appearance=dark, so the board's dark colours and the slate
+     light (--w) take over and every token above follows; only these need their own value. */
+  --primary-foreground: #062520;
+  --destructive: oklch(0.68 0.18 25);
+  --destructive-foreground: oklch(0.17 0.02 25);
+  --success: oklch(0.74 0.13 155);
   --warning: oklch(0.80 0.14 80);
-  --info: oklch(0.72 0.11 235);
-  --border: oklch(0.30 0.014 255);
-  --ring: oklch(0.70 0.12 255);
+  --info: oklch(0.74 0.11 235);
 }
 
 @theme inline {
@@ -99,12 +90,40 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+  /* A bare <select> looks like the jelly fields (input.tsx); one with its own classes keeps them. */
+  select { min-height: 2.5rem; padding-inline: .75rem; border-radius: 14px; background: rgb(var(--w) / .45); border: 1px solid rgb(var(--w) / .8); }
 }
 
-/* Jelly surfaces (.jelly-glass, packages/jelly/jelly.css) are unlayered, so in light they win over Tailwind's bg/border
-   utilities. In dark they fall back to plain cards and the moving field is off. */
-.dark .jelly-glass { background: var(--card); border: 1px solid var(--border); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-.dark .jelly-glass::before, .dark .jl-bg { display: none; }
+/* The phone's jelly parts, for the desktop's primitives (button.tsx, input.tsx, misc.tsx, AppShell.tsx). In a layer, so
+   a page's own utilities still win. */
+@layer components {
+  .jelly-primary {
+    color: var(--primary-foreground); font-weight: 650; border: 1.5px solid rgb(var(--w) / .9);
+    background: linear-gradient(to bottom, rgb(var(--w) / .38), rgb(var(--w) / 0) 30%),
+      linear-gradient(170deg, color-mix(in srgb, var(--c2) 92%, #fff), var(--deep));
+    box-shadow: inset 0 0 14px rgb(var(--w) / .45), inset 9px 0 12px -6px rgb(196 178 255 / .35),
+      inset -9px 0 12px -6px rgb(255 196 224 / .3), 0 10px 18px -10px color-mix(in srgb, var(--c2) 70%, transparent);
+    text-shadow: 0 1px 2px color-mix(in srgb, var(--deep) 60%, transparent);
+    transition: filter .15s, transform .15s;
+  }
+  .jelly-primary:hover { filter: brightness(1.05) saturate(1.05); }
+  .jelly-primary:active { transform: scale(.97); }
+  :root[data-appearance=dark] .jelly-primary { text-shadow: none; }
+  .jelly-field {
+    background: rgb(var(--w) / .45); border: 1px solid rgb(var(--w) / .8);
+    box-shadow: inset 0 1px 3px color-mix(in srgb, var(--ink) 10%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  .jelly-track {
+    background: color-mix(in srgb, var(--c1) 40%, rgb(var(--w) / .35)); border: 1px solid rgb(var(--w) / .7);
+    box-shadow: inset 0 1px 4px color-mix(in srgb, var(--ink) 9%, transparent);
+  }
+  .jelly-pill, .jelly-tab[data-state=active] {
+    background: color-mix(in srgb, var(--c2) 28%, rgb(var(--w) / .55)); border: 1px solid rgb(var(--w) / .85);
+    box-shadow: inset 0 0 10px rgb(var(--w) / .8), 0 6px 14px -10px color-mix(in srgb, var(--c2) 80%, transparent);
+  }
+  :root[data-appearance=dark] .jelly-field, :root[data-appearance=dark] .jelly-track { border-color: rgb(var(--w) / .9); }
+}
 
 /* Export to PDF: the browser prints only the mastery report, without the shell, the field or the controls. */
 @media print {

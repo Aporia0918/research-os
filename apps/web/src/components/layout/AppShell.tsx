@@ -18,19 +18,21 @@ import { useTheme } from "./theme";
 import { WhatsNew } from "./WhatsNew";
 import { Backdrop } from "@jelly/Backdrop";
 import { ZZ } from "@jelly/Zhangzhang";
-import { useBoard } from "./board";
+import { BoardSwitch } from "@jelly/BoardSwitch";
+import { DESK_BOARDS, useBoard } from "./board";
 
 const NAV: { to: string; label: ParseKeys; icon: ReactNode; key: string }[] = [
+  { to: "/ledger", label: "nav.ledger", icon: <BookCheck />, key: "" },
   { to: "/projects", label: "nav.projects", icon: <FolderKanban />, key: "p" },
   { to: "/library", label: "nav.library", icon: <BookOpen />, key: "l" },
   { to: "/research", label: "nav.research", icon: <MessageSquareQuote />, key: "r" },
   { to: "/experiments", label: "nav.experiments", icon: <FlaskConical />, key: "" },
   { to: "/literature", label: "nav.literature", icon: <FileSearch />, key: "" },
   { to: "/studies", label: "nav.studies", icon: <ChartScatter />, key: "" },
-  { to: "/ledger", label: "nav.ledger", icon: <BookCheck />, key: "" },
   { to: "/tasks", label: "nav.tasks", icon: <ListTodo />, key: "t" },
   { to: "/settings", label: "nav.settings", icon: <Settings />, key: "s" },
 ];
+
 
 function Connection() {
   const { t } = useTranslation();
@@ -69,23 +71,28 @@ function ThemeToggle() {
 }
 
 // md..lg (iPad portrait): an icon rail, labels for screen readers and as a hover title; lg and up: the full sidebar.
+// The open page sits on a jelly pill, like the picked board on the phone.
 const linkCls = ({ isActive }: { isActive: boolean }) =>
-  cn("flex min-h-11 items-center justify-center gap-3 rounded-md px-3 py-2.5 lg:justify-start text-body-sm font-medium transition-colors [&_svg]:size-[18px]",
-    isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground");
+  cn("flex min-h-11 items-center justify-center gap-3 rounded-full px-3 py-2.5 lg:justify-start text-body-sm font-medium transition-colors [&_svg]:size-[18px]",
+    isActive ? "jelly-pill text-accent-foreground" : "text-muted-foreground hover:bg-card hover:text-foreground");
 
 export function AppShell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [help, setHelp] = useState(false);
   useGlobalShortcuts(useCallback((to: string) => navigate(to), [navigate]), useCallback(() => setHelp(true), []));
-  useBoard(); // puts the remembered board's colours on the page
+  const [board, setBoard] = useBoard(); // puts the remembered board's colours on the page
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[5.5rem_1fr] lg:grid-cols-[15rem_1fr]">
       <Backdrop />
       <aside className="jelly-glass sticky top-3 m-3 hidden h-[calc(100dvh-1.5rem)] flex-col gap-1 rounded-[26px] px-2 py-4 md:flex lg:px-3">
-        <div className="mb-4 flex items-center justify-center gap-2 px-1 lg:justify-start">
-          <img src={ZZ.idle.img} alt="" className="size-9 shrink-0" draggable={false} />
-          <div className="hidden text-title font-semibold lg:block">Research OS</div>
+        <div className="mb-3 flex items-center justify-center gap-2 px-1 lg:justify-start">
+          <img src={ZZ.idle.img} alt="" className="size-10 shrink-0 drop-shadow-sm" draggable={false} />
+          <div className="hidden text-title font-semibold lg:block">{t("shell.brand")}</div>
+        </div>
+        <div className="mb-3 hidden lg:block" aria-label={t("shell.board")}>
+          <BoardSwitch board={board} onPick={setBoard} boards={DESK_BOARDS}
+            name={(b) => t(b === "学习" ? "shell.boardStudy" : "shell.boardResearch")} className="jelly-track text-body-sm" />
         </div>
         <nav className="grid gap-0.5" aria-label={t("nav.main")}>
           {NAV.map((n) => <NavLink key={n.to} to={n.to} className={linkCls} title={t(n.label)}>
@@ -94,8 +101,8 @@ export function AppShell() {
         <div className="mt-auto hidden px-2 text-caption text-muted-foreground lg:block">{t("nav.shortcutHintBefore")}<span className="font-mono">?</span>{t("nav.shortcutHintAfter")}</div>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b bg-background/55 px-4 backdrop-blur md:px-8">
-          <div className="mr-auto text-title font-semibold lg:hidden">Research OS</div>
+        <header className="sticky top-3 z-30 mx-3 mt-3 flex h-14 items-center justify-end gap-2 rounded-full px-4 jelly-glass md:ml-0 md:px-6">
+          <div className="mr-auto text-title font-semibold lg:hidden">{t("shell.brand")}</div>
           <Connection />
           <LanguageToggle />
           <ThemeToggle />
@@ -104,7 +111,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t bg-background/70 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      <nav className="jelly-glass fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto rounded-t-[22px] pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label={t("nav.main")}>
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to}

@@ -7,6 +7,7 @@ import i18n from "@/i18n";
 import { describeError } from "@/api/client";
 import { authCalls, qk } from "@/api/queries";
 import type { AuthState } from "@/api/types";
+import { Backdrop } from "@jelly/Backdrop";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
@@ -15,7 +16,8 @@ import { newKey } from "@/lib/utils";
 
 function Shell({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
   return (
-    <div className="grid min-h-dvh place-items-center bg-background px-4">
+    <div className="grid min-h-dvh place-items-center px-4">
+      <Backdrop />
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="mb-2 grid size-10 place-items-center rounded-lg bg-primary/12 text-primary [&_svg]:size-5">{icon}</div>

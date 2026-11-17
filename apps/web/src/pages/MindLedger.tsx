@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/AppShell";
 import { EmptyState, QueryView } from "@/components/layout/state";
-import { useBoard } from "@/components/layout/board";
+import { DESK_BOARDS, useBoard } from "@/components/layout/board";
 import { BoardSwitch } from "@jelly/BoardSwitch";
 import { Zhangzhang, type ZzState } from "@jelly/Zhangzhang";
 import { RESIDENT } from "@jelly/mood";
@@ -76,7 +76,8 @@ function Hero({ board, mine }: { board: keyof typeof BOARD_KEY; mine: Debt[] | n
     <Card className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[26px] p-5" data-testid="ledger-hero">
       <Zhangzhang state={zz} size={120} label={t("ledger.mascot")} />
       <div className="grid min-w-0 flex-1 gap-3">
-        <BoardSwitch board={board} onPick={pick} name={(b) => t(`ledger.boardName.${BOARD_KEY[b]}`)} className="max-w-sm bg-card/60" />
+        <BoardSwitch board={board} onPick={pick} boards={DESK_BOARDS} name={(b) => t(`ledger.boardName.${BOARD_KEY[b]}`)}
+          className="jelly-track max-w-xs lg:hidden" />
         {mine ? (
           <p className="text-body-sm text-muted-foreground">
             <span className="mr-1 text-display font-semibold text-foreground" data-testid="owed">{mine.length}</span>

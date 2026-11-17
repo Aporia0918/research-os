@@ -9,13 +9,13 @@ export function Skeleton({ className, ...p }: React.HTMLAttributes<HTMLDivElemen
 
 export const Tabs = TabsPrimitive.Root;
 export function TabsList({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("inline-flex h-10 items-center gap-1 rounded-lg bg-muted p-1", className)} {...p} />;
+  return <TabsPrimitive.List className={cn("jelly-track inline-flex h-11 items-center gap-1 rounded-full p-1", className)} {...p} />;
 }
 export function TabsTrigger({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
-      className={cn("rounded-md px-3 py-1.5 text-body-sm font-medium text-muted-foreground transition-colors " +
-        "data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs", className)}
+      className={cn("jelly-tab rounded-full border border-transparent px-4 py-1.5 text-body-sm font-medium text-muted-foreground transition-colors " +
+        "hover:text-foreground data-[state=active]:text-accent-foreground", className)}
       {...p}
     />
   );

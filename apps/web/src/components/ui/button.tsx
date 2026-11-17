@@ -5,16 +5,16 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center justify-self-start gap-2 whitespace-nowrap rounded-md text-body-sm font-medium " +
-    "transition-colors " +
+  "inline-flex items-center justify-center justify-self-start gap-2 whitespace-nowrap rounded-full text-body-sm font-medium " +
+    "transition-[color,background-color,filter,transform] " +
     "disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0 select-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "jelly-primary",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border bg-card hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-muted text-foreground hover:bg-muted/70",
+        outline: "jelly-field hover:bg-accent hover:text-accent-foreground",
+        secondary: "jelly-track text-foreground hover:bg-accent",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

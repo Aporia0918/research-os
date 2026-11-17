@@ -3,7 +3,7 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@/lib/utils";
 
 const field =
-  "w-full rounded-md border bg-card px-3 text-body placeholder:text-muted-foreground " +
+  "jelly-field w-full rounded-[14px] px-3.5 text-body placeholder:text-muted-foreground " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(

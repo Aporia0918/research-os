@@ -2,14 +2,15 @@
 import type { ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CloudOff, Inbox, Lock, RotateCw } from "lucide-react";
+import { CloudOff, Lock, RotateCw } from "lucide-react";
+import { ZZ } from "@jelly/Zhangzhang";
 import { ApiError, OfflineError, describeError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/misc";
 
 function Panel({ icon, title, body, action }: { icon: ReactNode; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-12 text-center">
+    <div className="jelly-glass flex flex-col items-center justify-center gap-3 rounded-[26px] px-6 py-12 text-center">
       <div className="text-muted-foreground [&_svg]:size-8">{icon}</div>
       <div className="text-title font-semibold">{title}</div>
       {body ? <div className="max-w-md text-body-sm text-muted-foreground">{body}</div> : null}
@@ -19,7 +20,8 @@ function Panel({ icon, title, body, action }: { icon: ReactNode; title: string; 
 }
 
 export function EmptyState({ title, body, action, icon }: { title: string; body?: ReactNode; action?: ReactNode; icon?: ReactNode }) {
-  return <Panel icon={icon ?? <Inbox />} title={title} body={body} action={action} />;
+  // Nothing here yet: 账账 dozes, as on the phone.
+  return <Panel icon={icon ?? <img src={ZZ.sleepy.img} alt="" className="size-24" draggable={false} />} title={title} body={body} action={action} />;
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
@@ -31,7 +33,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   if (error instanceof ApiError && error.status === 403) {
     return <Panel icon={<Lock />} title={t("state.forbiddenTitle")} body={describeError(error)} />;
   }
-  return <Panel icon={<AlertTriangle />} title={t("state.errorTitle")} body={describeError(error)}
+  return <Panel icon={<img src={ZZ.confused.img} alt="" className="size-20" draggable={false} />} title={t("state.errorTitle")} body={describeError(error)}
     action={onRetry ? <Button variant="outline" onClick={onRetry}><RotateCw />{t("common.tryAgain")}</Button> : undefined} />;
 }
 

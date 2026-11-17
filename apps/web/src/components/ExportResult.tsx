@@ -27,7 +27,7 @@ const EXPORT_LANGUAGES: readonly ExportLanguage[] = ["en", "zh-CN"];
 export function ExportLanguageSelect({ id, value, onChange }: { id: string; value: ExportLanguage; onChange: (v: ExportLanguage) => void }) {
   const { t } = useTranslation();
   return <label htmlFor={id} className="flex items-center gap-2 text-body-sm">{t("export.languageLabel")}
-    <select id={id} className="h-11 rounded-md border bg-card px-3" value={value}
+    <select id={id} className="h-11 jelly-field rounded-[14px] px-3" value={value}
       onChange={(e) => onChange(e.target.value === "zh-CN" ? "zh-CN" : "en")}>
       {EXPORT_LANGUAGES.map((l) => <option key={l} value={l} lang={l}>{t(`language.${l}`)}</option>)}
     </select></label>;

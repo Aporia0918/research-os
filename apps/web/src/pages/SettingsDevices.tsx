@@ -36,7 +36,7 @@ function PairingCodeView() {
   if (!code) return <p className="text-body-sm text-muted-foreground">{t("devices.creatingCode")}</p>;
   return (
     <div className="grid justify-items-center gap-3">
-      <div className="rounded-lg bg-muted px-6 py-4 font-mono text-display tracking-[0.3em]">{code.code.slice(0, 4)}-{code.code.slice(4)}</div>
+      <div className="jelly-track rounded-[22px] px-6 py-4 font-mono text-display tracking-[0.3em]">{code.code.slice(0, 4)}-{code.code.slice(4)}</div>
       {qr ? <img src={qr} alt={t("devices.qrAlt")} className="size-40 rounded-md bg-white p-1" /> : null}
       <p className="text-caption text-muted-foreground">{t("devices.validUntil", { time: formatTime(code.expires_at) })}</p>
       {!code.pair_url ? <p className="text-center text-caption text-muted-foreground">{t("devices.noLan")}</p> : null}

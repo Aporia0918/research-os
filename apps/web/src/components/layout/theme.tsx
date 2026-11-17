@@ -1,3 +1,4 @@
+import { setAppearance } from "@jelly/theme";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 type Theme = "light" | "dark" | "system";
@@ -6,6 +7,7 @@ const Ctx = createContext<{ theme: Theme; setTheme: (t: Theme) => void }>({ them
 function apply(t: Theme) {
   const dark = t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
+  setAppearance(dark ? "dark" : "light"); // the phone's dark jelly: slate light and the board's dark colours
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

@@ -97,7 +97,7 @@ it("shows the run's figures from the hash-checked figure route", async () => {
                     { path: "runs/r/run.json", sha256: "h2", size: 10, kind: "manifest" }] }));
   const p = await renderPage(<ExperimentRunPage />, "/experiments/tasks/:taskId", "/experiments/tasks/t");
   try { await p.flush();
-    const imgs = [...document.querySelectorAll("img")].map(i => i.getAttribute("src"));
+    const imgs = [...document.querySelectorAll("img")].map(i => i.getAttribute("src")).filter(s => s?.startsWith("/api/"));
     expect(imgs).toEqual(["/api/v1/runs/r/figures/confusion_search_val.png"]);
   } finally { await p.dispose(); }
 });

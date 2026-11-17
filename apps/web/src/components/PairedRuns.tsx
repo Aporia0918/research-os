@@ -22,7 +22,7 @@ export function PairedRuns({ runId }: { runId: string }) {
     <p className="text-body-sm text-muted-foreground">{t("paired.intro")}</p>
     <form className="grid gap-2" onSubmit={e => { e.preventDefault(); cmp.mutate(); }}>
       <Field label={t("paired.other")} htmlFor="paired-other"><Input id="paired-other" className="h-11" required value={other} onChange={e => setOther(e.target.value)} /></Field>
-      <Field label={t("paired.split")} htmlFor="paired-split"><select id="paired-split" className="h-11 rounded-md border bg-card px-3" value={split} onChange={e => setSplit(e.target.value)}>
+      <Field label={t("paired.split")} htmlFor="paired-split"><select id="paired-split" className="h-11 jelly-field rounded-[14px] px-3" value={split} onChange={e => setSplit(e.target.value)}>
         <option value="search_val">search_val</option><option value="confirm_val">confirm_val</option><option value="test">test</option></select></Field>
       <Button type="submit" size="touch" disabled={cmp.isPending || !other.trim()}>{t("common.compare")}</Button>
     </form>

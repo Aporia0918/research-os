@@ -34,7 +34,7 @@ export function LibraryEvidence() {
   }
   return <section className="grid gap-3 [&_button]:min-h-11 [&_input]:min-h-11"><h2>{t("evidence.title")}</h2>
     <p>{t("evidence.intro")}</p>
-    <Field label={t("evidence.projectField")} htmlFor="card-project"><select id="card-project" className="h-11 rounded-md border bg-card px-3"
+    <Field label={t("evidence.projectField")} htmlFor="card-project"><select id="card-project" className="h-11 jelly-field rounded-[14px] px-3"
       value={project} onChange={e => setProject(e.target.value)}><option value="">{t("evidence.chooseProjectOption")}</option>
       {(projects.data ?? []).map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></Field>
     <QueryView q={works}>{rows => <>{!rows.length && <p>{t("evidence.noWorks")}</p>}{rows.length === 1000 && <p>{t("evidence.limit")}</p>}
