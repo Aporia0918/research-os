@@ -165,7 +165,9 @@
     "mobilePlanCitationGateOpen": "每个在引用页找不到原文的数字都需要你先确认或否认(需确认)",
     "mobileHypothesisNotFound": "未找到该假设",
     "mobileBadHypothesis": "假设需要 1-500 个字符的文字并关联 1-20 个计划条目",
-    "mobileHypothesisBadStatus": "状态只能是 待验证、支持、不支持 或 证据不足"
+    "mobileHypothesisBadStatus": "状态只能是 待验证、支持、不支持 或 证据不足",
+    "mindBadState": "召回单只能接受或收起",
+    "mindRecallNotFound": "找不到这张召回单"
   },
   "app": {
     "notFoundTitle": "页面不存在",

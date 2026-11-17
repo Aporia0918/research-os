@@ -165,7 +165,9 @@
     "mobilePlanCitationGateOpen": "every number without a matching quote on its page needs your confirm or reject first",
     "mobileHypothesisNotFound": "hypothesis not found",
     "mobileBadHypothesis": "a hypothesis needs 1-500 characters of text and 1-20 plan items",
-    "mobileHypothesisBadStatus": "status must be pending, supported, refuted or insufficient"
+    "mobileHypothesisBadStatus": "status must be pending, supported, refuted or insufficient",
+    "mindBadState": "state must be accepted or dismissed",
+    "mindRecallNotFound": "recall not found"
   },
   "app": {
     "notFoundTitle": "Page not found",
