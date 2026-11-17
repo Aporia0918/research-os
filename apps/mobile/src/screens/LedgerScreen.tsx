@@ -18,6 +18,7 @@ import { courses, recentTopics, NO_TOPIC } from '../ledger/courses';
 import { balanceOn, streak } from '../ledger/insight';
 import { DueView } from './ledger/DueView';
 import { BalanceView } from './ledger/BalanceView';
+import { SearchView } from './ledger/SearchView';
 import { importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
 import { fromShared } from '../me/shareIn';
 import { refreshReminders } from '../remind';
@@ -34,7 +35,7 @@ const LEVELS: { id: HelpLevel; label: string; cost: string }[] = [
   { id: 'answer', label: tr('完整答案'), cost: tr('记一笔重的，明天和一周后各问你一次。') },
 ];
 type Board = Entry['board'];
-type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance';
+type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance' | 'search';
 const BOARD_KEY = 'mindledger.board.v1';
 /** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
 const ofBoard = (b: Board) => (e: Entry) => e.board === b;
@@ -184,6 +185,9 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
         done={async m => { setMoment(m); await refresh(); }} />
     </section>
   );
+  if (view === 'search') return (
+    <section>{back}<SearchView all={all} onRepay={e => { if (e.board !== board && e.board !== '生活') pickBoard(e.board); setFocus(e); setCourse(null); setView('due'); }} /></section>
+  );
   if (view === 'balance') return (
     <section>{back}<BalanceView all={all} board={board} day={today()} onCopy={(t, d) => void copy(t, d)} />{status}</section>
   );
@@ -307,7 +311,11 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   );
   return (
     <section className={`home ${research ? 'home-research' : 'home-study'}`}>
-      {switcher}
+      <div className="home-top">
+        {switcher}
+        <button type="button" className="icon-button" aria-label={tr('搜索账本')} data-testid="go-search"
+          onClick={() => { void book.all().then(setAll); go('search')(); }}><Icon name="search" size={20} /></button>
+      </div>
       <div className="hero-wrap">
         <div className="hero-zz"><Zhangzhang state={zz} size={150} /></div>
         <div className="card hero" data-testid="ledger-hero" data-board={board}>

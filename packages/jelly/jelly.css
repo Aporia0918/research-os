@@ -15,13 +15,14 @@
    lilac left / pink right inner edges, ⑥ the c2 light cast below. A surface uses these four values; the iridescent ring is
    .jelly-ring::before. */
 :root {
+  --w: 255 255 255; /* the light the jelly is made of; the dark look swaps it for a deep slate */
   --jelly-blur: blur(5px) saturate(150%);
   --jelly-fill:
-    linear-gradient(to bottom, rgb(255 255 255 / .38), rgb(255 255 255 / 0) 22%),
+    linear-gradient(to bottom, rgb(var(--w) / .38), rgb(var(--w) / 0) 22%),
     radial-gradient(ellipse 78% 58% at 50% 100%, color-mix(in srgb, var(--c2) 38%, transparent), transparent),
     linear-gradient(color-mix(in srgb, var(--c1) 14%, transparent), color-mix(in srgb, var(--c1) 14%, transparent));
-  --jelly-rim: 1.5px solid rgb(255 255 255 / .9);
-  --jelly-glow: inset 0 0 16px rgb(255 255 255 / .7), inset 9px 0 12px -6px rgb(196 178 255 / .28), inset -9px 0 12px -6px rgb(255 196 224 / .2);
+  --jelly-rim: 1.5px solid rgb(var(--w) / .9);
+  --jelly-glow: inset 0 0 16px rgb(var(--w) / .7), inset 9px 0 12px -6px rgb(196 178 255 / .28), inset -9px 0 12px -6px rgb(255 196 224 / .2);
   --jelly-ring: conic-gradient(from 200deg, #c4b2ff, #b8f3ff, #c9ffe4, #fff4c4, #ffc4e0, #c4b2ff);
   --jelly-cast: 0 12px 18px -10px color-mix(in srgb, var(--c2) 45%, transparent);
 }
@@ -30,7 +31,11 @@
 .jelly-glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 2.5px; opacity: .5; pointer-events: none; z-index: -1;
   background: var(--jelly-ring);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .jelly-glass { background-color: rgb(255 255 255 / .3); } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .jelly-glass { background-color: rgb(var(--w) / .3); } }
+
+/* dark look (setAppearance in theme.ts): the same jelly in slate glass on the board's dark field */
+:root[data-appearance=dark] { --w: 62 90 98; color-scheme: dark; }
+:root[data-appearance=dark] .jl-bg i { opacity: .42; }
 
 /* ---------- the board switch (BoardSwitch.tsx) ---------- */
 .board-switch { position: relative; display: flex; gap: 4px; padding: 4px; border-radius: 999px; }
@@ -39,7 +44,7 @@
   color: color-mix(in srgb, var(--ink) 64%, transparent); }
 .board-switch > button[aria-selected=true] { color: var(--deep); background: none; box-shadow: none; }
 .seg-pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 16px) / 3); border-radius: 999px;
-  background: color-mix(in srgb, var(--c2) 28%, rgb(255 255 255 / .5)); box-shadow: inset 0 0 10px rgb(255 255 255 / .8);
+  background: color-mix(in srgb, var(--c2) 28%, rgb(var(--w) / .5)); box-shadow: inset 0 0 10px rgb(var(--w) / .8);
   translate: calc(var(--i, 0) * (100% + 4px)) 0; transition: translate .34s cubic-bezier(.3, 1.35, .5, 1); will-change: translate; }
 
 /* ---------- the moving field behind the jelly ---------- */
@@ -52,7 +57,7 @@
 .jl-bg .b2 { width: 80vmax; height: 80vmax; right: -38vmax; top: 18vh; background: radial-gradient(closest-side, rgb(196 176 255 / .6), transparent); animation: jl-drift2 27s ease-in-out infinite alternate; }
 .jl-bg .b3 { width: 85vmax; height: 85vmax; left: -20vmax; bottom: -45vmax; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 42%, transparent), transparent); animation: jl-drift3 19s ease-in-out infinite alternate; }
 .jl-bg .band { width: 220vmax; height: 18vh; left: -60vmax; top: 34vh; border-radius: 0; rotate: -16deg;
-  background: linear-gradient(transparent, rgb(255 255 255 / .55) 45%, rgb(255 255 255 / .75) 50%, rgb(255 255 255 / .55) 55%, transparent);
+  background: linear-gradient(transparent, rgb(var(--w) / .55) 45%, rgb(var(--w) / .75) 50%, rgb(var(--w) / .55) 55%, transparent);
   animation: jl-band 13s ease-in-out infinite alternate; }
 @keyframes jl-drift1 { to { translate: 22vw 16vh; } }
 @keyframes jl-drift2 { to { translate: -26vw 22vh; } }

@@ -12,6 +12,7 @@ const PATHS = {
   plan: 'M8 3h8v3H8zM6 5H5v16h14V5h-1M9 12l2 2 4-4',
   log: 'M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
   exam: 'M4 19V5M4 19h16M8 15l3-4 3 2 4-6',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   guide: 'M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z',
 } as const;
 export type IconName = keyof typeof PATHS;

@@ -8,6 +8,9 @@ import { EnhancedScreen } from './screens/EnhancedScreen';
 import { loadComputerSettings } from './settings';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { preferencesKV } from './storage/kv';
+import { autoBackup } from './backup/native';
+import { followAppearance, loadAppearance, saveAppearance } from './appearance';
+import type { Appearance } from '@jelly/theme';
 import { loadDemo, saveDemo } from './demo/demo';
 import { autoCheckUpdate } from './update/manifest';
 import { CURRENT, TEST_BUILD } from './update/version';
@@ -57,6 +60,7 @@ export function App() {
   }
   useEffect(() => { if (tab === 'research') applyBoard('科研'); }, [tab]); // 账本 sets its own board's colours
   useEffect(() => jellyPress(PRESSABLE), []);
+  useEffect(() => { const t = setTimeout(() => void autoBackup(), 3000); return () => clearTimeout(t); }, []); // daily private snapshot, after first paint
   const [researchStart, setResearchStart] = useState<'exam' | null>(null);
   /** From the ledger home straight into 提问 or 科研 → 零世界. */
   const go = (to: 'ask' | 'exam') => { setResearchStart(to === 'exam' ? 'exam' : null); setTab(to === 'exam' ? 'research' : 'ask'); };
@@ -68,6 +72,10 @@ export function App() {
     void loadLang(preferencesKV).then(setLang);
     return off;
   }, []);
+  const [look, setLook] = useState<Appearance>('light');
+  useEffect(() => { void loadAppearance(preferencesKV).then(setLook); }, []);
+  useEffect(() => followAppearance(look), [look]);
+  const chooseLook = (a: Appearance) => { setLook(a); void saveAppearance(preferencesKV, a); };
   const [enhanced, setEnhanced] = useState(false);
   useEffect(() => { void loadComputerSettings(preferencesKV).then(s => setEnhanced(s.enabled)); }, [tab]);
   const [newVer, setNewVer] = useState<string | null>(null);
@@ -100,7 +108,7 @@ export function App() {
         {tab === 'ask' && <AskScreen demo={demo} />}
         {tab === 'research' && <ResearchScreen demo={demo} start={researchStart} />}
         {tab === 'enhanced' && enhanced && <EnhancedScreen />}
-        {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} onComputer={setEnhanced} onJelly={() => setJelly(true)} />}
+        {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} look={look} onLook={chooseLook} onComputer={setEnhanced} onJelly={() => setJelly(true)} />}
       </main>
       <nav className="tabbar" role="tablist" aria-label={tr('主导航')}>
         {[...TABS, ...(enhanced ? [{ id: 'enhanced' as Tab, label: tr('电脑增强'), icon: 'computer' as IconName }] : [])].map(t => (

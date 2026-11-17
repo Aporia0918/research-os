@@ -6,13 +6,17 @@ import { ResearchOsClient, describeError } from '../api/computer';
 import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
 import { MeCard } from './MeCard';
+import { BackupCard } from './BackupCard';
+import type { Appearance } from '@jelly/theme';
+
+const LOOKS: { id: Appearance; label: string }[] = [{ id: 'light', label: '浅色' }, { id: 'dark', label: '深色' }, { id: 'system', label: '跟随系统' }];
 import { book, today } from '../ledger/book';
 import { DEFAULT_MODEL_SETTINGS, OPENROUTER_BASE_URL, clearKey, hasKey, loadKey, loadModelSettings, saveKey, saveModelSettings, type Job, type KeyHeader, type ModelSettings } from '../model/settings';
 import { chat, describeModelError, listModels } from '../model/direct';
 
 const JOBS: { id: Job; label: string }[] = [{ id: 'grade', label: '判「讲给我听」用的模型' }, { id: 'photo', label: '看照片用的模型（要能读图）' }];
 
-export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer, onJelly }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; onComputer?: (enabled: boolean) => void; onJelly?: () => void }) {
+export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onLook, onComputer, onJelly }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; look?: Appearance; onLook?: (a: Appearance) => void; onComputer?: (enabled: boolean) => void; onJelly?: () => void }) {
   const [computer, setComputer] = useState<ComputerSettings>({ enabled: false, url: DEFAULT_COMPUTER_URL });
   useEffect(() => { void loadComputerSettings(preferencesKV).then(setComputer); }, []);
   async function updateComputer(next: ComputerSettings) { setComputer(next); await saveComputerSettings(preferencesKV, next); onComputer?.(next.enabled); }
@@ -73,6 +77,14 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer, onJelly
         </div>
         <div className="muted">{tr('默认中文;只由这里决定,不跟随手机语言。')}</div>
       </div>
+      {onLook && (
+        <div className="card" data-testid="look-switch">
+          <div><b>{tr('外观')}</b></div>
+          <div className="row" role="radiogroup" aria-label={tr('外观')}>
+            {LOOKS.map(l => <button key={l.id} type="button" role="radio" aria-checked={look === l.id} className="ghost" onClick={() => onLook(l.id)}>{tr(l.label)}</button>)}
+          </div>
+        </div>
+      )}
       <div className="card">
         <label className="row"><input type="checkbox" checked={demo} onChange={e => onDemo(e.target.checked)} aria-label={tr('演示模式')} /> {tr('演示模式(')}{tr(DEMO_LABEL)})</label>
         <div className="muted">{tr('显示一篇公开论文(EEGNet)和一条示例日志的预先计算结果。离线可用,不发送任何数据。')} {demo ? tr(demoSource) : ''}</div>
@@ -125,6 +137,7 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, onComputer, onJelly
         {trial ? <div className="muted">{tr('两周试用从 {0} 开始。', trial)}</div>
           : <button className="ghost" onClick={() => void joinTrial()}>{tr('开始两周试用')}</button>}
       </div>
+      <BackupCard />
       <UpdateCard />
       {status && <div className="card" role="status">{status}</div>}
     </section>
