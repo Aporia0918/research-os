@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement, act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { springStep, type SpringSpec } from '../src/jelly/spring';
 import { beat } from '../src/jelly/JellySurface';
 import { JellyDemo } from '../src/jelly/JellyDemo';
-import { ZZ, ZZ_FILES } from '../src/jelly/Zhangzhang';
+import { ZZ, ZZ_FILES, Zhangzhang, type ZzState } from '../src/jelly/Zhangzhang';
 import { THEMES } from '../src/jelly/theme';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -55,6 +55,38 @@ describe('账账', () => {
   });
   it('only the standing and hello pictures blink', () => {
     expect(Object.entries(ZZ).filter(([, z]) => z.blink).map(([k]) => k).sort()).toEqual(['idle', 'wave']);
+  });
+});
+
+describe('smooth switching', () => {
+  it('a state change swaps the picture in the same render and plays one GPU boing', () => {
+    const animate = vi.fn();
+    (HTMLElement.prototype as unknown as { animate: unknown }).animate = animate;
+    vi.useFakeTimers();
+    try {
+      host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host);
+      const show = (state: ZzState) => act(() => { root!.render(createElement(Zhangzhang, { state })); });
+      show('study');
+      expect(animate).not.toHaveBeenCalled(); // no boing on first show
+      show('research');
+      const zz = host.querySelector('[data-testid=zhangzhang]')!;
+      expect(zz.getAttribute('data-state')).toBe('research');
+      expect(zz.querySelector('img.zz-in')!.getAttribute('src')).toBe(ZZ.research.img);
+      expect(zz.querySelector('img.zz-out')!.getAttribute('src')).toBe(ZZ.study.img);
+      expect(animate).toHaveBeenCalledTimes(1);
+      const frames = animate.mock.calls[0][0] as Keyframe[];
+      for (const f of frames) for (const k of Object.keys(f)) expect(['scale', 'translate', 'offset', 'easing']).toContain(k);
+      act(() => { vi.advanceTimersByTime(250); });
+      expect(zz.querySelector('img.zz-out')).toBeNull();
+    } finally { vi.useRealTimers(); delete (HTMLElement.prototype as unknown as { animate?: unknown }).animate; }
+  });
+  it('board colours are not faded across the whole page, only on the background field', () => {
+    const page = readFileSync(join(__dirname, '../src/styles.css'), 'utf8');
+    const jelly = readFileSync(join(__dirname, '../src/jelly/jelly.css'), 'utf8');
+    expect(page).not.toMatch(/transition:\s*--/);
+    expect(page).not.toMatch(/\)\s*fixed;/); // no fixed body background, which repaints on every scroll
+    const fades = [...jelly.matchAll(/^([^{\n]*)\{[^}]*transition:\s*--/gm)].map(m => m[1].trim());
+    expect(fades).toEqual(['.jl-bg, .jl-bg i']);
   });
 });
 

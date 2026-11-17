@@ -1,5 +1,8 @@
 // 账账, the mascot (owner's 16 pictures, used unchanged). All motion is code: breathing from the feet, random blinks,
-// a squash-and-spring tap, a 150 ms cross-fade with a squeeze on every state change, and one motion per state (jelly.css).
+// a squash-and-spring tap, a jelly boing on every state change (squash, the picture swaps at the bottom of it, stretch
+// up, settle) and one motion per state (jelly.css). The boing runs as a Web Animation on scale and translate only, so the
+// GPU plays it even while the page is busy re-rendering for a board switch; all 16 pictures are decoded up front, so a
+// new look never waits for its file.
 // The shadow and the mint light under the feet are drawn here, not in the pictures. Feet sit at y 481 of 512 in every
 // picture, so every transform is anchored at 50% 94%.
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -62,17 +65,46 @@ function useBlink(on: boolean): boolean {
   return shut;
 }
 
+/** Squash, swap, stretch up, settle: 440 ms, with the picture changing at the bottom of the squash. */
+const BOING: Keyframe[] = [
+  { scale: '1 1', translate: '0 0', easing: 'cubic-bezier(.3,.7,.4,1)' },
+  { offset: 0.2, scale: '1.13 .85', translate: '0 0', easing: 'cubic-bezier(.3,0,.3,1)' },
+  { offset: 0.46, scale: '.93 1.09', translate: '0 -12px', easing: 'cubic-bezier(.4,0,.6,1)' },
+  { offset: 0.7, scale: '1.04 .97', translate: '0 0' },
+  { offset: 0.86, scale: '.99 1.015', translate: '0 0' },
+  { scale: '1 1', translate: '0 0' },
+];
+const BOING_MS = 440;
+const SWAP_MS = 200; // the old picture is gone by then (jelly.css .zz-out)
+
+/** Decode every picture once, so switching look never waits on a file or a decode. Kept alive for the whole session. */
+const warm: HTMLImageElement[] = [];
+function warmUp(): void {
+  if (warm.length || typeof Image === 'undefined') return;
+  for (const src of ZZ_FILES) {
+    const i = new Image(); i.decoding = 'async'; i.src = src; warm.push(i);
+    i.decode?.().catch(() => {});
+  }
+}
+const stillPlease = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export function Zhangzhang({ state, size = 200 }: { state: ZzState; size?: number }) {
   const squash = useSquash<HTMLDivElement>([1.14, 0.82], { dampingRatio: 0.35, stiffness: STIFFNESS_MEDIUM });
-  const [shown, setShown] = useState<{ cur: ZzState; prev: ZzState | null }>({ cur: state, prev: null });
+  const morph = useRef<HTMLDivElement | null>(null);
+  // The previous look stays for one cross-fade. Worked out while rendering, so the new picture is in the same frame.
+  const [seen, setSeen] = useState(state);
+  const [prev, setPrev] = useState<ZzState | null>(null);
+  if (seen !== state) { setSeen(state); setPrev(seen); }
+  useEffect(warmUp, []);
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    setShown(s => (s.cur === state ? s : { cur: state, prev: s.cur }));
-    squash.pop(0.45); // the squeeze that goes with the fade
-    const t = setTimeout(() => setShown(s => ({ cur: s.cur, prev: null })), 150);
+    const el = morph.current;
+    if (el && typeof el.animate === 'function' && !stillPlease()) el.animate(BOING, { duration: BOING_MS });
+    const t = setTimeout(() => setPrev(null), SWAP_MS);
     return () => clearTimeout(t);
-  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state]);
+  const shown = { cur: state, prev };
   const cur = ZZ[shown.cur];
   const shut = useBlink(!!cur.blink);
   return (
@@ -82,10 +114,12 @@ export function Zhangzhang({ state, size = 200 }: { state: ZzState; size?: numbe
       <span className="zz-spot" aria-hidden="true" />
       <div className="zz-act">
         <div className="zz-breath">
+          <div className="zz-morph" ref={morph}>
           <div className="zz-tap" ref={squash.ref}>
             {shown.prev && <img key={`p-${shown.prev}`} className="zz-img zz-out" src={ZZ[shown.prev].img} alt="" draggable={false} />}
             <img key={`c-${shown.cur}`} className={`zz-img${shown.prev ? ' zz-in' : ''}`} src={cur.img} alt="" draggable={false} />
             {cur.blink && <img className="zz-img zz-blink" src={cur.blink} alt="" draggable={false} style={{ opacity: shut ? 1 : 0 }} data-testid="zz-blink" />}
+          </div>
           </div>
         </div>
       </div>

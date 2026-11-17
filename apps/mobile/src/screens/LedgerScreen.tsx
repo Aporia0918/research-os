@@ -1,7 +1,7 @@
 // 思维账本 first screen: the pre-exam report on top, today's repayments, then booking a new debt. Works with no key
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
 import { setBoardTheme } from '../look';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { tr } from '../i18n';
 import { countdown, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
 import { ResearchOsClient } from '../api/computer';
@@ -120,9 +120,10 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
   const switcher = (
-    <div role="tablist" className="seg board-switch" data-testid="board-switch">{BOARDS.map(b => (
-      <button key={b} role="tab" aria-selected={board === b} onClick={() => pickBoard(b)}>{tr(b)}</button>
-    ))}</div>
+    <div role="tablist" className="seg board-switch" data-testid="board-switch">
+      <span className="seg-pill" aria-hidden="true" style={{ '--i': BOARDS.indexOf(board) } as CSSProperties} />
+      {BOARDS.map(b => <button key={b} role="tab" aria-selected={board === b} onClick={() => pickBoard(b)}>{tr(b)}</button>)}
+    </div>
   );
   /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
   async function checkNow(e: Entry, attempt: string) {
