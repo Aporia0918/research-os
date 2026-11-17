@@ -56,7 +56,7 @@ class ProviderError(Exception):
 class ModelProvider(Protocol):
     """Optional attribute `location`: "local" (runs on this machine, e.g. mock or a loopback endpoint) or "cloud".
     The gateway reads it with getattr(..., "cloud"): an undeclared provider is cloud (egress gate, ADR-159)."""
-    name: str  # deepseek | zhipu | anthropic | openai | mock
+    name: str  # deepseek | zhipu | qwen | anthropic | openai | mock
 
     def complete(self, req: ChatRequest, api_key: str) -> ChatResponse: ...
 

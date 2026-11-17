@@ -12,10 +12,12 @@ from typing import Any
 
 from ...kernel.db import Row, row, rows, tx, utcnow
 
-# (alias, provider, model_id placeholder, tier). Per USER OVERRIDE: routine = DeepSeek + GLM; premium = Claude + OpenAI.
+# (alias, provider, model_id placeholder, tier). Per USER OVERRIDE: routine = DeepSeek + GLM + Qwen; premium = Claude +
+# OpenAI.
 DEFAULT_ALIASES: tuple[tuple[str, str, str, str], ...] = (
     ("ROUTINE_TEXT", "deepseek", "deepseek-v4", "routine"),
     ("ROUTINE_TEXT_GLM", "zhipu", "glm-5.3-flash", "routine"),
+    ("ROUTINE_TEXT_QWEN", "qwen", "qwen3.8-flash", "routine"),
     ("DOCUMENT_OCR", "zhipu", "glm-ocr", "routine"),
     ("ROUTINE_VISION", "zhipu", "glm-5.3-flash", "routine"),
     ("VISUAL_CODING", "zhipu", "glm-5v-turbo", "routine"),

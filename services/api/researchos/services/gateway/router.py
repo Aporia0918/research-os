@@ -8,7 +8,7 @@ from ...contracts.gateway import TaskType
 
 # Ordered candidate aliases per task type. Index 0 = cheapest suitable. Fallbacks within the same tier first.
 ROUTES: dict[TaskType, tuple[str, ...]] = {
-    TaskType.ROUTINE_TEXT: ("ROUTINE_TEXT", "ROUTINE_TEXT_GLM", "LONG_DOCUMENT_REASONING"),
+    TaskType.ROUTINE_TEXT: ("ROUTINE_TEXT", "ROUTINE_TEXT_GLM", "ROUTINE_TEXT_QWEN", "LONG_DOCUMENT_REASONING"),
     TaskType.DOCUMENT_OCR: ("DOCUMENT_OCR", "COMPLEX_MULTIMODAL"),
     TaskType.ROUTINE_VISION: ("ROUTINE_VISION", "COMPLEX_MULTIMODAL"),
     TaskType.VISUAL_CODING: ("VISUAL_CODING", "COMPLEX_MULTIMODAL"),
@@ -16,8 +16,9 @@ ROUTES: dict[TaskType, tuple[str, ...]] = {
     TaskType.LONG_DOCUMENT_REASONING: ("LONG_DOCUMENT_REASONING", "PREMIUM_AGENT"),
     TaskType.PREMIUM_AGENT: ("PREMIUM_AGENT", "TOP_OPENAI"),
 }
-# Same-tier substitutes when the routine provider is down (spec: DeepSeek <-> GLM cross-fallback first).
-SIBLINGS: dict[str, tuple[str, ...]] = {"ROUTINE_TEXT": ("ROUTINE_TEXT_GLM",), "ROUTINE_TEXT_GLM": ("ROUTINE_TEXT",)}
+# Same-tier substitutes when the routine provider is down (spec: DeepSeek <-> GLM cross-fallback first, then Qwen).
+_ROUTINE = ("ROUTINE_TEXT", "ROUTINE_TEXT_GLM", "ROUTINE_TEXT_QWEN")
+SIBLINGS: dict[str, tuple[str, ...]] = {a: tuple(b for b in _ROUTINE if b != a) for a in _ROUTINE}
 EMERGENCY = "EMERGENCY_CHEAP_FALLBACK"
 
 

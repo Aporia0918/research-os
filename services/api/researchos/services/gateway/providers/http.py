@@ -1,4 +1,6 @@
-"""HTTP adapters for real providers (DeepSeek, Zhipu, OpenAI = OpenAI-compatible chat API; Anthropic Messages).
+"""HTTP adapters for real providers (DeepSeek, Zhipu, Qwen, OpenAI = OpenAI-compatible chat API; Anthropic Messages).
+Qwen uses DashScope's Beijing compatible-mode host; Alibaba's docs (2026-10) also offer per-workspace hosts, and keys
+are region-bound, so a Singapore key needs the relay setting or a different URL.
 Endpoints/headers are config-like constants; verify against provider docs before first paid use (NOT RUN: tests
 make no paid calls). Keys are passed per call from the keystore and never logged."""
 from __future__ import annotations
@@ -13,6 +15,7 @@ from ....contracts.gateway import ChatRequest, ChatResponse, ProviderError
 OPENAI_COMPAT_URLS = {
     "deepseek": "https://api.deepseek.com/chat/completions",
     "zhipu": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+    "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
     "openai": "https://api.openai.com/v1/chat/completions",
 }
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
