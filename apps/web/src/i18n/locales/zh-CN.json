@@ -916,6 +916,15 @@
       "life": "生活 · {{count}} 笔到期"
     },
     "emptyTitle": "今天没有到期的账",
-    "emptyBody": "手机连上这台电脑后，记的账会同步过来。"
+    "emptyBody": "手机连上这台电脑后，记的账会同步过来。",
+    "boardName": {
+      "study": "学习",
+      "research": "科研",
+      "life": "生活"
+    },
+    "mascot": "账账，思维账本的吉祥物",
+    "owed": "笔在这个板块到期",
+    "redCount_one": "其中 {{count}} 笔讲不出来",
+    "redCount_other": "其中 {{count}} 笔讲不出来"
   }
 }

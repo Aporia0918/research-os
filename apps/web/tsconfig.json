@@ -16,8 +16,13 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
+    "paths": {
+      "@/*": ["src/*"],
+      "@jelly/*": ["../../packages/jelly/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"]
+    },
     "types": ["vite/client"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "../../packages/jelly", "vite.config.ts"]
 }

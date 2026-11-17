@@ -3,6 +3,7 @@ import { api } from "@/api/client";
 import { marked } from "@/api/ledger";
 import { renderPage } from "@/test/pageHarness";
 import { MindLedgerPage } from "./MindLedger";
+import { THEMES } from "@jelly/theme";
 vi.mock("@/components/layout/AppShell", () => ({ PageHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -18,7 +19,8 @@ it("marks the recalled sentence yellow inside the AI's answer", () => {
   expect(marked("别的", recall.claim)).toEqual(["别的", "", ""]);
 });
 
-it("shows recalls with the paper's page and where it was used, then debts by board; accepting reopens the debt", async () => {
+it("shows the picked board's recalls with the paper's page and where it was used, then its debts; accepting reopens the debt", async () => {
+  localStorage.removeItem("ros-board"); // 科研 by default on the computer
   vi.spyOn(api, "get").mockImplementation((p) => Promise.resolve(p === "/mind-ledger/recalls" ? [recall] : debts));
   const post = vi.spyOn(api, "post").mockResolvedValue({ ...recall, state: "accepted" });
   const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");
@@ -26,9 +28,10 @@ it("shows recalls with the paper's page and where it was used, then debts by boa
     expect(p.host.querySelector("mark")?.textContent).toBe("午睡会提高记忆。");
     expect(p.host.textContent).toContain("p.3");
     expect(p.host.textContent).toContain("Used in: 组会幻灯片");
-    expect(p.host.textContent).toContain("Couldn't explain");
     expect(p.host.textContent).toContain("Citation debt");
-    expect(p.host.querySelectorAll("[data-testid=debt]")).toHaveLength(2);
+    expect(p.host.querySelectorAll("[data-testid=debt]")).toHaveLength(1);
+    expect(p.host.querySelector("[data-testid=zhangzhang]")?.getAttribute("data-state")).toBe("research");
+    expect(document.documentElement.dataset.board).toBe("科研");
     await p.click("Explain again");
     expect(post).toHaveBeenCalledWith("/mind-ledger/recalls/mrec_1", { state: "accepted" }, expect.objectContaining({ idempotencyKey: "recall:mrec_1:accepted" }));
   } finally { await p.dispose(); }
@@ -38,4 +41,20 @@ it("says so when nothing is due", async () => {
   vi.spyOn(api, "get").mockResolvedValue([]);
   const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");
   try { expect(p.host.textContent).toContain("Nothing due today"); } finally { await p.dispose(); }
+});
+
+it("the board switch shows that board's debts, moves 账账 and the page colours, and is remembered", async () => {
+  localStorage.removeItem("ros-board");
+  vi.spyOn(api, "get").mockImplementation((path) => Promise.resolve(path === "/mind-ledger/recalls" ? [recall] : debts));
+  const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");
+  try {
+    await p.click("Study");
+    expect(p.host.querySelector("mark")).toBeNull(); // the 科研 recall stays on its own board
+    expect(p.host.querySelectorAll("[data-testid=debt]")).toHaveLength(1);
+    expect(p.host.textContent).toContain("Couldn't explain");
+    expect(p.host.querySelector("[data-testid=zhangzhang]")?.getAttribute("data-state")).toBe("dun"); // a red debt is due
+    expect(document.documentElement.dataset.board).toBe("学习");
+    expect(document.documentElement.style.getPropertyValue("--deep")).toBe(THEMES.学习.deep);
+    expect(localStorage.getItem("ros-board")).toBe("学习");
+  } finally { await p.dispose(); }
 });

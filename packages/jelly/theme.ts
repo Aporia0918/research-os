@@ -4,7 +4,7 @@
 import type { CSSProperties } from 'react';
 
 export type Board = '生活' | '学习' | '科研';
-export const BOARDS: Board[] = ['生活', '学习', '科研'];
+export const BOARDS: Board[] = ['学习', '科研', '生活'];
 
 export interface Theme { bgA: string; bgB: string; c1: string; c2: string; deep: string; accent: string; ink: string }
 

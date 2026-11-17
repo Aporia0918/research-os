@@ -5,24 +5,26 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(0.985 0.002 250);
-  --foreground: oklch(0.21 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--foreground);
-  --muted: oklch(0.955 0.006 250);
-  --muted-foreground: oklch(0.50 0.02 255);
-  --primary: oklch(0.45 0.13 255);
-  --primary-foreground: oklch(0.985 0 0);
-  --accent: oklch(0.94 0.02 255);
-  --accent-foreground: oklch(0.30 0.08 255);
+  /* Light: 思维账本's jelly look. The board (packages/jelly/theme.ts) sets --bg-a, --c1, --c2, --deep, --accent, --ink on
+     <html>; these tokens follow it, so every page changes colour with the board. */
+  --background: var(--bg-a);
+  --foreground: var(--ink);
+  --card: rgb(255 255 255 / .5);
+  --card-foreground: var(--ink);
+  --muted: color-mix(in srgb, var(--c1) 55%, white);
+  --muted-foreground: color-mix(in srgb, var(--ink) 66%, var(--bg-a));
+  --primary: var(--deep);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: color-mix(in srgb, var(--c2) 26%, white);
+  --accent-foreground: var(--deep);
   --destructive: oklch(0.55 0.20 27);
   --destructive-foreground: oklch(0.985 0 0);
   --success: oklch(0.55 0.13 155);
-  --warning: oklch(0.70 0.15 75);
-  --info: oklch(0.58 0.12 235);
-  --border: oklch(0.91 0.008 250);
-  --ring: oklch(0.55 0.13 255);
-  --radius: 0.625rem;
+  --warning: oklch(0.62 0.15 70);
+  --info: oklch(0.56 0.12 235);
+  --border: color-mix(in srgb, var(--ink) 12%, transparent);
+  --ring: var(--deep);
+  --radius: 0.875rem;
 }
 
 .dark {
@@ -98,3 +100,8 @@
   }
   :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
 }
+
+/* Jelly surfaces (.jelly-glass, packages/jelly/jelly.css) are unlayered, so in light they win over Tailwind's bg/border
+   utilities. In dark they fall back to plain cards and the moving field is off. */
+.dark .jelly-glass { background: var(--card); border: 1px solid var(--border); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.dark .jelly-glass::before, .dark .jl-bg { display: none; }

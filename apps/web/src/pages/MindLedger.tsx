@@ -1,17 +1,21 @@
-// 思维账本 on the computer: open 召回单 first (the recalled sentence marked yellow in the AI's answer, the paper's own
-// sentence and page beside it, and where the user used it), then what is due, by board. Repaying stays on the phone.
+// 思维账本 on the computer, in the same look as the phone: 账账 and the board switch on a jelly hero, then the picked
+// board's open 召回单 (the recalled sentence marked yellow in the AI's answer, the paper's own sentence and page beside
+// it, and where the user used it), then what is due on that board. Repaying stays on the phone.
 import { BookCheck, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { describeError } from "@/api/client";
-import { marked, useDebts, useRecalls, useSettleRecall, type Board, type Debt, type Recall } from "@/api/ledger";
+import { marked, useDebts, useRecalls, useSettleRecall, type Debt, type Recall } from "@/api/ledger";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/AppShell";
 import { EmptyState, QueryView } from "@/components/layout/state";
+import { useBoard } from "@/components/layout/board";
+import { BoardSwitch } from "@jelly/BoardSwitch";
+import { Zhangzhang, type ZzState } from "@jelly/Zhangzhang";
+import { RESIDENT } from "@jelly/mood";
 
-const BOARDS: Board[] = ["学习", "科研", "生活"];
 const BOARD_KEY = { 学习: "study", 科研: "research", 生活: "life" } as const;
 
 function RecallCard({ r }: { r: Recall }) {
@@ -60,32 +64,56 @@ function DebtRow({ d }: { d: Debt }) {
   );
 }
 
+/** 账账 and the board switch, with how many of the board's debts are due and how many are red. */
+function Hero({ board, mine }: { board: keyof typeof BOARD_KEY; mine: Debt[] | null }) {
+  const { t } = useTranslation();
+  const [, pick] = useBoard();
+  const red = mine?.filter((d) => d.red).length ?? 0;
+  const zz: ZzState = red ? "dun" : RESIDENT[board];
+  return (
+    <Card className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[26px] p-5" data-testid="ledger-hero">
+      <Zhangzhang state={zz} size={120} label={t("ledger.mascot")} />
+      <div className="grid min-w-0 flex-1 gap-3">
+        <BoardSwitch board={board} onPick={pick} name={(b) => t(`ledger.boardName.${BOARD_KEY[b]}`)} className="max-w-sm bg-card/60" />
+        {mine ? (
+          <p className="text-body-sm text-muted-foreground">
+            <span className="mr-1 text-display font-semibold text-foreground" data-testid="owed">{mine.length}</span>
+            {t("ledger.owed")}{red ? <span className="ml-3 text-destructive">{t("ledger.redCount", { count: red })}</span> : null}
+          </p>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
 export function MindLedgerPage() {
   const { t } = useTranslation();
+  const [board] = useBoard();
   const recalls = useRecalls();
   const debts = useDebts();
+  const mine = debts.data?.filter((d) => d.board === board) ?? null;
   return (
     <>
       <PageHeader title={t("ledger.title")} description={t("ledger.description")} />
+      <Hero board={board} mine={mine} />
       <QueryView q={recalls}>
-        {(list) => list.length ? <div className="mb-6 grid gap-3">{list.map((r) => <RecallCard key={r.id} r={r} />)}</div> : null}
+        {(list) => {
+          const open = list.filter((r) => r.board === board);
+          return open.length ? <div className="mb-6 grid gap-3">{open.map((r) => <RecallCard key={r.id} r={r} />)}</div> : null;
+        }}
       </QueryView>
       <QueryView q={debts}>
-        {(list) => list.length === 0 ? (
-          <EmptyState icon={<BookCheck />} title={t("ledger.emptyTitle")} body={t("ledger.emptyBody")} />
-        ) : (
-          <div className="grid gap-3 md:grid-cols-3">
-            {BOARDS.map((b) => {
-              const mine = list.filter((d) => d.board === b);
-              return mine.length ? (
-                <Card key={b} className="p-4">
-                  <h2 className="mb-2 font-semibold">{t(`ledger.board.${BOARD_KEY[b]}`, { count: mine.length })}</h2>
-                  <ul className="divide-y">{mine.map((d) => <DebtRow key={d.id} d={d} />)}</ul>
-                </Card>
-              ) : null;
-            })}
-          </div>
-        )}
+        {(list) => {
+          const due = list.filter((d) => d.board === board);
+          return due.length === 0 ? (
+            <EmptyState icon={<BookCheck />} title={t("ledger.emptyTitle")} body={t("ledger.emptyBody")} />
+          ) : (
+            <Card className="p-4">
+              <h2 className="mb-2 font-semibold">{t(`ledger.board.${BOARD_KEY[board]}`, { count: due.length })}</h2>
+              <ul className="divide-y">{due.map((d) => <DebtRow key={d.id} d={d} />)}</ul>
+            </Card>
+          );
+        }}
       </QueryView>
     </>
   );

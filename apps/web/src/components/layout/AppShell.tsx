@@ -16,6 +16,9 @@ import { LanguageToggle } from "./language";
 import { ShortcutHelp } from "./ShortcutHelp";
 import { useTheme } from "./theme";
 import { WhatsNew } from "./WhatsNew";
+import { Backdrop } from "@jelly/Backdrop";
+import { ZZ } from "@jelly/Zhangzhang";
+import { useBoard } from "./board";
 
 const NAV: { to: string; label: ParseKeys; icon: ReactNode; key: string }[] = [
   { to: "/projects", label: "nav.projects", icon: <FolderKanban />, key: "p" },
@@ -75,11 +78,13 @@ export function AppShell() {
   const navigate = useNavigate();
   const [help, setHelp] = useState(false);
   useGlobalShortcuts(useCallback((to: string) => navigate(to), [navigate]), useCallback(() => setHelp(true), []));
+  useBoard(); // puts the remembered board's colours on the page
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[4.5rem_1fr] lg:grid-cols-[13.5rem_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-1 border-r bg-card px-2 py-4 md:flex lg:px-3">
-        <div className="mb-4 flex items-center justify-center gap-2 px-2 lg:justify-start">
-          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-body-sm font-bold text-primary-foreground">R</div>
+    <div className="min-h-dvh md:grid md:grid-cols-[5.5rem_1fr] lg:grid-cols-[15rem_1fr]">
+      <Backdrop />
+      <aside className="jelly-glass sticky top-3 m-3 hidden h-[calc(100dvh-1.5rem)] flex-col gap-1 rounded-[26px] px-2 py-4 md:flex lg:px-3">
+        <div className="mb-4 flex items-center justify-center gap-2 px-1 lg:justify-start">
+          <img src={ZZ.idle.img} alt="" className="size-9 shrink-0" draggable={false} />
           <div className="hidden text-title font-semibold lg:block">Research OS</div>
         </div>
         <nav className="grid gap-0.5" aria-label={t("nav.main")}>
@@ -89,7 +94,7 @@ export function AppShell() {
         <div className="mt-auto hidden px-2 text-caption text-muted-foreground lg:block">{t("nav.shortcutHintBefore")}<span className="font-mono">?</span>{t("nav.shortcutHintAfter")}</div>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b bg-background/85 px-4 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b bg-background/55 px-4 backdrop-blur md:px-8">
           <div className="mr-auto text-title font-semibold lg:hidden">Research OS</div>
           <Connection />
           <LanguageToggle />
@@ -99,7 +104,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t bg-background/70 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         aria-label={t("nav.main")}>
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to}

@@ -916,6 +916,15 @@
       "life": "Life · {{count}} due"
     },
     "emptyTitle": "Nothing due today",
-    "emptyBody": "Once the phone is paired with this computer, its ledger syncs here."
+    "emptyBody": "Once the phone is paired with this computer, its ledger syncs here.",
+    "boardName": {
+      "study": "Study",
+      "research": "Research",
+      "life": "Life"
+    },
+    "mascot": "Zhangzhang, the ledger's mascot",
+    "owed": "due on this board",
+    "redCount_one": "{{count}} couldn't be explained",
+    "redCount_other": "{{count}} couldn't be explained"
   }
 }

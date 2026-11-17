@@ -1,7 +1,7 @@
 // 思维账本 first screen: the pre-exam report on top, today's repayments, then booking a new debt. Works with no key
 // and no computer; a model set in Settings is asked only where it can change a grade (ledger.needsModel).
-import { applyBoard } from '@jelly/theme';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { applyBoard, BOARDS } from '@jelly/theme';
+import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
 import { countdown, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
 import { ResearchOsClient } from '../api/computer';
@@ -12,6 +12,7 @@ import { preferencesKV } from '../storage/kv';
 import { LifeScreen } from './LifeScreen';
 import { Icon, type IconName } from '../icons';
 import { Zhangzhang } from '../jelly/Zhangzhang';
+import { BoardSwitch } from '@jelly/BoardSwitch';
 import { homeMood, type Moment } from '@jelly/mood';
 import { courses, recentTopics, NO_TOPIC } from '../ledger/courses';
 import { balanceOn, streak } from '../ledger/insight';
@@ -34,7 +35,6 @@ const LEVELS: { id: HelpLevel; label: string; cost: string }[] = [
 ];
 type Board = Entry['board'];
 type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance';
-const BOARDS: Board[] = ['学习', '科研', '生活'];
 const BOARD_KEY = 'mindledger.board.v1';
 /** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 is a different book on a different screen. */
 const ofBoard = (b: Board) => (e: Entry) => e.board === b;
@@ -119,12 +119,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
 
   const left = countdown(today(), exam || undefined, report?.repayBeforeExam.length ?? 0);
   const pickExam = (e: string) => { setExam(e); void preferencesKV.set(EXAM_KEY, e).then(() => refresh(e)); };
-  const switcher = (
-    <div role="tablist" className="seg board-switch" data-testid="board-switch">
-      <span className="seg-pill" aria-hidden="true" style={{ '--i': BOARDS.indexOf(board) } as CSSProperties} />
-      {BOARDS.map(b => <button key={b} role="tab" aria-selected={board === b} onClick={() => pickBoard(b)}>{tr(b)}</button>)}
-    </div>
-  );
+  const switcher = <BoardSwitch board={board} onPick={pickBoard} name={b => tr(b)} className="seg" />;
   /** Right after booking. 讲不出来 is a plain answer, not a failure: no score, the debt is marked red and goes first. */
   async function checkNow(e: Entry, attempt: string) {
     const g = await book.checkNow(e.id, attempt, today(), exam || undefined, attempt.trim() ? await modelAsk() : undefined);

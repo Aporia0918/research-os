@@ -12,6 +12,7 @@ import { qk } from "@/api/queries";
 import { ThemeProvider } from "@/components/layout/theme";
 import { TooltipProvider } from "@/components/ui/misc";
 import { App } from "./App";
+import "@jelly/jelly.css";
 import "./index.css";
 
 const queryClient = new QueryClient({
