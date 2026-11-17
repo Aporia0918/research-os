@@ -90,3 +90,59 @@ describe('召回单 on the ledger screen (演示第三段, phone half)', () => {
     expect(host.querySelector('.item')?.textContent).toContain('空间滤波为什么放在分类之前');
   });
 });
+
+describe('讲给我听 talks back, and 引用债 needs the original', () => {
+  async function open() {
+    host = document.createElement('div'); document.body.appendChild(host);
+    root = createRoot(host);
+    await act(async () => { root!.render(createElement(LedgerScreen)); });
+    await flush();
+    return host;
+  }
+  it('a miss offers to go through the missed points, never a score; 改天再聊 moves it to tomorrow', async () => {
+    await book.add({ clientId: 'w1', board: '科研', question: '什么是导数', helpLevel: 'answer',
+      answer: '导数是函数在某点的瞬时变化率。几何上它是切线的斜率。求导要先写出差商再取极限。' }, addDays(today(), -1));
+    await book.add({ clientId: 'w2', board: '科研', question: '链式法则', helpLevel: 'answer', answer: '外层导数乘内层导数。' }, addDays(today(), -1));
+    const h = await open();
+    await act(async () => { button(h, '讲给我听 · 今天 2 笔')!.click(); });
+    await act(async () => { [...h.querySelectorAll('.item')].find(b => b.textContent?.includes('什么是导数'))!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    await flush();
+    type(field(h, '不看答案'), '不会');
+    await act(async () => { button(h, '讲完了')!.click(); });
+    await flush();
+    const walk = h.querySelector('[data-testid=walk-through]');
+    expect(walk?.textContent).toContain('我们一起捋一遍');
+    expect(walk?.querySelectorAll('li').length).toBe(1);
+    await act(async () => { button(h, '懂了，下一条')!.click(); });
+    expect(h.querySelectorAll('[data-testid=walk-through] li').length).toBe(2);
+    expect(h.textContent).not.toMatch(/分数|失败|不及格/);
+    await act(async () => { [...h.querySelectorAll('.item')].find(b => b.textContent?.includes('链式法则'))!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    await flush();
+    await act(async () => { button(h, '改天再聊')!.click(); });
+    await flush();
+    expect((await book.all()).find(e => e.clientId === 'w2')!.dueOn).toBe(addDays(today(), 1));
+  });
+  it('books a citation debt and clears it only with the sentence from the imported paper', async () => {
+    await savePaper(preferencesKV, { ref: { versionId: 'v2', name: '方法.pdf', parseState: 'parsed' },
+      doc: { pages: [{ page: 1, text: '我们用 0.5 到 40 Hz 带通滤波。' }], numPages: 1, chars: 20 }, chunks: [] });
+    const h = await open();
+    await act(async () => { button(h, '记一笔')!.click(); });
+    await act(async () => { h.querySelector<HTMLButtonElement>('[data-testid=kind-citation]')!.click(); });
+    type(field(h, 'AI 给的那句引用'), '论文用了 0.5 到 40 Hz 带通滤波');
+    type(h.querySelector('[data-testid=used-in]')!, '第二章');
+    await act(async () => { button(h, '记下')!.click(); });
+    await flush();
+    expect(h.textContent).toContain('记了一笔引用债');
+    await act(async () => { button(h, '讲给我听 · 今天 1 笔')!.click(); });
+    await act(async () => { h.querySelector<HTMLButtonElement>('[data-testid=citation-due] .item')!.click(); });
+    await flush();
+    expect(h.querySelector('[data-testid=citation-due]')?.textContent).toContain('用在：第二章');
+    type(field(h, '贴一句原文'), '我们用 0.5 到 40 Hz 带通滤波。');
+    await act(async () => { button(h, '找到原文')!.click(); });
+    await flush();
+    expect(h.textContent).toContain('这笔引用债还清');
+    await act(async () => { button(h, '‹ 账本')!.click(); });
+    await act(async () => { h.querySelector<HTMLButtonElement>('[data-testid=go-balance]')!.click(); });
+    expect(h.querySelector('[data-testid=week-bill]')?.textContent).toContain('思维账本每周账单');
+  });
+});

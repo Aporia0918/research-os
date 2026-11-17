@@ -3,6 +3,7 @@
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
 import { backs, opposing, type Source } from '../rules/recall';
+import { findSpan } from '../rules/text';
 
 export type HelpLevel = 'own' | 'hint' | 'approach' | 'answer'; // 先自己说 / 提示 / 思路 / 完整答案
 export type Weight = 'light' | 'medium' | 'heavy';
@@ -16,6 +17,7 @@ const MAX_POINTS = 6;
 const BIGRAM_HIT = 0.4;
 const CLEAR_PASS = 0.8;
 const MIN_ATTEMPT = 6;
+const UNSURE_FROM = 0.3; // a third of the points or more, but short of a pass
 const FILLER = /[的了是在它上要先再就这那和与及也都]/g;
 
 // ---- rules ------------------------------------------------------------------------------------------------
@@ -81,6 +83,14 @@ export function gradeFree(reference: string, attempt: string): Grade {
   return { points, hits, passed: verdict(hits.length, points.length), method: 'deterministic' };
 }
 
+/**
+ * 拿不准: the free grader found some of the points but not enough, so it cannot tell a muddled explanation from one said
+ * in other words. The screen asks for the explanation again in other words instead of counting it (plan 2.2).
+ */
+export function unsureGrade(g: Grade): boolean {
+  return g.method === 'deterministic' && !g.passed && g.hits.length > 0 && g.hits.length / g.points.length >= UNSURE_FROM;
+}
+
 /** Compute follows the debt: heavy debts always get the model, lighter ones only when the free grade is unsure. */
 export function needsModel(w: Weight | null, free: Grade, attempt: string): boolean {
   if (w === 'heavy') return true;
@@ -122,7 +132,11 @@ export interface Entry {
   serverId?: string; // set once the computer has the entry (multi-device)
   fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
   red?: boolean; // 讲不出来: the last try fell short or the user said so; no score, it just goes first on the pre-exam list
-  kind?: 'conclusion'; // 结论债: a result an AI-written analysis produced; repaid by passing the null-world exam, not by explaining
+  kind?: 'conclusion' | 'citation'; // 结论债: repaid by the null-world exam; 引用债: repaid by finding the original page
+  tries?: Try[]; // every repayment try, in order: the 今天 card, 思考结余 and its curve read these
+  dropped?: string; // 这个不用了: the day the user let this one go; it leaves the schedule, the report and the balance
+  usedIn?: string; // 用在哪里: where the user used this answer (a chapter, a slide), so a recall says where to go back to
+  origin?: { page: number; paper: string; quote: string }; // 引用债 repaid: the original sentence the user found
   ai?: string; // which AI gave the answer, as the user named it
   recalls?: Recall[]; // 知识召回: imported texts that said the opposite of the answer, newest last
 }
@@ -135,6 +149,9 @@ export interface Entry {
 export interface Recall {
   claim: string; quote: string; page: number; paper: string; on: string; state: 'open' | 'accepted' | 'dismissed'; evidence?: string;
 }
+
+export interface Try { on: string; ok: boolean }
+const tried = (e: Entry, on: string, ok: boolean) => { e.tries = [...(e.tries ?? []), { on, ok }]; };
 
 export type ExamOutcome = 'pass' | 'fail' | 'unsure';
 /** One exam of one analysis: `key` names the analysis (script, data, label), so a retake lands on the same debt. */
@@ -151,7 +168,7 @@ export interface LedgerRemote {
 export interface SyncResult { sent: number; pulled: number; stopped: boolean }
 interface Pending { clientId: string; text: string; key: string }
 export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLevel'> &
-  Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea' | 'ai'>>;
+  Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea' | 'ai' | 'usedIn'>>;
 
 const KEY = 'mindledger.v1';
 const DAYS = 'mindledger.days.v1';
@@ -180,7 +197,8 @@ export class Book {
     const w = weightOf(n.helpLevel, Boolean(ownIdea.trim()));
     const e: Entry = { id: `mind_${n.clientId}`, clientId: n.clientId, board: n.board, topic: (n.topic ?? '').trim(),
       question: n.question.trim(), answer: n.answer ?? '', ownIdea, helpLevel: n.helpLevel, weight: w, passes: 0,
-      attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today, ...(n.ai?.trim() ? { ai: n.ai.trim() } : {}) };
+      attempts: 0, dueOn: w ? nextDue(w, 0, today, exam) : null, createdOn: today, ...(n.ai?.trim() ? { ai: n.ai.trim() } : {}),
+      ...(n.usedIn?.trim() ? { usedIn: n.usedIn.trim() } : {}) };
     if (w && heldBack(n.clientId) && (this.trial || (await this.trialStart()))) Object.assign(e, { held: true, dueOn: null });
     await this.save([...es, e]);
     return e;
@@ -207,6 +225,7 @@ export class Book {
     e.attempts += 1;
     e.passes += g.passed ? 1 : 0;
     e.red = !g.passed;
+    tried(e, today, g.passed);
     e.dueOn = g.passed ? nextDue(e.weight, e.passes, today, exam) : frontLoad(addDays(today, 1), today, exam);
     await this.save(es);
     await this.queue({ clientId: e.clientId, text: attempt, key: `attempt-${e.clientId}-${e.attempts}` });
@@ -225,6 +244,7 @@ export class Book {
     if (e.kind) throw new Error('repay_by_exam');
     const g = attempt.trim() ? await grade(e, attempt, ask) : null;
     if (g?.passed) return g;
+    tried(e, today, false);
     Object.assign(e, { red: true, attempts: e.attempts + 1, dueOn: frontLoad(addDays(today, 1), today, exam) });
     await this.save(es);
     return g;
@@ -245,10 +265,72 @@ export class Book {
       es.push(e);
     }
     const passed = c.outcome === 'pass';
+    tried(e, today, passed);
     Object.assign(e, { attempts: e.attempts + 1, passes: passed ? STEPS.heavy.length : 0, red: c.outcome === 'fail',
       dueOn: passed ? null : today });
     await this.save(es);
     return e;
+  }
+
+  /** Grade without booking: lets the screen ask again in other words when the free grade is 拿不准 (see unsureGrade). */
+  async preview(id: string, attempt: string, ask?: Ask): Promise<Grade> {
+    const e = (await this.all()).find((x) => x.id === id);
+    if (!e) throw new Error('nothing_to_repay');
+    return grade(e, attempt, ask);
+  }
+
+  private async edit(id: string, f: (e: Entry) => void): Promise<Entry> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    if (!e) throw new Error('no_entry');
+    f(e); await this.save(es);
+    return e;
+  }
+
+  /** 改天再聊: tomorrow instead of today; nothing is counted, the debt is not marked. */
+  snooze(id: string, today: string): Promise<Entry> {
+    return this.edit(id, (e) => { if (e.dueOn && e.dueOn <= today) e.dueOn = addDays(today, 1); });
+  }
+
+  /** 这个不用了: the user decides this one does not matter; it leaves the schedule, the report and 思考结余, not the record. */
+  drop(id: string, today: string): Promise<Entry> {
+    return this.edit(id, (e) => { Object.assign(e, { dropped: today, dueOn: null, red: false }); });
+  }
+
+  /** 用在哪里: one short line, so a later recall can say where the answer went. Empty clears it. */
+  setUsedIn(id: string, where: string): Promise<Entry> {
+    return this.edit(id, (e) => { const w = where.replace(/\s+/g, ' ').trim().slice(0, 40); if (w) e.usedIn = w; else delete e.usedIn; });
+  }
+
+  /**
+   * 引用债: an AI gave a citation, a number or a sentence the user may put in their own writing. It is owed from today and
+   * repaid only by finding the original: a sentence copied from an imported text, found there word for word, that shares
+   * the claim's numbers (when it has any) or enough of its wording.
+   */
+  async addCitation(n: { clientId: string; claim: string; topic?: string; ai?: string; usedIn?: string }, today: string): Promise<Entry> {
+    const claim = n.claim.trim();
+    if (!claim) throw new Error('empty_question');
+    const es = await this.all();
+    const prior = es.find((e) => e.clientId === n.clientId);
+    if (prior) return prior;
+    const e: Entry = { id: `mind_${n.clientId}`, clientId: n.clientId, board: '科研', topic: (n.topic ?? '').trim() || '引用债',
+      question: claim, answer: claim, ownIdea: '', helpLevel: 'answer', weight: 'heavy', passes: 0, attempts: 0, dueOn: today,
+      createdOn: today, kind: 'citation', ...(n.ai?.trim() ? { ai: n.ai.trim() } : {}), ...(n.usedIn?.trim() ? { usedIn: n.usedIn.trim() } : {}) };
+    await this.save([...es, e]);
+    return e;
+  }
+
+  /** 找到原文: true and settled when the quote is in an imported text and backs the claim; otherwise nothing changes. */
+  async findOrigin(id: string, quote: string, sources: Source[], today: string): Promise<boolean> {
+    const es = await this.all();
+    const e = es.find((x) => x.id === id);
+    if (!e || e.kind !== 'citation') throw new Error('not_a_citation');
+    const hit = originOf(e.answer, quote, sources);
+    if (!hit) return false;
+    tried(e, today, true);
+    Object.assign(e, { origin: hit, attempts: e.attempts + 1, passes: STEPS.heavy.length, dueOn: null, red: false });
+    await this.save(es);
+    return true;
   }
 
   // ---- 知识召回: an imported text that says the opposite reopens what you learned from the AI ----
@@ -296,7 +378,7 @@ export class Book {
 
   /** 考前真实掌握度报告: independence from no-AI attempts only, and what to repay before the exam, in order. */
   async report(today: string, exam: string, board?: Entry['board']) {
-    const es = (await this.all()).filter((e) => !board || e.board === board);
+    const es = (await this.all()).filter((e) => !e.dropped && (!board || e.board === board));
     const items = es.map((e) => ({ ...e, status: statusOf(e.passes, e.attempts, e.weight),
       dueOn: e.dueOn ? frontLoad(e.dueOn, today, exam) : null }));
     const counts = { own: 0, settled: 0, shaky: 0, untested: 0 };
@@ -311,7 +393,9 @@ export class Book {
   async processRecord(today: string, exam?: string, board?: Entry['board']): Promise<string> {
     const LEVEL: Record<HelpLevel, string> = { own: '自己想的', hint: '提示', approach: '思路', answer: '完整答案' };
     const STATUS: Record<Status, string> = { own: '自己想的', settled: '已讲清', shaky: '讲到一半', untested: '还没讲' };
-    const state = (e: Entry): string => e.kind
+    const state = (e: Entry): string => e.dropped ? '不用了' : e.kind === 'citation'
+      ? (e.origin ? `找到原文（《${e.origin.paper}》第 ${e.origin.page} 页）` : '还没找到原文')
+      : e.kind
       ? (e.red ? '崩分，改好再考' : statusOf(e.passes, e.attempts, e.weight) === 'settled' ? '零世界考过' : '还没考过')
       : e.recalls?.some((r) => r.state === 'open') ? '被召回，待你看'
         : `${e.red ? '讲不出来' : STATUS[statusOf(e.passes, e.attempts, e.weight)]}${e.recalls?.some((r) => r.state === 'accepted') ? '（召回后重开）' : ''}`;
@@ -321,7 +405,7 @@ export class Book {
     const pct = head?.independence == null ? '—' : `${Math.round(head.independence * 100)}%`;
     return [`思维账本过程记录 · ${today}${board ? ` · ${board}` : ''}`,
       ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
-      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), e.kind ? 'AI 写的分析' : LEVEL[e.helpLevel],
+      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), e.kind === 'citation' ? 'AI 给的引用' : e.kind ? 'AI 写的分析' : LEVEL[e.helpLevel],
         ...(e.kind ? [] : [e.ownIdea.trim() ? '先想过' : '没先想']), state(e)].join(' · '))].join('\n');
   }
 
@@ -408,4 +492,20 @@ export class Book {
       settledShare: repayable.length ? repayable.filter((e) => statusOf(e.passes, e.attempts, e.weight) === 'settled').length / repayable.length : null,
       daysOpened: days.length, back7: Boolean(first && days.some((d) => d >= addDays(first, 7))) };
   }
+}
+
+const DIGITS = /\d+(?:\.\d+)?/g;
+/** Where a quote backs a claim: on a page of an imported text word for word, with the claim's numbers or enough of its words. */
+export function originOf(claim: string, quote: string, sources: Source[]): { page: number; paper: string; quote: string } | null {
+  const q = quote.trim();
+  if (norm(q).length < 8) return null;
+  const nums = claim.match(DIGITS) ?? [];
+  const agrees = nums.length ? nums.every((n) => q.includes(n))
+    : (() => { const c = bigrams(claim); return c.size > 0 && [...c].filter((x) => bigrams(q).has(x)).length / c.size >= BIGRAM_HIT; })();
+  if (!agrees) return null;
+  for (const src of sources) {
+    const at = src.pages.findIndex((p) => findSpan(p, q) !== null);
+    if (at >= 0) return { page: at + 1, paper: src.name, quote: q };
+  }
+  return null;
 }
