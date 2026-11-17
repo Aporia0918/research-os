@@ -124,9 +124,16 @@ jobs:
           java -cp "$d" dev.paperlab.assistant.UpdateDownloadCheck \
             "$(jq -r '.apk[-1].url' "$v")" "$(jq -r .size "$v")" "$(jq -r .sha256 "$v")" \
             $(jq -r '.apk[:-1][].url' "$v")
+          # The purge can take a little while to reach every CDN: ask again each 30 s for up to 5 minutes.
           code=$(jq -r .versionCode "$v")
           for h in gcore fastly cdn; do
-            got=$(curl -sS -m 30 "https://$h.jsdelivr.net/gh/${GITHUB_REPOSITORY}@test-builds/version.json" | jq -r .versionCode 2>/dev/null || echo none)
+            got=none
+            for try in $(seq 1 10); do
+              got=$(curl -sS -m 30 "https://$h.jsdelivr.net/gh/${GITHUB_REPOSITORY}@test-builds/version.json" | jq -r .versionCode 2>/dev/null || echo none)
+              [ "$got" = "$code" ] && break
+              curl -sS -m 30 -o /dev/null "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@test-builds/version.json" || true
+              sleep 30
+            done
             [ "$got" = "$code" ] && echo "ok   $h.jsdelivr.net version.json is $got" \
-              || echo "::warning::$h.jsdelivr.net version.json is $got, not $code yet (cache); the app also asks GitHub and takes the newest"
+              || echo "::warning::$h.jsdelivr.net version.json is $got, not $code after 5 minutes; the app also asks GitHub and takes the newest"
           done
