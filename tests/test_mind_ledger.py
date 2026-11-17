@@ -229,3 +229,64 @@ def test_extension_body_accepted_from_an_allowed_extension_origin(ext_origin: st
     blocked = client.post("/api/v1/mind-ledger/entries", json={"client_id": "ext-2", **EXT_ENTRY},
                           headers={"origin": "chrome-extension://someoneelse"})
     assert blocked.status_code == 403
+
+
+# ---- boards, marks and recalls (the computer knows what the phone's book knows) ----------------------------------
+
+def test_boards_kinds_marks_and_due_order(conn: sqlite3.Connection) -> None:
+    _, a = store.create(conn, "u1", "u1", store.NewEntry("c-a", "什么是导数", "hint", topic="高数"), D0)
+    _, b = store.create(conn, "u1", "u1", store.NewEntry("c-b", "这个 p 值说明了什么", "hint", board="科研",
+                                                         used_in="第二章"), D0)
+    _, c = store.create(conn, "u1", "u1", store.NewEntry("c-c", "AI 给的引用：Smith 2020", "answer", board="科研",
+                                                         kind="citation"), D0)
+    assert (c["weight"], c["due_on"], c["kind"]) == ("heavy", D0.isoformat(), "citation")  # a citation is due now
+    assert b["used_in"] == "第二章" and not b["red"]
+    store.mark(conn, "u1", "u1", b["id"], red=True)
+    ids = [e["id"] for e in store.due(conn, "u1", day(3))]
+    assert ids[0] == b["id"]  # red goes first
+    assert [e["id"] for e in store.due(conn, "u1", day(3), "科研")] == [b["id"], c["id"]]
+    store.mark(conn, "u1", "u1", a["id"], dropped_on=day(1))
+    assert a["id"] not in [e["id"] for e in store.due(conn, "u1", day(3))]
+    with pytest.raises(Exception):
+        store.create(conn, "u1", "u1", store.NewEntry("c-x", "q", "hint", board="工作"), D0)
+
+
+def test_failed_attempt_marks_red_and_a_pass_clears_it(conn: sqlite3.Connection) -> None:
+    _, e = store.create(conn, "u1", "u1", store.NewEntry("c-r", "什么是导数", "hint", answer=DERIV), D0)
+    store.record_attempt(conn, "u1", "u1", e["id"], "不会", judge.grade_deterministic(DERIV, "不会"), day(3))
+    assert store.get(conn, "u1", e["id"])["red"]
+    store.record_attempt(conn, "u1", "u1", e["id"], GOOD, judge.grade_deterministic(DERIV, GOOD), day(4))
+    assert not store.get(conn, "u1", e["id"])["red"]
+
+
+def test_recall_once_then_accept_reopens_with_the_paper_as_reference(conn: sqlite3.Connection) -> None:
+    _, e = store.create(conn, "u1", "u1", store.NewEntry("c-q", "午睡和记忆", "hint", answer="午睡会提高记忆。",
+                                                         board="科研", used_in="组会幻灯片"), D0)
+    kw = {"claim": "午睡会提高记忆。", "paper": "论文乙", "page": 3, "quote": "午睡会降低记忆。"}
+    r1 = store.add_recall(conn, "u1", "u1", e["id"], **kw)
+    r2 = store.add_recall(conn, "u1", "u1", e["id"], **kw)
+    assert r1["id"] == r2["id"]
+    [open_] = store.recalls(conn, "u1")
+    assert (open_["used_in"], open_["answer"], open_["page"]) == ("组会幻灯片", "午睡会提高记忆。", 3)
+    store.settle_recall(conn, "u1", "u1", r1["id"], "accepted", day(5))
+    got = store.get(conn, "u1", e["id"])
+    assert (got["answer"], got["due_on"]) == ("午睡会降低记忆。", day(5).isoformat())
+    assert store.recalls(conn, "u1") == []
+
+
+def test_http_marks_and_recalls(client: Client) -> None:
+    body = {"client_id": "m-1", "question": "午睡和记忆", "help_level": "hint", "answer": "午睡会提高记忆。",
+            "board": "科研", "used_in": "第三章"}
+    r = client.post("/api/v1/mind-ledger/entries", json=body)
+    assert r.status_code == 201 and r.json()["board"] == "科研"
+    eid = r.json()["id"]
+    m = client.patch(f"/api/v1/mind-ledger/entries/{eid}", json={"red": True})
+    assert m.status_code == 200 and m.json()["red"] is True
+    rc = client.post(f"/api/v1/mind-ledger/entries/{eid}/recalls",
+                     json={"claim": "午睡会提高记忆。", "paper": "论文乙", "page": 2, "quote": "午睡会降低记忆。"})
+    assert rc.status_code == 201
+    listed = client.get("/api/v1/mind-ledger/recalls").json()
+    assert [x["used_in"] for x in listed] == ["第三章"]
+    s = client.post(f"/api/v1/mind-ledger/recalls/{rc.json()['id']}", json={"state": "dismissed"})
+    assert s.status_code == 200 and client.get("/api/v1/mind-ledger/recalls").json() == []
+    assert client.post(f"/api/v1/mind-ledger/recalls/{rc.json()['id']}", json={"state": "maybe"}).status_code == 422

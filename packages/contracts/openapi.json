@@ -5793,6 +5793,498 @@
     }
    }
   },
+  "/api/v1/null-world/detect": {
+   "post": {
+    "tags": [
+     "null-world"
+    ],
+    "summary": "Detect Columns",
+    "operationId": "detect_columns_api_v1_null_world_detect_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DetectIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Detect Columns Api V1 Null World Detect Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/leak-audit/script": {
+   "post": {
+    "tags": [
+     "experiments"
+    ],
+    "summary": "Audit Script",
+    "description": "Red / yellow / green per rule (R1-R5) with line numbers and a one-sentence fix. Read-only.",
+    "operationId": "audit_script_api_v1_leak_audit_script_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScriptIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Audit Script Api V1 Leak Audit Script Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/entries": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Create Entry",
+    "operationId": "create_entry_api_v1_mind_ledger_entries_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EntryIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Entry Api V1 Mind Ledger Entries Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/due": {
+   "get": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Due",
+    "operationId": "due_api_v1_mind_ledger_due_get",
+    "parameters": [
+     {
+      "name": "board",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 4
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Board"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": true
+         },
+         "title": "Response Due Api V1 Mind Ledger Due Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/entries/{entry_id}": {
+   "patch": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Mark",
+    "description": "\u8bb2\u4e0d\u51fa\u6765 / \u7528\u5728\u54ea\u91cc / \u8fd9\u4e2a\u4e0d\u7528\u4e86, sent by the phone after the entry. Sending the same again is harmless.",
+    "operationId": "mark_api_v1_mind_ledger_entries__entry_id__patch",
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MarkIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Mark Api V1 Mind Ledger Entries  Entry Id  Patch"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/entries/{entry_id}/recalls": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Add Recall",
+    "operationId": "add_recall_api_v1_mind_ledger_entries__entry_id__recalls_post",
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RecallIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Add Recall Api V1 Mind Ledger Entries  Entry Id  Recalls Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/recalls": {
+   "get": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Recalls",
+    "description": "Open \u53ec\u56de\u5355, newest first, with the answer they came from and where the user used it.",
+    "operationId": "recalls_api_v1_mind_ledger_recalls_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "type": "array",
+         "title": "Response Recalls Api V1 Mind Ledger Recalls Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/recalls/{recall_id}": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Settle Recall",
+    "operationId": "settle_recall_api_v1_mind_ledger_recalls__recall_id__post",
+    "parameters": [
+     {
+      "name": "recall_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Recall Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SettleIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Settle Recall Api V1 Mind Ledger Recalls  Recall Id  Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/entries/{entry_id}/attempts": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Repay",
+    "description": "Grade first (a model call must not sit inside the write transaction), then record append-only.",
+    "operationId": "repay_api_v1_mind_ledger_entries__entry_id__attempts_post",
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AttemptIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Repay Api V1 Mind Ledger Entries  Entry Id  Attempts Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/report": {
+   "get": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Report",
+    "operationId": "report_api_v1_mind_ledger_report_get",
+    "parameters": [
+     {
+      "name": "exam",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "date",
+       "title": "Exam"
+      }
+     },
+     {
+      "name": "topic",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Topic"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Report Api V1 Mind Ledger Report Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/research/deep": {
    "post": {
     "tags": [
@@ -7034,6 +7526,979 @@
      }
     }
    }
+  },
+  "/api/v1/mobile/logs": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Log",
+    "description": "Idempotent twice over: the Idempotency-Key replays a response, and (user, client_id) dedupes offline retries.",
+    "operationId": "create_log_api_v1_mobile_logs_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_create_log_api_v1_mobile_logs_post"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Create Log Api V1 Mobile Logs Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "List Logs",
+    "operationId": "list_logs_api_v1_mobile_logs_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": true
+         },
+         "title": "Response List Logs Api V1 Mobile Logs Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/compare": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Compare",
+    "description": "Method-step mismatches between a log entry and a paper, each citing a page via validated Evidence.",
+    "operationId": "compare_api_v1_mobile_compare_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileCompareIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Compare Api V1 Mobile Compare Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Plan",
+    "description": "Draft a pre-experiment plan (variables / controls / materials) from the paper's method text; every item cites\na page. Candidates come only from Methods-like sections found by heading; when none is found the plan has\nstatus method_section_not_found and no items. The plan stays a draft until the user confirms it.",
+    "operationId": "create_plan_api_v1_mobile_plans_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobilePlanIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Plan Api V1 Mobile Plans Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans/{plan_id}": {
+   "get": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Get Plan",
+    "operationId": "get_plan_api_v1_mobile_plans__plan_id__get",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Plan Api V1 Mobile Plans  Plan Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans/{plan_id}/items": {
+   "put": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Edit Plan",
+    "description": "Replace the items of a DRAFT plan (409 once confirmed).",
+    "operationId": "edit_plan_api_v1_mobile_plans__plan_id__items_put",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobilePlanEditIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Edit Plan Api V1 Mobile Plans  Plan Id  Items Put"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans/{plan_id}/confirm": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Confirm Plan",
+    "description": "The user's explicit confirmation; recorded with a timestamp. Nothing in the plan counts before this.",
+    "operationId": "confirm_plan_api_v1_mobile_plans__plan_id__confirm_post",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Confirm Plan Api V1 Mobile Plans  Plan Id  Confirm Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans/{plan_id}/items/{item_id}/approval": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Decide Plan Action",
+    "description": "Approve or reject one key action (model call / data out / share) of a DRAFT plan; records time and device.\nOnly the approval gate: nothing is run or sent here.",
+    "operationId": "decide_plan_action_api_v1_mobile_plans__plan_id__items__item_id__approval_post",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobilePlanActionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Decide Plan Action Api V1 Mobile Plans  Plan Id  Items  Item Id  Approval Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/plans/{plan_id}/items/{item_id}/number": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Decide Plan Number",
+    "description": "Numbers-and-citation gate: confirm_match / reject_match one item whose numbers are not on its cited page\n(or that has no citation). 409 citation_gate_open on plan confirm while any is open.",
+    "operationId": "decide_plan_number_api_v1_mobile_plans__plan_id__items__item_id__number_post",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobilePlanNumberIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Decide Plan Number Api V1 Mobile Plans  Plan Id  Items  Item Id  Number Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/questions": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Questions",
+    "description": "Research guidance: 3-5 counter-questions on the user's idea, each citing a method sentence and its page. Rules\nunless use_model and a model is configured. No method section -> status method_section_not_found, no items.",
+    "operationId": "create_questions_api_v1_mobile_guidance_questions_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileQuestionsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Questions Api V1 Mobile Guidance Questions Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/citation-check": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Citation Check",
+    "description": "Writing guidance: each sentence of the text is a claim about the paper. Verdict exact_match (\"\u627e\u5230\u539f\u53e5\", with\nan anchored citation), near_match (\"\u627e\u5230\u76f8\u8fd1\u539f\u6587(\u9700\u4f60\u786e\u8ba4)\": candidate page + text, needs_confirmation; the\nguidance cannot be confirmed (409 guidance_match_unconfirmed) until each is confirm_match / reject_match), or\ncannot_check (\"\u65e0\u6cd5\u6838\u5bf9\": rule mode cannot read paraphrases; NOT a finding that the claim is unsupported).\nRules only (word overlap); never a guess.",
+    "operationId": "create_citation_check_api_v1_mobile_guidance_citation_check_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileCitationCheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Citation Check Api V1 Mobile Guidance Citation Check Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/methods-check": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Methods Check",
+    "description": "Writing guidance: compare the user's methods paragraph with a CONFIRMED plan (409 plan_not_confirmed\notherwise); plan items not found in the text are listed as missing, first.",
+    "operationId": "create_methods_check_api_v1_mobile_guidance_methods_check_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileMethodsCheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Methods Check Api V1 Mobile Guidance Methods Check Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/predict": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Predict",
+    "description": "Prediction and adjustment suggestions from a CONFIRMED plan (409 plan_not_confirmed otherwise) and experiment\nlog entries. Deterministic; every suggestion cites a paper page. A reference for the user, who decides\n(adopt / ignore, then confirm; 409 after confirm).",
+    "operationId": "create_predict_api_v1_mobile_guidance_predict_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobilePredictIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Create Predict Api V1 Mobile Guidance Predict Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/{guidance_id}": {
+   "get": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Get Guidance",
+    "operationId": "get_guidance_api_v1_mobile_guidance__guidance_id__get",
+    "parameters": [
+     {
+      "name": "guidance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Guidance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Guidance Api V1 Mobile Guidance  Guidance Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/{guidance_id}/decisions": {
+   "put": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Decide Guidance",
+    "description": "Adopt / ignore / edit a question, or mark a check result handled / not_applicable\n(a near_match also confirm_match / reject_match), while draft (409 after).",
+    "operationId": "decide_guidance_api_v1_mobile_guidance__guidance_id__decisions_put",
+    "parameters": [
+     {
+      "name": "guidance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Guidance Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileGuidanceDecisionsIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Decide Guidance Api V1 Mobile Guidance  Guidance Id  Decisions Put"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/guidance/{guidance_id}/confirm": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Confirm Guidance",
+    "description": "The user's explicit confirmation, with a timestamp; after it nothing can change (409).\n409 guidance_match_unconfirmed while a citation-check near_match has no confirm_match / reject_match.",
+    "operationId": "confirm_guidance_api_v1_mobile_guidance__guidance_id__confirm_post",
+    "parameters": [
+     {
+      "name": "guidance_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Guidance Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Confirm Guidance Api V1 Mobile Guidance  Guidance Id  Confirm Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/hypotheses": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Create Hypothesis",
+    "description": "A hypothesis on items of a CONFIRMED plan (409 plan_not_confirmed otherwise); status starts as pending.",
+    "operationId": "create_hypothesis_api_v1_mobile_hypotheses_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileHypothesisIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Create Hypothesis Api V1 Mobile Hypotheses Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "List Hypotheses",
+    "operationId": "list_hypotheses_api_v1_mobile_hypotheses_get",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "title": "Plan Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": true
+         },
+         "title": "Response List Hypotheses Api V1 Mobile Hypotheses Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/hypotheses/{hypothesis_id}/compare": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Compare Hypothesis",
+    "description": "Paper value with page next to the log value (or \u65e5\u5fd7\u672a\u8bb0\u5f55 / \u65e0\u8bba\u6587\u4f9d\u636e). Side by side only.",
+    "operationId": "compare_hypothesis_api_v1_mobile_hypotheses__hypothesis_id__compare_post",
+    "parameters": [
+     {
+      "name": "hypothesis_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Hypothesis Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileHypothesisCompareIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Compare Hypothesis Api V1 Mobile Hypotheses  Hypothesis Id  Compare Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mobile/hypotheses/{hypothesis_id}/status": {
+   "post": {
+    "tags": [
+     "mobile"
+    ],
+    "summary": "Set Hypothesis Status",
+    "description": "The user's choice: pending / supported / refuted / insufficient (422 otherwise), kept with history.",
+    "operationId": "set_hypothesis_status_api_v1_mobile_hypotheses__hypothesis_id__status_post",
+    "parameters": [
+     {
+      "name": "hypothesis_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Hypothesis Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MobileHypothesisStatusIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Set Hypothesis Status Api V1 Mobile Hypotheses  Hypothesis Id  Status Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -7042,7 +8507,7 @@
     "properties": {
      "provider": {
       "type": "string",
-      "pattern": "^(deepseek|zhipu|anthropic|openai)$",
+      "pattern": "^(deepseek|zhipu|qwen|anthropic|openai)$",
       "title": "Provider"
      },
      "model_id": {
@@ -7252,6 +8717,38 @@
     ],
     "title": "ApprovalIn"
    },
+   "AttemptIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Text"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": true
+     },
+     "exam": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exam"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "AttemptIn"
+   },
    "AuthState": {
     "properties": {
      "initialized": {
@@ -7301,6 +8798,68 @@
      "setup_allowed"
     ],
     "title": "AuthState"
+   },
+   "Body_create_log_api_v1_mobile_logs_post": {
+    "properties": {
+     "client_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Client Id"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind",
+      "default": "text"
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 5000,
+      "title": "Text",
+      "default": ""
+     },
+     "captured_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Captured At"
+     },
+     "duration_ms": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration Ms"
+     },
+     "file": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File"
+     }
+    },
+    "type": "object",
+    "required": [
+     "client_id"
+    ],
+    "title": "Body_create_log_api_v1_mobile_logs_post"
    },
    "Body_import_file_api_v1_literature_files__importer__post": {
     "properties": {
@@ -7569,6 +9128,21 @@
     ],
     "title": "DeepIn"
    },
+   "DetectIn": {
+    "properties": {
+     "data": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Data"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "DetectIn"
+   },
    "DeviceOut": {
     "properties": {
      "id": {
@@ -7723,6 +9297,90 @@
      "enabled"
     ],
     "title": "EnableIn"
+   },
+   "EntryIn": {
+    "properties": {
+     "client_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Client Id"
+     },
+     "question": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Question"
+     },
+     "help_level": {
+      "type": "string",
+      "title": "Help Level"
+     },
+     "answer": {
+      "type": "string",
+      "maxLength": 8000,
+      "title": "Answer",
+      "default": ""
+     },
+     "own_idea": {
+      "type": "string",
+      "maxLength": 8000,
+      "title": "Own Idea",
+      "default": ""
+     },
+     "topic": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Topic",
+      "default": ""
+     },
+     "source": {
+      "type": "string",
+      "title": "Source",
+      "default": "app"
+     },
+     "board": {
+      "type": "string",
+      "title": "Board",
+      "default": "\u5b66\u4e60"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "used_in": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Used In",
+      "default": ""
+     },
+     "exam": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exam"
+     }
+    },
+    "type": "object",
+    "required": [
+     "client_id",
+     "question",
+     "help_level"
+    ],
+    "title": "EntryIn"
    },
    "Event": {
     "properties": {
@@ -8397,6 +10055,47 @@
     ],
     "title": "LoginIn"
    },
+   "MarkIn": {
+    "properties": {
+     "red": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Red"
+     },
+     "used_in": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Used In"
+     },
+     "dropped_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dropped On"
+     }
+    },
+    "type": "object",
+    "title": "MarkIn"
+   },
    "MirrorIn": {
     "properties": {
      "mirror_prefix": {
@@ -8408,6 +10107,363 @@
     },
     "type": "object",
     "title": "MirrorIn"
+   },
+   "MobileCitationCheckIn": {
+    "properties": {
+     "version_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Version Id"
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "version_id",
+     "text"
+    ],
+    "title": "MobileCitationCheckIn"
+   },
+   "MobileCompareIn": {
+    "properties": {
+     "log_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Log Id"
+     },
+     "version_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Version Id"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "log_id",
+     "version_id"
+    ],
+    "title": "MobileCompareIn"
+   },
+   "MobileGuidanceDecisionIn": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Id"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id"
+    ],
+    "title": "MobileGuidanceDecisionIn"
+   },
+   "MobileGuidanceDecisionsIn": {
+    "properties": {
+     "decisions": {
+      "items": {
+       "$ref": "#/components/schemas/MobileGuidanceDecisionIn"
+      },
+      "type": "array",
+      "maxItems": 60,
+      "title": "Decisions"
+     }
+    },
+    "type": "object",
+    "required": [
+     "decisions"
+    ],
+    "title": "MobileGuidanceDecisionsIn"
+   },
+   "MobileHypothesisCompareIn": {
+    "properties": {
+     "log_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Log Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "log_ids"
+    ],
+    "title": "MobileHypothesisCompareIn"
+   },
+   "MobileHypothesisIn": {
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Plan Id"
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Text"
+     },
+     "plan_item_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Plan Item Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "plan_id",
+     "text",
+     "plan_item_ids"
+    ],
+    "title": "MobileHypothesisIn"
+   },
+   "MobileHypothesisStatusIn": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status"
+    ],
+    "title": "MobileHypothesisStatusIn"
+   },
+   "MobileMethodsCheckIn": {
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Plan Id"
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "plan_id",
+     "text"
+    ],
+    "title": "MobileMethodsCheckIn"
+   },
+   "MobilePlanActionIn": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 1,
+      "title": "Decision"
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision"
+    ],
+    "title": "MobilePlanActionIn"
+   },
+   "MobilePlanEditIn": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/MobilePlanItemIn"
+      },
+      "type": "array",
+      "maxItems": 60,
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "MobilePlanEditIn"
+   },
+   "MobilePlanIn": {
+    "properties": {
+     "version_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Version Id"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "version_id"
+    ],
+    "title": "MobilePlanIn"
+   },
+   "MobilePlanItemIn": {
+    "properties": {
+     "id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Category"
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Text"
+     },
+     "key_action": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Key Action"
+     }
+    },
+    "type": "object",
+    "required": [
+     "category",
+     "text"
+    ],
+    "title": "MobilePlanItemIn"
+   },
+   "MobilePlanNumberIn": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Decision"
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision"
+    ],
+    "title": "MobilePlanNumberIn"
+   },
+   "MobilePredictIn": {
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Plan Id"
+     },
+     "log_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Log Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "plan_id",
+     "log_ids"
+    ],
+    "title": "MobilePredictIn"
+   },
+   "MobileQuestionsIn": {
+    "properties": {
+     "version_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Version Id"
+     },
+     "idea": {
+      "type": "string",
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Idea"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "version_id",
+     "idea"
+    ],
+    "title": "MobileQuestionsIn"
    },
    "Note": {
     "properties": {
@@ -9129,6 +11185,41 @@
     ],
     "title": "ReauthIn"
    },
+   "RecallIn": {
+    "properties": {
+     "claim": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Claim"
+     },
+     "paper": {
+      "type": "string",
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Paper"
+     },
+     "page": {
+      "type": "integer",
+      "minimum": 1.0,
+      "title": "Page"
+     },
+     "quote": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Quote"
+     }
+    },
+    "type": "object",
+    "required": [
+     "claim",
+     "paper",
+     "page",
+     "quote"
+    ],
+    "title": "RecallIn"
+   },
    "RetractionIn": {
     "properties": {
      "work_ids": {
@@ -9265,6 +11356,57 @@
     ],
     "title": "RunIn"
    },
+   "ScriptIn": {
+    "properties": {
+     "source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source",
+      "description": "script text (or notebook JSON)"
+     },
+     "path": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Path",
+      "description": "a .py / .ipynb inside a read root"
+     },
+     "filename": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Filename",
+      "default": "script.py"
+     },
+     "notebook": {
+      "type": "boolean",
+      "title": "Notebook",
+      "default": false
+     },
+     "subject_columns": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 50,
+      "title": "Subject Columns"
+     }
+    },
+    "type": "object",
+    "title": "ScriptIn"
+   },
    "SelectionIn": {
     "properties": {
      "candidate_ids": {
@@ -9309,6 +11451,19 @@
     },
     "type": "object",
     "title": "SettingsIn"
+   },
+   "SettleIn": {
+    "properties": {
+     "state": {
+      "type": "string",
+      "title": "State"
+     }
+    },
+    "type": "object",
+    "required": [
+     "state"
+    ],
+    "title": "SettleIn"
    },
    "SetupIn": {
     "properties": {

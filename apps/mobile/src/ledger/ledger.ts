@@ -139,6 +139,7 @@ export interface Entry {
   origin?: { page: number; paper: string; quote: string }; // 引用债 repaid: the original sentence the user found
   ai?: string; // which AI gave the answer, as the user named it
   recalls?: Recall[]; // 知识召回: imported texts that said the opposite of the answer, newest last
+  sentMark?: string; // the red / used-in / dropped state the computer last received
 }
 
 /**
@@ -148,6 +149,7 @@ export interface Entry {
  */
 export interface Recall {
   claim: string; quote: string; page: number; paper: string; on: string; state: 'open' | 'accepted' | 'dismissed'; evidence?: string;
+  sent?: boolean; // the computer has it
 }
 
 export interface Try { on: string; ok: boolean }
@@ -159,11 +161,16 @@ export interface Checkup { key: string; question: string; outcome: ExamOutcome }
 
 /** The computer's 思维账本 API, as the phone needs it. Kept as an interface so the book never touches the network. */
 export interface LedgerRemote {
-  entry(body: { client_id: string; question: string; help_level: HelpLevel; answer: string; own_idea: string; topic: string; source: 'app' },
-    key: string): Promise<{ id: string }>;
+  entry(body: { client_id: string; question: string; help_level: HelpLevel; answer: string; own_idea: string; topic: string; source: 'app';
+    board: Entry['board']; kind?: Entry['kind']; used_in: string }, key: string): Promise<{ id: string }>;
   attempt(serverId: string, text: string, key: string): Promise<unknown>;
   due(): Promise<{ id: string; client_id: string; topic: string; question: string; answer: string; own_idea: string;
-    help_level: HelpLevel; due_on: string | null; created_on: string }[]>;
+    help_level: HelpLevel; due_on: string | null; created_on: string; board?: Entry['board']; kind?: Entry['kind'] | null;
+    used_in?: string; red?: boolean }[]>;
+  /** 讲不出来 / 用在哪里 / 这个不用了 after the entry was sent (a computer from before these fields leaves it out). */
+  mark?(serverId: string, m: { red: boolean; used_in: string; dropped_on: string | null }): Promise<unknown>;
+  /** A 召回单 found on the phone, so the computer can show it and mark the sentence yellow. */
+  recall?(serverId: string, r: { claim: string; paper: string; page: number; quote: string }): Promise<unknown>;
 }
 export interface SyncResult { sent: number; pulled: number; stopped: boolean }
 interface Pending { clientId: string; text: string; key: string }
@@ -424,11 +431,24 @@ export class Book {
     const es = await this.all();
     let sent = 0, pulled = 0;
     try {
-      for (const e of es.filter((x) => !x.serverId && !x.kind)) { // 结论债 stays on the phone until the computer keeps them
+      for (const e of es.filter((x) => !x.serverId)) {
         e.serverId = (await remote.entry({ client_id: e.clientId, question: e.question, help_level: e.helpLevel, answer: e.answer,
-          own_idea: e.ownIdea, topic: e.topic, source: 'app' }, `entry-${e.clientId}`)).id;
+          own_idea: e.ownIdea, topic: e.topic, source: 'app', board: e.board, ...(e.kind ? { kind: e.kind } : {}), used_in: e.usedIn ?? '' },
+        `entry-${e.clientId}`)).id;
         sent += 1;
         await this.save(es);
+      }
+      for (const e of es.filter((x) => x.serverId)) { // what changed since: sent once per change, harmless if repeated
+        const m = { red: Boolean(e.red), used_in: e.usedIn ?? '', dropped_on: e.dropped ?? null };
+        const sig = JSON.stringify(m);
+        if (remote.mark && e.sentMark !== sig && (e.sentMark || m.red || m.used_in || m.dropped_on)) {
+          await remote.mark(e.serverId!, m); e.sentMark = sig; sent += 1; await this.save(es);
+        }
+        for (const r of e.recalls ?? []) {
+          if (!remote.recall || r.sent) continue;
+          await remote.recall(e.serverId!, { claim: r.claim, paper: r.paper, page: r.page, quote: r.quote });
+          r.sent = true; sent += 1; await this.save(es);
+        }
       }
       const box = await this.outbox();
       while (box.length) {
@@ -440,9 +460,10 @@ export class Book {
       }
       for (const d of await remote.due()) {
         if (es.some((x) => x.clientId === d.client_id)) continue;
-        es.push({ id: `mind_${d.client_id}`, clientId: d.client_id, board: '学习', topic: d.topic, question: d.question, answer: d.answer,
-          ownIdea: d.own_idea, helpLevel: d.help_level, weight: weightOf(d.help_level, Boolean(d.own_idea.trim())), passes: 0, attempts: 0,
-          dueOn: d.due_on ?? today, createdOn: d.created_on, serverId: d.id, fromComputer: true });
+        es.push({ id: `mind_${d.client_id}`, clientId: d.client_id, board: d.board ?? '学习', topic: d.topic, question: d.question,
+          answer: d.answer, ownIdea: d.own_idea, helpLevel: d.help_level, weight: d.kind ? 'heavy' : weightOf(d.help_level, Boolean(d.own_idea.trim())),
+          passes: 0, attempts: 0, dueOn: d.due_on ?? today, createdOn: d.created_on, serverId: d.id, fromComputer: true,
+          ...(d.kind ? { kind: d.kind } : {}), ...(d.used_in ? { usedIn: d.used_in } : {}), ...(d.red ? { red: true } : {}) });
         pulled += 1;
       }
       await this.save(es);

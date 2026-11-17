@@ -184,7 +184,8 @@
     "tasks": "Tasks",
     "settings": "Settings",
     "shortcutHintBefore": "Press ",
-    "shortcutHintAfter": " for shortcuts"
+    "shortcutHintAfter": " for shortcuts",
+    "ledger": "Mind ledger"
   },
   "shell": {
     "queuedDelivered": "{{count}} queued action(s) delivered",
@@ -889,5 +890,30 @@
     "diagnosticsTitle": "Diagnostics",
     "diagnosticsHint": "Saves a zip with the setup, launcher and update logs, the version, OS facts and recent task errors for a bug report. API keys, folder paths, user names and e-mail addresses are removed; your documents and notes are not included. Nothing is sent: check the file, then attach it yourself.",
     "diagnosticsExport": "Export diagnostics"
+  },
+  "ledger": {
+    "title": "Mind ledger",
+    "description": "Debts logged on the phone. Recalls come first: a paper says the opposite of what the AI said, and the AI's sentence is marked yellow. Explaining back happens on the phone.",
+    "recall": "Recall",
+    "usedIn": "Used in: {{where}}",
+    "aiSaid": "The AI said",
+    "paperSays": "\"{{paper}}\", p.{{page}}",
+    "accept": "Explain again",
+    "dismiss": "Seen",
+    "reopened": "Reopened with the paper's sentence as the reference; explain it on the phone today.",
+    "dismissed": "Recall put away.",
+    "red": "Couldn't explain",
+    "crashed": "Score collapsed",
+    "kind": {
+      "conclusion": "Conclusion debt",
+      "citation": "Citation debt"
+    },
+    "board": {
+      "study": "Study · {{count}} due",
+      "research": "Research · {{count}} due",
+      "life": "Life · {{count}} due"
+    },
+    "emptyTitle": "Nothing due today",
+    "emptyBody": "Once the phone is paired with this computer, its ledger syncs here."
   }
 }

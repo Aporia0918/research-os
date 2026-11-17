@@ -189,15 +189,47 @@ describe('结论体检崩分记结论债（演示第二段）', () => {
     expect(await book.due('2026-12-02')).toEqual([]);
   });
 
-  it('stays on the phone: never sent to the computer and kept out of the trial quiz', async () => {
+  it('goes to the computer as a 结论债 (on the 科研 board) and stays out of the trial quiz', async () => {
     const book = new Book(memoryKV());
     await book.checkup(crash, D0);
     const sent: string[] = [];
-    const remote: LedgerRemote = { entry: async (b) => { sent.push(b.client_id); return { id: 's' }; }, attempt: async () => ({}), due: async () => [] };
+    const remote: LedgerRemote = { entry: async (b) => { sent.push(`${b.board}:${b.kind}`); return { id: 's' }; }, attempt: async () => ({}), due: async () => [] };
     await book.sync(remote, D0);
-    expect(sent).toEqual([]);
+    expect(sent).toEqual(['科研:conclusion']);
     await book.startTrial(D0);
     expect(await book.quizDue(D0, true)).toEqual([]);
   });
 });
 
+
+describe('电脑端认得标红、用在哪里、这个不用了和召回单', () => {
+  it('sends each change once after the entry, and a recall once', async () => {
+    const book = new Book(memoryKV());
+    const e = await book.add({ clientId: 'k1', board: '科研', question: '午睡和记忆', answer: '午睡会提高记忆。', helpLevel: 'answer', usedIn: '第二章' }, D0);
+    const calls: string[] = [];
+    const remote: LedgerRemote = {
+      entry: async (b) => { calls.push(`entry:${b.board}:${b.used_in}`); return { id: 'srv' }; }, attempt: async () => ({}), due: async () => [],
+      mark: async (id, m) => { calls.push(`mark:${id}:${m.red}:${m.used_in}:${m.dropped_on}`); },
+      recall: async (id, r) => { calls.push(`recall:${id}:${r.page}`); },
+    };
+    await book.sync(remote, D0);
+    expect(calls).toEqual(['entry:科研:第二章', 'mark:srv:false:第二章:null']);
+    await book.sync(remote, D0);
+    expect(calls).toHaveLength(2); // nothing changed, nothing sent
+    await book.drop(e.id, '2026-12-02');
+    const paper = { name: '论文乙', pages: ['在 80 名受试者中，午睡会降低记忆。'] };
+    await book.recallScan(paper, '2026-12-02');
+    await book.sync(remote, '2026-12-02');
+    expect(calls.slice(2)).toEqual(['mark:srv:false:第二章:2026-12-02', 'recall:srv:1']);
+    await book.sync(remote, '2026-12-02');
+    expect(calls).toHaveLength(4);
+  });
+  it('a debt borrowed on the computer comes with its board, kind and red mark', async () => {
+    const book = new Book(memoryKV());
+    const remote: LedgerRemote = { entry: async () => ({ id: 'x' }), attempt: async () => ({}), due: async () => [{ id: 's1', client_id: 'c1', topic: '综述',
+      question: 'AI 给的引用', answer: '', own_idea: '', help_level: 'answer', due_on: D0, created_on: D0, board: '科研', kind: 'citation', red: true, used_in: '第一章' }] };
+    await book.sync(remote, D0);
+    const [got] = await book.all();
+    expect(got).toMatchObject({ board: '科研', kind: 'citation', red: true, usedIn: '第一章', weight: 'heavy', fromComputer: true });
+  });
+});

@@ -47,7 +47,8 @@ async function remote(): Promise<LedgerRemote | null> {
   const s = await loadComputerSettings(preferencesKV);
   if (!s.enabled) return null;
   const c = new ResearchOsClient(s.url, undefined, 5000);
-  return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue() };
+  return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue(),
+    mark: (id, m) => c.ledgerMark(id, m), recall: (id, r) => c.ledgerRecall(id, r) };
 }
 
 export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => void; intent?: LedgerIntent | null }) {

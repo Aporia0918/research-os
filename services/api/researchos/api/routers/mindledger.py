@@ -24,7 +24,27 @@ class EntryIn(BaseModel):
     own_idea: str = TEXT
     topic: str = Field(default="", max_length=80)
     source: str = "app"
+    board: str = "学习"
+    kind: str | None = None
+    used_in: str = Field(default="", max_length=200)
     exam: date | None = None
+
+
+class MarkIn(BaseModel):
+    red: bool | None = None
+    used_in: str | None = Field(default=None, max_length=200)
+    dropped_on: date | None = None
+
+
+class RecallIn(BaseModel):
+    claim: str = Field(min_length=1, max_length=store.MAX_TEXT)
+    paper: str = Field(min_length=1, max_length=300)
+    page: int = Field(ge=1)
+    quote: str = Field(min_length=1, max_length=store.MAX_TEXT)
+
+
+class SettleIn(BaseModel):
+    state: str
 
 
 class AttemptIn(BaseModel):
@@ -48,8 +68,35 @@ def create_entry(data: EntryIn, request: Request, p: Principal = Depends(princip
 
 
 @router.get("/due")
-def due(p: Principal = Depends(principal), conn: sqlite3.Connection = Depends(db)) -> list[dict[str, Any]]:
-    return store.due(conn, p.user_id, date.today())
+def due(board: str | None = Query(None, max_length=4), p: Principal = Depends(principal),
+        conn: sqlite3.Connection = Depends(db)) -> list[dict[str, Any]]:
+    return store.due(conn, p.user_id, date.today(), board)
+
+
+@router.patch("/entries/{entry_id}")
+def mark(entry_id: str, data: MarkIn, p: Principal = Depends(principal),
+         conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    """讲不出来 / 用在哪里 / 这个不用了, sent by the phone after the entry. Sending the same again is harmless."""
+    return store.mark(conn, p.user_id, p.actor, entry_id, red=data.red, used_in=data.used_in,
+                      dropped_on=data.dropped_on)
+
+
+@router.post("/entries/{entry_id}/recalls", status_code=201)
+def add_recall(entry_id: str, data: RecallIn, p: Principal = Depends(principal),
+               conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    return store.add_recall(conn, p.user_id, p.actor, entry_id, **data.model_dump())
+
+
+@router.get("/recalls")
+def recalls(p: Principal = Depends(principal), conn: sqlite3.Connection = Depends(db)) -> list[dict[str, Any]]:
+    """Open 召回单, newest first, with the answer they came from and where the user used it."""
+    return store.recalls(conn, p.user_id)
+
+
+@router.post("/recalls/{recall_id}")
+def settle_recall(recall_id: str, data: SettleIn, p: Principal = Depends(principal),
+                  conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    return store.settle_recall(conn, p.user_id, p.actor, recall_id, data.state, date.today())
 
 
 @router.post("/entries/{entry_id}/attempts")

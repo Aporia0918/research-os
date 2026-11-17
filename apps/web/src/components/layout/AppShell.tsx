@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { replayPending } from "@/api/replay";
 import { BookOpen, ChartScatter, FileSearch, FlaskConical, FolderKanban, ListTodo, MessageSquareQuote, Moon, Settings, Sun, Wifi,
-  WifiOff } from "lucide-react";
+  WifiOff, BookCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ParseKeys } from "i18next";
 import { api } from "@/api/client";
@@ -24,6 +24,7 @@ const NAV: { to: string; label: ParseKeys; icon: ReactNode; key: string }[] = [
   { to: "/experiments", label: "nav.experiments", icon: <FlaskConical />, key: "" },
   { to: "/literature", label: "nav.literature", icon: <FileSearch />, key: "" },
   { to: "/studies", label: "nav.studies", icon: <ChartScatter />, key: "" },
+  { to: "/ledger", label: "nav.ledger", icon: <BookCheck />, key: "" },
   { to: "/tasks", label: "nav.tasks", icon: <ListTodo />, key: "t" },
   { to: "/settings", label: "nav.settings", icon: <Settings />, key: "s" },
 ];

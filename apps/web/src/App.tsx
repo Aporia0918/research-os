@@ -22,6 +22,7 @@ const ExperimentPlanPage = lazy(() => import("@/pages/ExperimentPlan").then((m) 
 const ExperimentRunPage = lazy(() => import("@/pages/ExperimentRun").then((m) => ({ default: m.ExperimentRunPage })));
 const StudiesPage = lazy(() => import("@/pages/Studies").then((m) => ({ default: m.StudiesPage })));
 const StudyDetailPage = lazy(() => import("@/pages/StudyDetail").then((m) => ({ default: m.StudyDetailPage })));
+const MindLedgerPage = lazy(() => import("@/pages/MindLedger").then((m) => ({ default: m.MindLedgerPage })));
 function NotFound() {
   const { t } = useTranslation();
   return <EmptyState title={t("app.notFoundTitle")} body={t("app.notFoundBody")} />;
@@ -45,6 +46,7 @@ const router = createHashRouter([
       { path: "experiments/:planId/:revision", element: page(<ExperimentPlanPage />) },
       { path: "studies", element: page(<StudiesPage />) },
       { path: "studies/:studyId", element: page(<StudyDetailPage />) },
+      { path: "ledger", element: page(<MindLedgerPage />) },
       { path: "tasks", element: page(<TasksPage />) },
       { path: "settings", element: page(<SettingsPage />) },
       { path: "pair", element: <Navigate to="/projects" replace /> },

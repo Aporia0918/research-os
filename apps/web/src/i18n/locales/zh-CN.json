@@ -184,7 +184,8 @@
     "tasks": "任务",
     "settings": "设置",
     "shortcutHintBefore": "按 ",
-    "shortcutHintAfter": " 查看快捷键"
+    "shortcutHintAfter": " 查看快捷键",
+    "ledger": "思维账本"
   },
   "shell": {
     "queuedDelivered": "已送达 {{count}} 个排队操作",
@@ -889,5 +890,30 @@
     "diagnosticsTitle": "诊断信息",
     "diagnosticsHint": "保存一个 zip，包含安装、启动和更新日志、版本、系统信息和最近的任务错误，用于提交问题报告。API 密钥、文件夹路径、用户名和邮箱地址已移除；不包含你的文档和笔记。不会自动发送：请检查文件后自行附上。",
     "diagnosticsExport": "导出诊断信息"
+  },
+  "ledger": {
+    "title": "思维账本",
+    "description": "手机上记的账。召回单在最上面：论文原话和 AI 说的相反，黄色标出的是 AI 那句。讲给我听在手机上做。",
+    "recall": "召回单",
+    "usedIn": "用在：{{where}}",
+    "aiSaid": "AI 当时说",
+    "paperSays": "《{{paper}}》第 {{page}} 页原文",
+    "accept": "重新讲一遍",
+    "dismiss": "已看过",
+    "reopened": "这笔重新打开了，参考答案换成了论文原话，手机上今天再讲一遍。",
+    "dismissed": "召回单收起了。",
+    "red": "讲不出来",
+    "crashed": "崩分",
+    "kind": {
+      "conclusion": "结论债",
+      "citation": "引用债"
+    },
+    "board": {
+      "study": "学习 · {{count}} 笔到期",
+      "research": "科研 · {{count}} 笔到期",
+      "life": "生活 · {{count}} 笔到期"
+    },
+    "emptyTitle": "今天没有到期的账",
+    "emptyBody": "手机连上这台电脑后，记的账会同步过来。"
   }
 }

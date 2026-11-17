@@ -2048,6 +2048,188 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/null-world/detect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Detect Columns */
+        post: operations["detect_columns_api_v1_null_world_detect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leak-audit/script": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Audit Script
+         * @description Red / yellow / green per rule (R1-R5) with line numbers and a one-sentence fix. Read-only.
+         */
+        post: operations["audit_script_api_v1_leak_audit_script_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Entry */
+        post: operations["create_entry_api_v1_mind_ledger_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Due */
+        get: operations["due_api_v1_mind_ledger_due_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Mark
+         * @description 讲不出来 / 用在哪里 / 这个不用了, sent by the phone after the entry. Sending the same again is harmless.
+         */
+        patch: operations["mark_api_v1_mind_ledger_entries__entry_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/entries/{entry_id}/recalls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Recall */
+        post: operations["add_recall_api_v1_mind_ledger_entries__entry_id__recalls_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/recalls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recalls
+         * @description Open 召回单, newest first, with the answer they came from and where the user used it.
+         */
+        get: operations["recalls_api_v1_mind_ledger_recalls_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/recalls/{recall_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Settle Recall */
+        post: operations["settle_recall_api_v1_mind_ledger_recalls__recall_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/entries/{entry_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Repay
+         * @description Grade first (a model call must not sit inside the write transaction), then record append-only.
+         */
+        post: operations["repay_api_v1_mind_ledger_entries__entry_id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_api_v1_mind_ledger_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/research/deep": {
         parameters: {
             query?: never;
@@ -2477,6 +2659,376 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mobile/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Logs */
+        get: operations["list_logs_api_v1_mobile_logs_get"];
+        put?: never;
+        /**
+         * Create Log
+         * @description Idempotent twice over: the Idempotency-Key replays a response, and (user, client_id) dedupes offline retries.
+         */
+        post: operations["create_log_api_v1_mobile_logs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare
+         * @description Method-step mismatches between a log entry and a paper, each citing a page via validated Evidence.
+         */
+        post: operations["compare_api_v1_mobile_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Plan
+         * @description Draft a pre-experiment plan (variables / controls / materials) from the paper's method text; every item cites
+         *     a page. Candidates come only from Methods-like sections found by heading; when none is found the plan has
+         *     status method_section_not_found and no items. The plan stays a draft until the user confirms it.
+         */
+        post: operations["create_plan_api_v1_mobile_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Plan */
+        get: operations["get_plan_api_v1_mobile_plans__plan_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans/{plan_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edit Plan
+         * @description Replace the items of a DRAFT plan (409 once confirmed).
+         */
+        put: operations["edit_plan_api_v1_mobile_plans__plan_id__items_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans/{plan_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Plan
+         * @description The user's explicit confirmation; recorded with a timestamp. Nothing in the plan counts before this.
+         */
+        post: operations["confirm_plan_api_v1_mobile_plans__plan_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans/{plan_id}/items/{item_id}/approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide Plan Action
+         * @description Approve or reject one key action (model call / data out / share) of a DRAFT plan; records time and device.
+         *     Only the approval gate: nothing is run or sent here.
+         */
+        post: operations["decide_plan_action_api_v1_mobile_plans__plan_id__items__item_id__approval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/plans/{plan_id}/items/{item_id}/number": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide Plan Number
+         * @description Numbers-and-citation gate: confirm_match / reject_match one item whose numbers are not on its cited page
+         *     (or that has no citation). 409 citation_gate_open on plan confirm while any is open.
+         */
+        post: operations["decide_plan_number_api_v1_mobile_plans__plan_id__items__item_id__number_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Questions
+         * @description Research guidance: 3-5 counter-questions on the user's idea, each citing a method sentence and its page. Rules
+         *     unless use_model and a model is configured. No method section -> status method_section_not_found, no items.
+         */
+        post: operations["create_questions_api_v1_mobile_guidance_questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/citation-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Citation Check
+         * @description Writing guidance: each sentence of the text is a claim about the paper. Verdict exact_match ("找到原句", with
+         *     an anchored citation), near_match ("找到相近原文(需你确认)": candidate page + text, needs_confirmation; the
+         *     guidance cannot be confirmed (409 guidance_match_unconfirmed) until each is confirm_match / reject_match), or
+         *     cannot_check ("无法核对": rule mode cannot read paraphrases; NOT a finding that the claim is unsupported).
+         *     Rules only (word overlap); never a guess.
+         */
+        post: operations["create_citation_check_api_v1_mobile_guidance_citation_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/methods-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Methods Check
+         * @description Writing guidance: compare the user's methods paragraph with a CONFIRMED plan (409 plan_not_confirmed
+         *     otherwise); plan items not found in the text are listed as missing, first.
+         */
+        post: operations["create_methods_check_api_v1_mobile_guidance_methods_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/predict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Predict
+         * @description Prediction and adjustment suggestions from a CONFIRMED plan (409 plan_not_confirmed otherwise) and experiment
+         *     log entries. Deterministic; every suggestion cites a paper page. A reference for the user, who decides
+         *     (adopt / ignore, then confirm; 409 after confirm).
+         */
+        post: operations["create_predict_api_v1_mobile_guidance_predict_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/{guidance_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Guidance */
+        get: operations["get_guidance_api_v1_mobile_guidance__guidance_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/{guidance_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Decide Guidance
+         * @description Adopt / ignore / edit a question, or mark a check result handled / not_applicable
+         *     (a near_match also confirm_match / reject_match), while draft (409 after).
+         */
+        put: operations["decide_guidance_api_v1_mobile_guidance__guidance_id__decisions_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/guidance/{guidance_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Guidance
+         * @description The user's explicit confirmation, with a timestamp; after it nothing can change (409).
+         *     409 guidance_match_unconfirmed while a citation-check near_match has no confirm_match / reject_match.
+         */
+        post: operations["confirm_guidance_api_v1_mobile_guidance__guidance_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/hypotheses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Hypotheses */
+        get: operations["list_hypotheses_api_v1_mobile_hypotheses_get"];
+        put?: never;
+        /**
+         * Create Hypothesis
+         * @description A hypothesis on items of a CONFIRMED plan (409 plan_not_confirmed otherwise); status starts as pending.
+         */
+        post: operations["create_hypothesis_api_v1_mobile_hypotheses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/hypotheses/{hypothesis_id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare Hypothesis
+         * @description Paper value with page next to the log value (or 日志未记录 / 无论文依据). Side by side only.
+         */
+        post: operations["compare_hypothesis_api_v1_mobile_hypotheses__hypothesis_id__compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mobile/hypotheses/{hypothesis_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Hypothesis Status
+         * @description The user's choice: pending / supported / refuted / insufficient (422 otherwise), kept with history.
+         */
+        post: operations["set_hypothesis_status_api_v1_mobile_hypotheses__hypothesis_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2553,6 +3105,18 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** AttemptIn */
+        AttemptIn: {
+            /** Text */
+            text: string;
+            /**
+             * Use Model
+             * @default true
+             */
+            use_model: boolean;
+            /** Exam */
+            exam?: string | null;
+        };
         /** AuthState */
         AuthState: {
             /** Initialized */
@@ -2570,6 +3134,27 @@ export interface components {
              * @default false
              */
             is_host: boolean;
+        };
+        /** Body_create_log_api_v1_mobile_logs_post */
+        Body_create_log_api_v1_mobile_logs_post: {
+            /** Client Id */
+            client_id: string;
+            /**
+             * Kind
+             * @default text
+             */
+            kind: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /** Captured At */
+            captured_at?: string | null;
+            /** Duration Ms */
+            duration_ms?: number | null;
+            /** File */
+            file?: string | null;
         };
         /** Body_import_file_api_v1_literature_files__importer__post */
         Body_import_file_api_v1_literature_files__importer__post: {
@@ -2676,6 +3261,11 @@ export interface components {
              */
             language: "en" | "zh-CN";
         };
+        /** DetectIn */
+        DetectIn: {
+            /** Data */
+            data: string;
+        };
         /** DeviceOut */
         DeviceOut: {
             /** Id */
@@ -2735,6 +3325,49 @@ export interface components {
         EnableIn: {
             /** Enabled */
             enabled: boolean;
+        };
+        /** EntryIn */
+        EntryIn: {
+            /** Client Id */
+            client_id: string;
+            /** Question */
+            question: string;
+            /** Help Level */
+            help_level: string;
+            /**
+             * Answer
+             * @default
+             */
+            answer: string;
+            /**
+             * Own Idea
+             * @default
+             */
+            own_idea: string;
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Source
+             * @default app
+             */
+            source: string;
+            /**
+             * Board
+             * @default 学习
+             */
+            board: string;
+            /** Kind */
+            kind?: string | null;
+            /**
+             * Used In
+             * @default
+             */
+            used_in: string;
+            /** Exam */
+            exam?: string | null;
         };
         /** Event */
         Event: {
@@ -2954,6 +3587,15 @@ export interface components {
              */
             device_name: string;
         };
+        /** MarkIn */
+        MarkIn: {
+            /** Red */
+            red?: boolean | null;
+            /** Used In */
+            used_in?: string | null;
+            /** Dropped On */
+            dropped_on?: string | null;
+        };
         /** MirrorIn */
         MirrorIn: {
             /**
@@ -2961,6 +3603,120 @@ export interface components {
              * @default
              */
             mirror_prefix: string;
+        };
+        /** MobileCitationCheckIn */
+        MobileCitationCheckIn: {
+            /** Version Id */
+            version_id: string;
+            /** Text */
+            text: string;
+        };
+        /** MobileCompareIn */
+        MobileCompareIn: {
+            /** Log Id */
+            log_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Use Model
+             * @default false
+             */
+            use_model: boolean;
+        };
+        /** MobileGuidanceDecisionIn */
+        MobileGuidanceDecisionIn: {
+            /** Id */
+            id: string;
+            /** Decision */
+            decision?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** MobileGuidanceDecisionsIn */
+        MobileGuidanceDecisionsIn: {
+            /** Decisions */
+            decisions: components["schemas"]["MobileGuidanceDecisionIn"][];
+        };
+        /** MobileHypothesisCompareIn */
+        MobileHypothesisCompareIn: {
+            /** Log Ids */
+            log_ids: string[];
+        };
+        /** MobileHypothesisIn */
+        MobileHypothesisIn: {
+            /** Plan Id */
+            plan_id: string;
+            /** Text */
+            text: string;
+            /** Plan Item Ids */
+            plan_item_ids: string[];
+        };
+        /** MobileHypothesisStatusIn */
+        MobileHypothesisStatusIn: {
+            /** Status */
+            status: string;
+        };
+        /** MobileMethodsCheckIn */
+        MobileMethodsCheckIn: {
+            /** Plan Id */
+            plan_id: string;
+            /** Text */
+            text: string;
+        };
+        /** MobilePlanActionIn */
+        MobilePlanActionIn: {
+            /** Decision */
+            decision: string;
+        };
+        /** MobilePlanEditIn */
+        MobilePlanEditIn: {
+            /** Items */
+            items: components["schemas"]["MobilePlanItemIn"][];
+        };
+        /** MobilePlanIn */
+        MobilePlanIn: {
+            /** Version Id */
+            version_id: string;
+            /**
+             * Use Model
+             * @default false
+             */
+            use_model: boolean;
+        };
+        /** MobilePlanItemIn */
+        MobilePlanItemIn: {
+            /** Id */
+            id?: string | null;
+            /** Category */
+            category: string;
+            /** Text */
+            text: string;
+            /** Key Action */
+            key_action?: string | null;
+        };
+        /** MobilePlanNumberIn */
+        MobilePlanNumberIn: {
+            /** Decision */
+            decision: string;
+        };
+        /** MobilePredictIn */
+        MobilePredictIn: {
+            /** Plan Id */
+            plan_id: string;
+            /** Log Ids */
+            log_ids: string[];
+        };
+        /** MobileQuestionsIn */
+        MobileQuestionsIn: {
+            /** Version Id */
+            version_id: string;
+            /** Idea */
+            idea: string;
+            /**
+             * Use Model
+             * @default false
+             */
+            use_model: boolean;
         };
         /** Note */
         Note: {
@@ -3239,6 +3995,17 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RecallIn */
+        RecallIn: {
+            /** Claim */
+            claim: string;
+            /** Paper */
+            paper: string;
+            /** Page */
+            page: number;
+            /** Quote */
+            quote: string;
+        };
         /** RetractionIn */
         RetractionIn: {
             /** Work Ids */
@@ -3298,6 +4065,31 @@ export interface components {
              */
             control?: string | null;
         };
+        /** ScriptIn */
+        ScriptIn: {
+            /**
+             * Source
+             * @description script text (or notebook JSON)
+             */
+            source?: string | null;
+            /**
+             * Path
+             * @description a .py / .ipynb inside a read root
+             */
+            path?: string | null;
+            /**
+             * Filename
+             * @default script.py
+             */
+            filename: string;
+            /**
+             * Notebook
+             * @default false
+             */
+            notebook: boolean;
+            /** Subject Columns */
+            subject_columns?: string[];
+        };
         /** SelectionIn */
         SelectionIn: {
             /** Candidate Ids */
@@ -3316,6 +4108,11 @@ export interface components {
             values?: {
                 [key: string]: unknown;
             };
+        };
+        /** SettleIn */
+        SettleIn: {
+            /** State */
+            state: string;
         };
         /** SetupIn */
         SetupIn: {
@@ -7750,6 +8547,348 @@ export interface operations {
             };
         };
     };
+    detect_columns_api_v1_null_world_detect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DetectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_script_api_v1_leak_audit_script_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScriptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_entry_api_v1_mind_ledger_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    due_api_v1_mind_ledger_due_get: {
+        parameters: {
+            query?: {
+                board?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_api_v1_mind_ledger_entries__entry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_recall_api_v1_mind_ledger_entries__entry_id__recalls_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecallIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recalls_api_v1_mind_ledger_recalls_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    settle_recall_api_v1_mind_ledger_recalls__recall_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recall_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    repay_api_v1_mind_ledger_entries__entry_id__attempts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_api_v1_mind_ledger_report_get: {
+        parameters: {
+            query: {
+                exam: string;
+                topic?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_api_v1_research_deep_post: {
         parameters: {
             query?: never;
@@ -8644,6 +9783,708 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_logs_api_v1_mobile_logs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_log_api_v1_mobile_logs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_log_api_v1_mobile_logs_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_api_v1_mobile_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_api_v1_mobile_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_api_v1_mobile_plans__plan_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_plan_api_v1_mobile_plans__plan_id__items_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePlanEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_plan_api_v1_mobile_plans__plan_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_plan_action_api_v1_mobile_plans__plan_id__items__item_id__approval_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePlanActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_plan_number_api_v1_mobile_plans__plan_id__items__item_id__number_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePlanNumberIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_questions_api_v1_mobile_guidance_questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileQuestionsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_citation_check_api_v1_mobile_guidance_citation_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileCitationCheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_methods_check_api_v1_mobile_guidance_methods_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileMethodsCheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_predict_api_v1_mobile_guidance_predict_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePredictIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_guidance_api_v1_mobile_guidance__guidance_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                guidance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_guidance_api_v1_mobile_guidance__guidance_id__decisions_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                guidance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileGuidanceDecisionsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_guidance_api_v1_mobile_guidance__guidance_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                guidance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hypotheses_api_v1_mobile_hypotheses_get: {
+        parameters: {
+            query: {
+                plan_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hypothesis_api_v1_mobile_hypotheses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileHypothesisIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_hypothesis_api_v1_mobile_hypotheses__hypothesis_id__compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileHypothesisCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_hypothesis_status_api_v1_mobile_hypotheses__hypothesis_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileHypothesisStatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

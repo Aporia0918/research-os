@@ -33,6 +33,8 @@ export class ResearchOsClient {
     return this.request('POST', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}/attempts`, { text, use_model: false }, { 'Idempotency-Key': idempotencyKey });
   }
   ledgerDue<T>(): Promise<T> { return this.request('GET', '/api/v1/mind-ledger/due'); }
+  ledgerMark(entryId: string, m: Record<string, unknown>): Promise<unknown> { return this.request('PATCH', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}`, m); }
+  ledgerRecall(entryId: string, r: Record<string, unknown>): Promise<unknown> { return this.request('POST', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}/recalls`, r); }
   listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
   // 零世界考试: the computer runs the exam as a task that waits for the owner's approval of its exact payload.
   detectColumns(data: string): Promise<Detected> { return this.request('POST', '/api/v1/null-world/detect', { data }); }
