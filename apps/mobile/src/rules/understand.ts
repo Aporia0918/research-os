@@ -37,11 +37,11 @@ export function points(answer: string, allowed: number[]): Point[] {
   return [a, b, { pages: rest.flatMap((g) => g.pages), text: rest.map((g) => g.text).join('') }];
 }
 
-/** Same paper, same question, same pages → same clientId, so asking twice never books twice. */
-function clientId(...parts: string[]): string {
+/** Same inputs → same clientId, so asking twice never books twice. */
+export function stableId(prefix: string, ...parts: string[]): string {
   let h = 5381;
   for (const c of parts.join('|')) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0;
-  return `ask-${h.toString(36)}`;
+  return `${prefix}-${h.toString(36)}`;
 }
 
 export interface Asked { question: string; answer: string; pages: number[]; paper: { name: string; versionId: string }; ai?: string }
@@ -51,7 +51,7 @@ export function askDebts(a: Asked): NewEntry[] {
   const q = a.question.trim();
   if (!q) return [];
   return points(a.answer, a.pages).map((p) => ({
-    clientId: clientId(a.paper.versionId, q, p.pages.join(',')),
+    clientId: stableId('ask', a.paper.versionId, q, p.pages.join(',')),
     board: '科研',
     topic: a.paper.name,
     question: `${q}（第 ${p.pages.join('、')} 页）`,

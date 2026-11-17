@@ -4,6 +4,7 @@
 import { chat, type ChatMessage, type FetchLike } from '../model/direct';
 import { forJob, type ModelSettings } from '../model/settings';
 import type { NewEntry } from '../ledger/ledger';
+import { stableId } from '../rules/understand';
 
 export type PhotoBoard = '学习' | '科研';
 const SYSTEM = '只根据照片里这一页的内容回答，用中文，三到六句。照片里没有的就说没找到，不要编。看不清就直说看不清。';
@@ -22,18 +23,12 @@ export async function askPhoto(question: string, dataUrl: string, s: ModelSettin
   return chat(forJob(s, 'photo'), key, photoMessages(question, dataUrl), f);
 }
 
-function clientId(...parts: string[]): string {
-  let h = 5381;
-  for (const c of parts.join('|')) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0;
-  return `photo-${h.toString(36)}`;
-}
-
 /** The one 理解债 a photo answer books, or none when the model could not read the page. Same photo and question: same id. */
 export function photoDebt(a: { question: string; answer: string; board: PhotoBoard; photoId: string; ai?: string }): NewEntry | null {
   const q = a.question.trim(), text = a.answer.trim();
   if (!q || !text || NOTHING.test(text.slice(0, 40))) return null;
   return {
-    clientId: clientId(a.photoId, q), board: a.board, topic: '拍的一页', question: `${q}（拍的一页）`, answer: text,
+    clientId: stableId('photo', a.photoId, q), board: a.board, topic: '拍的一页', question: `${q}（拍的一页）`, answer: text,
     helpLevel: 'answer', ...(a.ai?.trim() ? { ai: a.ai.trim() } : {}),
   };
 }
