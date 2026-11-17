@@ -29,7 +29,7 @@ describe('思维账本 on the phone, no key', () => {
     expect(await book.add({ clientId: 'c1', board: '学习', question: '重复', helpLevel: 'hint' }, D0)).toEqual(e);
     await book.add({ clientId: 'c2', board: '学习', question: '链式法则', helpLevel: 'own', ownIdea: '外导乘内导' }, D0);
     const r1 = await book.repay(e.id, '导数是函数某点的瞬时变化率，几何上是切线斜率，求导先写差商再取极限', '2026-12-02');
-    expect([r1.passed, r1.method, r1.nextDue]).toEqual([true, 'deterministic', '2026-12-09']);
+    expect([r1.passed, r1.method, r1.nextDue]).toEqual([true, 'deterministic', '2026-12-10']); // FSRS: every point covered = Easy, first interval 8 days
     const rep = await book.report('2026-12-02', '2026-12-06');
     expect([rep.total, rep.counts, rep.independence]).toEqual([2, { own: 1, settled: 0, shaky: 1, untested: 0 }, 0.5]);
     expect(rep.repayBeforeExam.map((i) => [i.id, i.dueOn])).toEqual([[e.id, '2026-12-05']]);

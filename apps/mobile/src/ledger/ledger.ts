@@ -2,6 +2,7 @@
 // (rules.py + the free grader in judge.py + store.py); tests/ledger.test.ts pins parity with the Python grader.
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
+import { ratingOf, review, type Memory } from './memory';
 import { backs, opposing, type Source } from '../rules/recall';
 import { findSpan } from '../rules/text';
 
@@ -140,6 +141,7 @@ export interface Entry {
   ai?: string; // which AI gave the answer, as the user named it
   recalls?: Recall[]; // 知识召回: imported texts that said the opposite of the answer, newest last
   sentMark?: string; // the red / used-in / dropped state the computer last received
+  mem?: Memory; // FSRS memory state after the last repayment; sets the next repayment day
 }
 
 /**
@@ -223,7 +225,7 @@ export class Book {
     return (await this.all()).filter((e) => e.dueOn && e.dueOn <= today).sort(firstToRepay);
   }
 
-  async repay(id: string, attempt: string, today: string, exam?: string, ask?: Ask): Promise<Grade & { nextDue: string | null }> {
+  async repay(id: string, attempt: string, today: string, exam?: string, ask?: Ask): Promise<Grade & { nextDue: string | null; mem: Memory }> {
     const es = await this.all();
     const e = es.find((x) => x.id === id);
     if (!e || !e.weight || !e.dueOn) throw new Error('nothing_to_repay');
@@ -233,11 +235,13 @@ export class Book {
     e.passes += g.passed ? 1 : 0;
     e.red = !g.passed;
     tried(e, today, g.passed);
-    e.dueOn = g.passed ? nextDue(e.weight, e.passes, today, exam) : frontLoad(addDays(today, 1), today, exam);
+    e.mem = review(e.mem, e.createdOn, today, ratingOf(g.passed, g.points.length ? g.hits.length / g.points.length : 0));
+    e.dueOn = !g.passed ? frontLoad(addDays(today, 1), today, exam)
+      : e.passes >= STEPS[e.weight].length ? null : frontLoad(e.mem.due, today, exam);
     await this.save(es);
     await this.queue({ clientId: e.clientId, text: attempt, key: `attempt-${e.clientId}-${e.attempts}` });
     await this.kv.set(DRAFT + id, '');
-    return { ...g, nextDue: e.dueOn };
+    return { ...g, nextDue: e.dueOn, mem: e.mem };
   }
 
   /**
@@ -252,7 +256,7 @@ export class Book {
     const g = attempt.trim() ? await grade(e, attempt, ask) : null;
     if (g?.passed) return g;
     tried(e, today, false);
-    Object.assign(e, { red: true, attempts: e.attempts + 1, dueOn: frontLoad(addDays(today, 1), today, exam) });
+    Object.assign(e, { red: true, attempts: e.attempts + 1, dueOn: frontLoad(addDays(today, 1), today, exam), mem: review(e.mem, e.createdOn, today, ratingOf(false, 0)) });
     await this.save(es);
     return g;
   }

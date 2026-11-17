@@ -236,3 +236,13 @@ input[type=search] { width: 100%; margin-bottom: 12px; }
 .hit-detail p { margin: 0; }
 .ask-box { border-radius: 18px; padding: 12px; background: color-mix(in srgb, var(--c2) 16%, rgb(var(--w) / .5)); }
 .ask-box p { margin: 0 0 8px; }
+
+/* 讲后即时回报: the map of what was just explained */
+.mindmap { width: 100%; max-width: 420px; height: auto; align-self: center; }
+.mm-edge { stroke: color-mix(in srgb, var(--c2) 70%, transparent); stroke-width: 2; }
+.mm-edge.mm-miss { stroke-dasharray: 4 4; stroke: var(--line); }
+.mm-center { fill: var(--deep); }
+.mm-center-text { fill: var(--on-accent); font-size: 13px; font-weight: 700; }
+.mm-node { fill: rgb(var(--w) / .7); stroke: color-mix(in srgb, var(--c2) 60%, transparent); stroke-width: 1.5; }
+.mm-node.mm-miss { fill: transparent; stroke: var(--line); }
+.mm-text { fill: var(--text); font-size: 11.5px; }

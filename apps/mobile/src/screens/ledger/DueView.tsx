@@ -13,6 +13,8 @@ import { readHandwriting } from '../../logic/photoAsk';
 import { preferencesKV } from '../../storage/kv';
 import type { Moment } from '@jelly/mood';
 import { importedPaper, missed, modelAsk, praise, redTag } from './shared';
+import { RecapCard } from './RecapCard';
+import type { Recap } from '../../recap/recap';
 
 interface Props {
   entries: Entry[]; exam?: string; title: string; head?: ReactNode;
@@ -27,6 +29,7 @@ export function DueView({ entries, exam, title, head, done }: Props) {
   const [busy, setBusy] = useState(false);
   const [askedAgain, setAskedAgain] = useState<string | null>(null); // 拿不准 asked once for this entry
   const [walk, setWalk] = useState<{ q: string; points: string[]; i: number } | null>(null);
+  const [recap, setRecap] = useState<{ recap: Recap; nextDue: string | null } | null>(null); // 讲后即时回报
   const after = async (line: string, m: Moment) => { setNote(line); await done(m); };
 
   async function pick(id: string) {
@@ -45,7 +48,7 @@ export function DueView({ entries, exam, title, head, done }: Props) {
       }
       const g = await book.repay(e.id, said, today(), exam, ask);
       setSaid(''); setOpen(null); setAskedAgain(null);
-      if (g.passed) { await after(praise(g), 'paid'); return; }
+      if (g.passed) { setRecap({ recap: { question: e.question, said, points: g.points, hits: g.hits }, nextDue: g.nextDue }); await after(praise(g), 'paid'); return; }
       setWalk({ q: e.question, points: missed(g), i: 0 });
       await after('', 'missed');
     } finally { setBusy(false); }
@@ -88,6 +91,7 @@ export function DueView({ entries, exam, title, head, done }: Props) {
       <h1>{title}</h1>
       {note && <p className="note" role="status">{note}</p>}
       {head}
+      {recap && <RecapCard recap={recap.recap} nextDue={recap.nextDue} onClose={() => setRecap(null)} />}
       {walk && (
         <div className="card" data-testid="walk-through">
           <h2>{tr('这块还有点模糊，我们一起捋一遍？')}</h2>
