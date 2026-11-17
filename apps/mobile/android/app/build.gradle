@@ -17,6 +17,11 @@ android {
         }
     }
     buildTypes {
+        // A test build installs beside the released app instead of over it.
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
