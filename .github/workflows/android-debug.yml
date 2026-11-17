@@ -99,8 +99,8 @@ jobs:
             --arg gh "$gh_url" --arg cdn "${GITHUB_REPOSITORY}@$pin/$apk" \
             --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg short "${GITHUB_SHA::7}" \
             '{versionName:$name, versionCode:$code, minSupportedVersionCode:1, sha256:$sha, size:$size,
-              apk:([["gcore",10],["fastly",20],["cdn",30]] | map({url:("https://" + .[0] + ".jsdelivr.net/gh/" + $cdn), priority:.[1]}))
-                  + [{url:$gh, priority:40}],
+              apk:(([["gcore",10],["fastly",20],["cdn",30]] | map({url:("https://" + .[0] + ".jsdelivr.net/gh/" + $cdn), priority:.[1]}))
+                  + [{url:$gh, priority:40}]),
               releaseNotes:("测试版 " + $name + "（" + $short + "）"), publishedAt:$at, channel:"test"}' > "$out/version.json"
           cp "$out/version.json" "$tb/"; git -C "$tb" add version.json; git -C "$tb" commit -qm "测试版 1.4.$code version.json"
           git -C "$tb" push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" test-builds
