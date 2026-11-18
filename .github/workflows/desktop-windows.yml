@@ -70,7 +70,7 @@ jobs:
         shell: powershell
         run: >-
           Get-Content "$env:RUNNER_TEMP\smoke\ResearchOS\data\logs\launcher.log" -ErrorAction SilentlyContinue |
-          ForEach-Object { $_ -replace '([Ss]etup [Tt]oken:).*', '$1 [redacted]' }
+          ForEach-Object { ($_ -replace "`0", '') -replace '([Ss]etup [Tt]oken:).*', '$1 [redacted]' }
 
       - name: The uploaded folder holds no data from the smoke test
         shell: powershell

@@ -59,9 +59,10 @@ try {
   Assert-Venv
   $url = if ($Phone) { Use-Phone } else { Get-Url }
   if (-not (Test-Up $url)) {
-    if ($Phone) { & (Join-Path $PSScriptRoot 'stop.ps1') *>> $Log }   # one started for this computer only
+    if ($Phone) { & (Join-Path $PSScriptRoot 'stop.ps1') *>&1 | ForEach-Object { Write-Log "$_" } }   # one started for this computer only
     Write-Log "starting server for $url"
-    & (Join-Path $PSScriptRoot 'start.ps1') *>> $Log
+    # through Write-Log, not an append redirect: PowerShell 5.1 appends redirected output as UTF-16 and the log became unreadable
+    & (Join-Path $PSScriptRoot 'start.ps1') *>&1 | ForEach-Object { Write-Log "$_" }
     $deadline = (Get-Date).AddSeconds(90)
     while (-not (Test-Up $url)) {
       if ((Get-Date) -gt $deadline) { throw "the server did not answer at $url within 90 s" }

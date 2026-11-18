@@ -65,3 +65,9 @@ def test_cli_helper_returns_only_the_exit_code() -> None:
     """Found by the first Windows run: `migrate` prints a line, and a function returns its pipeline output too."""
     common = (ROOT / "scripts" / "_common.ps1").read_text(encoding="utf-8")
     assert "@CliArgs | Write-Host; return $LASTEXITCODE" in common
+
+
+def test_launcher_log_is_one_encoding_and_ci_never_shows_the_token() -> None:
+    ps = (ROOT / "scripts" / "launch.ps1").read_text(encoding="utf-8-sig")
+    assert "*>>" not in ps  # PowerShell 5.1 would append UTF-16 into the UTF-8 log
+    assert "\"`0\", ''" in WORKFLOW and "[redacted]" in WORKFLOW
