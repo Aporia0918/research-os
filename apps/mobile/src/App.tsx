@@ -25,6 +25,7 @@ import { onTap } from './remind/native';
 import { refreshReminders } from './remind';
 import { book, today } from './ledger/book';
 import type { LedgerIntent } from './screens/LedgerScreen';
+import { markReady } from './perf/timing';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
@@ -60,6 +61,7 @@ export function App() {
   }
   useEffect(() => { if (tab === 'research') applyBoard('科研'); }, [tab]); // 账本 sets its own board's colours
   useEffect(() => jellyPress(PRESSABLE), []);
+  useEffect(() => { if (profile !== undefined) requestAnimationFrame(() => markReady()); }, [profile]); // first screen painted
   useEffect(() => { const t = setTimeout(() => void autoBackup(), 3000); return () => clearTimeout(t); }, []); // daily private snapshot, after first paint
   const [researchStart, setResearchStart] = useState<'exam' | null>(null);
   /** From the ledger home straight into 提问 or 科研 → 零世界. */

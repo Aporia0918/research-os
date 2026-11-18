@@ -31,14 +31,19 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
-      - run: npm ci
+      - name: Install (ripgrep is used by the network allowlist scan)
+        run: |
+          sudo apt-get install -y -q ripgrep >/dev/null
+          npm ci
       - name: TypeScript
         run: npx tsc --noEmit -p .
       - name: ESLint
         run: npx eslint src tests
       - name: No untranslated or English-only UI text
         run: node scripts/zh-scan.mjs
-      - name: Unit and judgement tests (vitest)
+      - name: Unit and judgement tests (vitest), with the logic timings written out
+        env:
+          PERF_OUT: perf-logic.json
         run: npx vitest run --reporter=default --reporter=junit --outputFile.junit=vitest-junit.xml
       - name: Production build
         run: npm run build
@@ -46,7 +51,9 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: mobile-test-report
-          path: apps/mobile/vitest-junit.xml
+          path: |
+            apps/mobile/vitest-junit.xml
+            apps/mobile/perf-logic.json
           if-no-files-found: ignore
 
   backend:

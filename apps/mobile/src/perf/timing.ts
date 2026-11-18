@@ -6,3 +6,14 @@ export async function timed<T>(stage: string, work: () => Promise<T> | T): Promi
   try { return await work(); }
   finally { importStages.push({ stage, ms: Math.round((performance.now() - start) * 10) / 10 }); }
 }
+
+/**
+ * Logs one line the moment the first screen can take input, so a cold-start run can time it from logcat
+ * (.github/workflows/perf-android.yml). Carries a number only, once per launch.
+ */
+let readyLogged = false;
+export function markReady(): void {
+  if (readyLogged) return;
+  readyLogged = true;
+  console.info(`[perf] ready ${Math.round(performance.now())}`);
+}

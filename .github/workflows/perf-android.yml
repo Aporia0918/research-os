@@ -1,0 +1,120 @@
+# Plan 2.5 cold start, measured on an Android emulator in the cloud (not a phone): build the debug APK, boot an
+# x86_64 API 34 emulator with KVM, then launch the app cold 20 times. Two numbers per launch:
+#   activity  `am start -W` TotalTime: process start to the first Android frame
+#   ready     launch to the app's own "[perf] ready" log line, i.e. the first screen painted and able to take input
+# The summary prints the median and P90 of each and the machine it ran on; perf-android.json is uploaded.
+name: perf-android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["integrate/whole-app"]
+    paths: ["apps/mobile/**", ".github/workflows/perf-android.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cold-start:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PKG: dev.paperlab.assistant.debug
+      RUNS: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Build the web app and the debug APK
+        working-directory: apps/mobile
+        run: |
+          set -eu
+          export VITE_VERSION_CODE=$((100 + ${{ github.run_number }}))
+          npm ci && npm run build && npx cap sync android
+          cd android
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          v=$(sed -n 's/.*gradle-\([0-9.]*\)-.*/\1/p' gradle/wrapper/gradle-wrapper.properties)
+          curl -fsSL -o "$RUNNER_TEMP/gradle.zip" "https://services.gradle.org/distributions/gradle-$v-bin.zip"
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/gradle-$v/bin/gradle" --no-daemon assembleDebug
+
+      - name: Boot an emulator (x86_64, API 34, KVM)
+        run: |
+          set -eu
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses >/dev/null || true
+          "$sdk/sdkmanager" "emulator" "platform-tools" "system-images;android-34;google_apis;x86_64" >/dev/null
+          echo no | "$sdk/avdmanager" create avd -n perf -k "system-images;android-34;google_apis;x86_64" -d pixel_6
+          nohup "$ANDROID_HOME/emulator/emulator" -avd perf -no-window -no-audio -no-boot-anim -no-snapshot \
+            -gpu swiftshader_indirect -memory 4096 -cores 4 > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          adb="$ANDROID_HOME/platform-tools/adb"
+          "$adb" wait-for-device
+          for i in $(seq 1 120); do
+            [ "$("$adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break; sleep 5
+          done
+          "$adb" shell settings put global window_animation_scale 0
+          "$adb" shell settings put global transition_animation_scale 0
+          "$adb" shell settings put global animator_duration_scale 0
+          sleep 30  # let the boot-time jobs settle before timing
+
+      - name: Install and time 20 cold starts
+        run: |
+          set -eu
+          adb="$ANDROID_HOME/platform-tools/adb"
+          "$adb" install -r apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          act=$("$adb" shell cmd package resolve-activity --brief "$PKG" | tail -1 | tr -d '\r')
+          # one launch first: the first open after install compiles and writes the WebView cache, which a user sees once
+          "$adb" shell am start -W -n "$act" >/dev/null; sleep 8
+          : > "$RUNNER_TEMP/runs.tsv"
+          for i in $(seq 1 "$RUNS"); do
+            "$adb" shell am force-stop "$PKG"; "$adb" shell sync; sleep 3
+            "$adb" logcat -c
+            total=$("$adb" shell am start -W -n "$act" | sed -n 's/^TotalTime: //p' | tr -d '\r')
+            ready=""
+            for k in $(seq 1 60); do
+              log=$("$adb" logcat -d -v epoch)
+              line=$(echo "$log" | grep -m1 '\[perf\] ready' || true)
+              if [ -n "$line" ]; then  # from the system's START line for this launch to the app's ready line
+                t0=$(echo "$log" | grep -m1 "START u0.*$PKG" | awk '{print $1}')
+                ts=$(echo "$line" | awk '{print $1}'); [ -n "$t0" ] && ready=$(python3 -c "print(round(($ts - $t0) * 1000))"); break
+              fi
+              sleep 0.5
+            done
+            echo "$i	$total	${ready:-NA}" | tee -a "$RUNNER_TEMP/runs.tsv"
+          done
+
+      - name: Summary
+        if: always()
+        run: |
+          python3 - "$RUNNER_TEMP/runs.tsv" <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, statistics, subprocess, sys
+          rows = [l.split('\t') for l in open(sys.argv[1]) if l.strip()]
+          def stat(col):
+              xs = sorted(float(r[col]) for r in rows if r[col].strip() not in ('', 'NA'))
+              if not xs: return None
+              return {"median_ms": statistics.median(xs), "p90_ms": xs[min(len(xs) - 1, round(0.9 * (len(xs) - 1)))], "runs": len(xs)}
+          cpu = next((l.split(':', 1)[1].strip() for l in open('/proc/cpuinfo') if l.startswith('model name')), '?')
+          out = {"where": f"GitHub Actions ubuntu-24.04 ({cpu}), Android emulator x86_64 API 34 google_apis, pixel_6 profile, 4 cores, 4 GB, swiftshader",
+                 "activity": stat(1), "ready": stat(2), "runs": rows}
+          json.dump(out, open('perf-android.json', 'w'), ensure_ascii=False, indent=1)
+          print("## Cold start on the emulator\n")
+          print(f"- where: {out['where']}")
+          print(f"- activity (am start -W TotalTime): {out['activity']}")
+          print(f"- ready (launch to first screen painted): {out['ready']}")
+          PY
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: perf-android
+          path: perf-android.json
+          if-no-files-found: ignore

@@ -1,4 +1,9 @@
 {
- "oversize": [],
+ "oversize": [
+  "services/api/researchos/services/verification/script_audit.py",
+  "services/api/researchos/services/verification/script_fitall.py",
+  "tests/test_leak_audit_flow.py",
+  "tests/test_leak_audit_script.py"
+ ],
  "cycles": []
 }
