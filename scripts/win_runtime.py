@@ -37,9 +37,10 @@ def _run(cmd: list[str], **kw: Any) -> subprocess.CompletedProcess[str]:
 
 def _pip() -> str:
     venv = CACHE / "pipvenv"
-    if not (venv / "bin" / "pip").is_file():
+    pip = venv / ("Scripts/pip.exe" if sys.platform == "win32" else "bin/pip")  # also built on a Windows runner
+    if not pip.is_file():
         _run(["uv", "venv", "-q", "--seed", str(venv)])
-    return str(venv / "bin" / "pip")
+    return str(pip)
 
 
 def python_runtime(dest: Path) -> dict[str, Any]:

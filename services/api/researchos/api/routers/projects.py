@@ -7,9 +7,12 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field
 
+from ...kernel.db import tx
 from ...services import projects as svc_projects
 from ...services.content import docs as svc_docs
+from ...services.identity import pushes
 from ...services.identity.sessions import Principal
+from ...services.mindledger import uses
 from ..deps import cid, db, idempotent, principal, services
 
 router = APIRouter(prefix="/api/v1", tags=["projects"])
@@ -107,11 +110,21 @@ def create_note(project_id: str, data: NoteIn, request: Request, response: Respo
         lambda: (201, svc_docs.create_in_tx(conn, kinds, project_id, "note", data.title, data.body, p.actor,
                                             data.client_operation_id, cid(request))))
     response.status_code = status
+    _found_uses(conn, p, body)
     return body
 
 
 @router.put("/notes/{note_id}", response_model=Note)
 def update_note(note_id: str, data: NoteUpdate, request: Request, p: Principal = Depends(principal),
                 conn: sqlite3.Connection = Depends(db)) -> Any:
-    return svc_docs.update(conn, note_id, title=data.title, body=data.body, base_version=data.base_version,
+    note = svc_docs.update(conn, note_id, title=data.title, body=data.body, base_version=data.base_version,
                            actor=p.actor, client_operation_id=data.client_operation_id, cid=cid(request))
+    _found_uses(conn, p, dict(note))
+    return note
+
+
+def _found_uses(conn: sqlite3.Connection, p: Principal, note: dict[str, Any]) -> None:
+    """用在哪里: debts whose AI answer this note now uses get the note's title, and the phone hears about it."""
+    with tx(conn):
+        for eid in uses.link_doc(conn, p.user_id, p.actor, note):
+            pushes.fan_out(conn, p.user_id, p.device_id, "used", eid, note["title"])

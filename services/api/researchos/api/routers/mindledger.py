@@ -8,8 +8,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 
+from ...kernel.db import tx
+from ...services.identity import pushes
 from ...services.identity.sessions import Principal
-from ...services.mindledger import judge, store
+from ...services.mindledger import judge, store, uses
 from ..deps import cid, db, idempotent, principal, services
 
 router = APIRouter(prefix="/api/v1/mind-ledger", tags=["mind-ledger"])
@@ -60,6 +62,8 @@ def create_entry(data: EntryIn, request: Request, p: Principal = Depends(princip
 
     def run() -> tuple[int, Any]:
         created, out = store.create(conn, p.user_id, p.actor, e, date.today(), data.exam)
+        if created and e.source == "extension":  # 电脑借、手机还: a debt from the browser reaches the phone
+            pushes.fan_out(conn, p.user_id, p.device_id, "entry", out["id"], e.question)
         return 201, {**out, "created": created}
 
     _, body = idempotent(request, conn, "mindledger.entries.create", data.model_dump(mode="json"), run)
@@ -84,19 +88,29 @@ def mark(entry_id: str, data: MarkIn, p: Principal = Depends(principal),
 @router.post("/entries/{entry_id}/recalls", status_code=201)
 def add_recall(entry_id: str, data: RecallIn, p: Principal = Depends(principal),
                conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
-    return store.add_recall(conn, p.user_id, p.actor, entry_id, **data.model_dump())
+    """A 召回单 from the phone; the owner's other devices get it pushed (the same one twice is pushed once)."""
+    with tx(conn):
+        before = conn.total_changes
+        r = store.add_recall(conn, p.user_id, p.actor, entry_id, **data.model_dump())
+        if conn.total_changes > before:
+            pushes.fan_out(conn, p.user_id, p.device_id, "recall", r["id"], data.claim)
+    return r
 
 
 @router.get("/recalls")
 def recalls(p: Principal = Depends(principal), conn: sqlite3.Connection = Depends(db)) -> list[dict[str, Any]]:
-    """Open 召回单, newest first, with the answer they came from and where the user used it."""
-    return store.recalls(conn, p.user_id)
+    """Open 召回单, newest first, with the answer they came from, where the user used it, and the paragraphs of the
+    user's notes that use the recalled sentence (affected, marked yellow on the page)."""
+    return [{**r, "affected": uses.affected(conn, r["claim"])} for r in store.recalls(conn, p.user_id)]
 
 
 @router.post("/recalls/{recall_id}")
 def settle_recall(recall_id: str, data: SettleIn, p: Principal = Depends(principal),
                   conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
-    return store.settle_recall(conn, p.user_id, p.actor, recall_id, data.state, date.today())
+    with tx(conn):
+        r = store.settle_recall(conn, p.user_id, p.actor, recall_id, data.state, date.today())
+        pushes.fan_out(conn, p.user_id, p.device_id, "recall_settled", recall_id, r["claim"])
+    return r
 
 
 @router.post("/entries/{entry_id}/attempts")

@@ -203,7 +203,13 @@
     "brand": "思维账本",
     "boardStudy": "学习",
     "boardResearch": "科研",
-    "board": "板块"
+    "board": "板块",
+    "push": {
+      "recall": "手机发来一张召回单：{{text}}",
+      "recall_settled": "召回单已在别的设备上处理：{{text}}",
+      "entry": "浏览器里记了一笔：{{text}}",
+      "used": "笔记《{{text}}》用到了一笔账上的 AI 回答，已记到「用在哪里」"
+    }
   },
   "shortcuts": {
     "title": "键盘快捷键",
@@ -952,6 +958,9 @@
       "nothingBefore": "那天之前没有要还的了。",
       "later_one": "另有 {{count}} 笔到那天之后才到期。",
       "later_other": "另有 {{count}} 笔到那天之后才到期。"
-    }
+    },
+    "affected_one": "你的笔记里用到这句的段落（{{count}} 段，黄色是你写的那句）",
+    "affected_other": "你的笔记里用到这句的段落（{{count}} 段，黄色是你写的那句）",
+    "untitled": "无题笔记"
   }
 }

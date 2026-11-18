@@ -2,9 +2,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { tr } from '../i18n';
 import { ApiError, ResearchOsClient, describeError } from '../api/computer';
+import { computerClient } from '../api/session';
 import { newId } from '../local/store';
 import { auditHeadline, describeFinding, type AuditReport } from '../logic/audit';
-import { loadComputerSettings } from '../settings';
 import { preferencesKV } from '../storage/kv';
 import {
   EXAM_KIND, POWER_KIND, RUN_CHOICES, analysisKey, debtLine, describePower, describeVerdict, examPayload, fmtScore, phase,
@@ -31,7 +31,7 @@ export function ExamScreen() {
   const booked = useRef(new Set<string>()); // tasks already entered in the ledger, so a re-render never books twice
 
   useEffect(() => {
-    void loadComputerSettings(preferencesKV).then(s => setClient(s.enabled ? new ResearchOsClient(s.url, undefined, 5000) : null));
+    void computerClient(preferencesKV).then(setClient);
     void preferencesKV.get(PATHS_KEY).then(v => { if (v) { const p = JSON.parse(v) as { script: string; data: string }; setScript(p.script); setData(p.data); } });
   }, []);
 

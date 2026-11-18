@@ -1711,3 +1711,35 @@ Format: id — decision — reason — consequence. Changing a frozen core contr
   (median about 0.33), so 0.4 sends roughly the top third to the user and the rest to cannot_check. It was not
   fitted to that set's answers. The reverse-number rule was prompted by that one false claim. Tests:
   `tests/test_mobile_guidance.py`.
+- **ADR-275: the phone keeps its pairing as a bearer token.** `POST /auth/pair` with `want_token: true` (the
+  Android app) returns the session token in the body and sets no cookie; the app keeps it in Keystore-backed
+  secure storage and sends `Authorization: Bearer` on every call (`deps._token` already accepted it). Reason: the
+  native HTTP layer's cookie jar was not shown to survive an app restart. Browsers that pair without the flag still
+  get the httpOnly cookie and no token. Same session row, same 14-day lifetime and 3-day idle timeout; revoking the
+  device on the computer ends it (401, the phone must pair again). Cloud-tested by restarting the server with a new
+  client (`tests/test_desktop_sync.py`, `apps/mobile/tests/pairing.sync.test.ts`); NOT verified on a real phone.
+- **ADR-276: pushes to the owner's other devices are an inbox, polled.** Migration 0026 `device_pushes`: a new
+  召回单 (`recall`), a settled one (`recall_settled`), an entry from the browser extension (`entry`) and a found
+  用在哪里 (`used`) fan out to every non-revoked device of the user except the one it came from, once (a replayed
+  write adds nothing). `GET /api/v1/pushes` lists the calling device's unseen rows, `POST /pushes/seen` marks only
+  the caller's. The phone reads them when the ledger syncs and applies `used` (fills an empty 用在哪里) and
+  `recall_settled` (settles the same open recall); the web app polls every 60 s and shows a toast. No FCM/APNs: a
+  phone with the app closed hears nothing until it opens the ledger. Tests: `tests/test_desktop_sync.py`.
+- **ADR-277: 用在哪里 and the 标黄 paragraphs come from sentence similarity on the computer.** Dice coefficient on
+  character bigrams (spaces and punctuation removed), threshold 0.6, sentences of 8+ characters, over the user's
+  notes, manuscripts and reports. When a note is saved, an open entry whose AI answer has a sentence at or above the
+  threshold gets the note's title as 用在哪里 (only if the user left it empty; recorded once in `mind_uses`). A
+  召回单 lists the paragraphs whose best sentence matches its claim, and the web page marks that sentence yellow.
+  The threshold was set on 16 hand-written pairs (8 copied with small edits, 8 on the same subject saying something
+  else), not on real notes; a point rewritten in the student's own words is missed, by design and by test: this
+  finds copying, not understanding. Tests: `tests/test_desktop_sync.py`.
+- **ADR-278: portable Windows folder, built and started on a GitHub Windows runner, shipped as an artifact.**
+  `scripts/build_portable.py` stages the app, the same embedded CPython 3.12 and win_amd64 wheels as the setup .exe
+  (unpacked into `app/python/Lib/site-packages` with `uv pip install --target`), `data/` next to `app/`, and three
+  ASCII launchers: `Start-ResearchOS.bat`, `Start-with-phone.bat` (`launch.ps1 -Phone`: listens on the first private
+  IPv4 address with `allow_insecure_lan`, `public_origins` and `mobile_app_origins` set for that run only, and shows
+  the address to type on the phone) and `Stop-ResearchOS.bat`. `.github/workflows/desktop-windows.yml` starts a copy
+  headless with both launchers, checks health and the data folder, and uploads the untouched folder as the artifact
+  `ResearchOS-Windows` (30 days). No tag, no fixed download page: that needs the owner's yes. `launch.ps1` now has a
+  UTF-8 BOM, because Windows PowerShell 5.1 reads a BOM-less file as ANSI and garbled the Chinese in its dialogs.
+  NOT run on a real Windows PC. Tests: `tests/test_portable_static.py`.

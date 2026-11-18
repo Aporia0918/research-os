@@ -451,6 +451,7 @@
      "auth"
     ],
     "summary": "Pair",
+    "description": "Redeem a pairing code. Browsers get the session cookie; the phone app asks for the token itself, because a\ncookie in the native HTTP layer's store is not reliably kept across app restarts.",
     "operationId": "pair_api_v1_auth_pair_post",
     "requestBody": {
      "content": {
@@ -468,7 +469,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/AuthState"
+         "$ref": "#/components/schemas/PairOut"
         }
        }
       }
@@ -6039,6 +6040,7 @@
      "mind-ledger"
     ],
     "summary": "Add Recall",
+    "description": "A \u53ec\u56de\u5355 from the phone; the owner's other devices get it pushed (the same one twice is pushed once).",
     "operationId": "add_recall_api_v1_mind_ledger_entries__entry_id__recalls_post",
     "parameters": [
      {
@@ -6093,7 +6095,7 @@
      "mind-ledger"
     ],
     "summary": "Recalls",
-    "description": "Open \u53ec\u56de\u5355, newest first, with the answer they came from and where the user used it.",
+    "description": "Open \u53ec\u56de\u5355, newest first, with the answer they came from, where the user used it, and the paragraphs of the\nuser's notes that use the recalled sentence (affected, marked yellow on the page).",
     "operationId": "recalls_api_v1_mind_ledger_recalls_get",
     "responses": {
      "200": {
@@ -8516,6 +8518,74 @@
      }
     }
    }
+  },
+  "/api/v1/pushes": {
+   "get": {
+    "tags": [
+     "pushes"
+    ],
+    "summary": "Inbox",
+    "operationId": "inbox_api_v1_pushes_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "type": "array",
+         "title": "Response Inbox Api V1 Pushes Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/pushes/seen": {
+   "post": {
+    "tags": [
+     "pushes"
+    ],
+    "summary": "Seen",
+    "description": "Marking the same pushes seen again is harmless; another device's pushes are never touched.",
+    "operationId": "seen_api_v1_pushes_seen_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SeenIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SeenOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -10722,6 +10792,11 @@
       "maxLength": 80,
       "title": "Device Name",
       "default": "iPad"
+     },
+     "want_token": {
+      "type": "boolean",
+      "title": "Want Token",
+      "default": false
      }
     },
     "type": "object",
@@ -10729,6 +10804,67 @@
      "code"
     ],
     "title": "PairIn"
+   },
+   "PairOut": {
+    "properties": {
+     "initialized": {
+      "type": "boolean",
+      "title": "Initialized"
+     },
+     "authenticated": {
+      "type": "boolean",
+      "title": "Authenticated"
+     },
+     "setup_allowed": {
+      "type": "boolean",
+      "title": "Setup Allowed"
+     },
+     "device_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Id"
+     },
+     "device_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Name"
+     },
+     "is_host": {
+      "type": "boolean",
+      "title": "Is Host",
+      "default": false
+     },
+     "token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Token"
+     }
+    },
+    "type": "object",
+    "required": [
+     "initialized",
+     "authenticated",
+     "setup_allowed"
+    ],
+    "title": "PairOut"
    },
    "PairedIn": {
     "properties": {
@@ -11423,6 +11559,36 @@
     },
     "type": "object",
     "title": "ScriptIn"
+   },
+   "SeenIn": {
+    "properties": {
+     "ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 100,
+      "title": "Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "ids"
+    ],
+    "title": "SeenIn"
+   },
+   "SeenOut": {
+    "properties": {
+     "seen": {
+      "type": "integer",
+      "title": "Seen"
+     }
+    },
+    "type": "object",
+    "required": [
+     "seen"
+    ],
+    "title": "SeenOut"
    },
    "SelectionIn": {
     "properties": {

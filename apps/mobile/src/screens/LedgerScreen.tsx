@@ -4,8 +4,7 @@ import { applyBoard, BOARDS } from '@jelly/theme';
 import { useEffect, useState } from 'react';
 import { tr } from '../i18n';
 import { countdown, type Book, type Entry, type HelpLevel, type LedgerRemote } from '../ledger/ledger';
-import { ResearchOsClient } from '../api/computer';
-import { loadComputerSettings } from '../settings';
+import { computerClient } from '../api/session';
 import { book, copyText, today } from '../ledger/book';
 import { newId } from '../local/store';
 import { preferencesKV } from '../storage/kv';
@@ -56,11 +55,10 @@ const openRecall = (e: Entry) => e.recalls!.find((r) => r.state === 'open')!;
 
 /** The paired computer as the book sees it; null when computer features are off. */
 async function remote(): Promise<LedgerRemote | null> {
-  const s = await loadComputerSettings(preferencesKV);
-  if (!s.enabled) return null;
-  const c = new ResearchOsClient(s.url, undefined, 5000);
+  const c = await computerClient(preferencesKV);
+  if (!c) return null;
   return { entry: (b, k) => c.ledgerEntry(b, k), attempt: (id, t, k) => c.ledgerAttempt(id, t, k), due: () => c.ledgerDue(),
-    mark: (id, m) => c.ledgerMark(id, m), recall: (id, r) => c.ledgerRecall(id, r) };
+    mark: (id, m) => c.ledgerMark(id, m), recall: (id, r) => c.ledgerRecall(id, r), pushes: () => c.pushes(), seen: (ids) => c.seenPushes(ids) };
 }
 
 export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => void; intent?: LedgerIntent | null }) {
@@ -126,7 +124,8 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
       if (!r) return;
       const s = await book.sync(r, today());
       if (s.pulled) setNote(tr('电脑上记的 {0} 笔已经到手机上，可以接着还。', s.pulled));
-      if (s.sent || s.pulled) await refresh();
+      else if (s.news) setNote(tr('电脑那边有 {0} 处更新，已经同步到手机。', s.news));
+      if (s.sent || s.pulled || s.news) await refresh();
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on open
   }, []);

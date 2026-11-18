@@ -203,7 +203,13 @@
     "brand": "Mind Ledger",
     "boardStudy": "Study",
     "boardResearch": "Research",
-    "board": "Board"
+    "board": "Board",
+    "push": {
+      "recall": "The phone sent a recall notice: {{text}}",
+      "recall_settled": "A recall notice was handled on another device: {{text}}",
+      "entry": "A debt was booked in the browser: {{text}}",
+      "used": "Your note \"{{text}}\" uses an AI answer from the ledger; it is now under \"used in\""
+    }
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -952,6 +958,9 @@
       "nothingBefore": "Nothing left to repay before that day.",
       "later_one": "{{count}} more falls due after that day.",
       "later_other": "{{count}} more fall due after that day."
-    }
+    },
+    "affected_one": "{{count}} paragraph of your notes uses this sentence (your sentence in yellow)",
+    "affected_other": "{{count}} paragraphs of your notes use this sentence (your sentence in yellow)",
+    "untitled": "Untitled note"
   }
 }

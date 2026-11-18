@@ -8,6 +8,7 @@ import { BookOpen, ChartScatter, FileSearch, FlaskConical, FolderKanban, ListTod
 import { useTranslation } from "react-i18next";
 import type { ParseKeys } from "i18next";
 import { api } from "@/api/client";
+import { markPushesSeen, usePushes } from "@/api/ledger";
 import { cn } from "@/lib/utils";
 import { useGlobalShortcuts } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,8 @@ function Connection() {
     });
   }, [online, qc, t]);
   return (
+    <>
+    <Pushes online={online} />
     <Tip label={online ? t("shell.connectedTip") : t("shell.offlineTip")}>
       <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-medium",
         online ? "bg-success/12 text-success" : "bg-warning/15 text-warning")} role="status">
@@ -54,7 +57,21 @@ function Connection() {
         {q.isPending ? t("shell.connecting") : online ? t("shell.online") : t("shell.offline")}
       </span>
     </Tip>
+    </>
   );
+}
+
+/** 多设备推送: what the phone (or another device) changed shows here as it arrives, then is marked seen. */
+export function Pushes({ online }: { online: boolean }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const { data } = usePushes(online);
+  useEffect(() => {
+    if (!data?.length) return;
+    for (const p of data) toast.info(t(`shell.push.${p.kind}`, { text: p.text }));
+    void markPushesSeen(data.map((p) => p.id)).then(() => qc.invalidateQueries({ queryKey: ["mind"] }));
+  }, [data, qc, t]);
+  return null;
 }
 
 function ThemeToggle() {

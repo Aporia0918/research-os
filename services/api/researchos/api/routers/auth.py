@@ -27,6 +27,7 @@ class SetupIn(LoginIn):
 class PairIn(BaseModel):
     code: str = Field(min_length=4, max_length=16)
     device_name: str = Field(default="iPad", max_length=80)
+    want_token: bool = False  # the phone app: keep the session as a bearer token, not a cookie (ADR-275)
 
 
 class PairingCodeIn(BaseModel):
@@ -44,6 +45,10 @@ class AuthState(BaseModel):
     device_id: str | None = None
     device_name: str | None = None
     is_host: bool = False
+
+
+class PairOut(AuthState):
+    token: str | None = None
 
 
 class DeviceOut(BaseModel):
@@ -157,8 +162,10 @@ def new_pairing_code(data: PairingCodeIn, request: Request, p: Principal = Depen
     return PairingCodeOut(code=code, expires_at=exp, pair_url=f"{base}/#/pair" if base else None)
 
 
-@router.post("/auth/pair", response_model=AuthState)
-def pair(data: PairIn, request: Request, response: Response, conn: sqlite3.Connection = Depends(db)) -> AuthState:
+@router.post("/auth/pair", response_model=PairOut)
+def pair(data: PairIn, request: Request, response: Response, conn: sqlite3.Connection = Depends(db)) -> PairOut:
+    """Redeem a pairing code. Browsers get the session cookie; the phone app asks for the token itself, because a
+    cookie in the native HTTP layer's store is not reliably kept across app restarts."""
     svc = services(request)
     key = f"pair:{limiter_key(request)}"
     svc.login_limiter.check(key)
@@ -168,8 +175,10 @@ def pair(data: PairIn, request: Request, response: Response, conn: sqlite3.Conne
     except ApiError:
         svc.login_limiter.fail(key)
         raise
+    if data.want_token:
+        return PairOut(**_state(did, data.device_name, False).model_dump(), token=token)
     _set_cookie(response, token, request, did)
-    return _state(did, data.device_name, False)
+    return PairOut(**_state(did, data.device_name, False).model_dump())
 
 
 @router.get("/devices", response_model=list[DeviceOut])

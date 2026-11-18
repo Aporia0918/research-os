@@ -37,6 +37,20 @@ it("shows the picked board's recalls with the paper's page and where it was used
   } finally { await p.dispose(); }
 });
 
+it("marks yellow the paragraphs of the user's notes that use the recalled sentence, with a link to the project", async () => {
+  localStorage.removeItem("ros-board");
+  const affected = [{ doc_id: "doc_1", project_id: "prj_1", title: "第三章", paragraph: "已有研究表明午睡会提高记忆，所以我们延长了午休。",
+    sentence: "已有研究表明午睡会提高记忆，所以我们延长了午休。", score: 0.71 }];
+  vi.spyOn(api, "get").mockImplementation((p) => Promise.resolve(p === "/mind-ledger/recalls" ? [{ ...recall, affected }] : debts));
+  const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");
+  try {
+    const box = p.host.querySelector("[data-testid=affected]");
+    expect(box?.textContent).toContain("1 paragraph of your notes uses this sentence");
+    expect(box?.querySelector("mark")?.textContent).toBe(affected[0]?.sentence);
+    expect(box?.querySelector("a")?.getAttribute("href")).toBe("/projects/prj_1");
+  } finally { await p.dispose(); }
+});
+
 it("says so when nothing is due", async () => {
   vi.spyOn(api, "get").mockResolvedValue([]);
   const p = await renderPage(<MindLedgerPage />, "/ledger", "/ledger");

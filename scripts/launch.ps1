@@ -1,8 +1,11 @@
-# Research OS launcher for the Desktop / Start Menu shortcut (via launch.vbs, so no console window ever shows).
+﻿# Research OS launcher for the Desktop / Start Menu shortcut (via launch.vbs, so no console window ever shows).
 # Starts the server hidden if it is not answering, waits until it answers, then opens the browser.
 # First run: shows the one-time setup token (also copied to the clipboard). Errors: message box + data\logs\launcher.log.
-# Windows execution: NOT RUN on the dev box (Linux); compiled/static checks only.
+# -Phone (Start-with-phone.bat, ADR-278): listen on this computer's Wi-Fi address so the paired phone can reach it.
+# RESEARCHOS_HEADLESS=1: no dialog, no browser (the CI smoke test). Windows: started headless on a GitHub runner only.
+param([switch]$Phone)
 $ErrorActionPreference = 'Stop'
+$Headless = $env:RESEARCHOS_HEADLESS -eq '1'
 $AppRoot = Split-Path -Parent $PSScriptRoot
 $InstallData = Join-Path (Split-Path -Parent $AppRoot) 'data'
 if (Test-Path $InstallData) { $env:RESEARCHOS_DATA_DIR = $InstallData }   # the data dir next to app\ wins
@@ -36,10 +39,27 @@ function Test-Up([string]$url) {
   } catch { return $false }
 }
 
+function Use-Phone {
+  # the first private IPv4 address (the server's own list); the server then accepts the app's pairing calls
+  $ip = (& $Py -m researchos.app.cli lan-urls | Select-Object -First 1) -replace '^https?://', '' -replace ':\d+$', ''
+  if (-not $ip) { throw 'no Wi-Fi / LAN address found: connect this computer to the same Wi-Fi as the phone' }
+  $env:RESEARCHOS_HOST = $ip
+  $env:RESEARCHOS_ALLOW_INSECURE_LAN = '1'
+  $env:RESEARCHOS_MOBILE_APP_ORIGINS = '1'
+  $env:RESEARCHOS_PUBLIC_ORIGINS = "http://${ip}:8443"
+  return "http://${ip}:8443/"
+}
+
+function Show-Info([string]$text) {
+  if ($Headless) { Write-Log 'info dialog skipped (headless)'; return }
+  [System.Windows.Forms.MessageBox]::Show($text, 'Research OS', 'OK', 'Information') | Out-Null
+}
+
 try {
   Assert-Venv
-  $url = Get-Url
+  $url = if ($Phone) { Use-Phone } else { Get-Url }
   if (-not (Test-Up $url)) {
+    if ($Phone) { & (Join-Path $PSScriptRoot 'stop.ps1') *>> $Log }   # one started for this computer only
     Write-Log "starting server for $url"
     & (Join-Path $PSScriptRoot 'start.ps1') *>> $Log
     $deadline = (Get-Date).AddSeconds(90)
@@ -51,16 +71,19 @@ try {
   $tokenFile = Join-Path $DataDir 'config\setup-token.txt'
   if (Test-Path $tokenFile) {
     $token = (Get-Content $tokenFile -Raw).Trim()
-    Set-Clipboard -Value $token
-    [System.Windows.Forms.MessageBox]::Show(
-      "First start: create your account in the browser with this one-time setup token (already copied):`n`n$token`n`n" +
-      "首次启动：请在浏览器中用这个一次性设置口令创建账号（已复制到剪贴板）。",
-      'Research OS', 'OK', 'Information') | Out-Null
+    if (-not $Headless) { Set-Clipboard -Value $token }
+    Show-Info ("First start: create your account in the browser with this one-time setup token (already copied):`n`n$token`n`n" +
+      "首次启动：请在浏览器中用这个一次性设置口令创建账号（已复制到剪贴板）。")
   }
-  Write-Log "opening $url"
-  Start-Process $url
+  if ($Phone) {
+    Show-Info ("On the phone (same Wi-Fi), type this computer address, then pair with the code from Settings > Devices:`n`n$url`n`n" +
+      "手机（同一个 Wi-Fi）：设置 → 连接电脑 → 电脑地址填上面这个，再用电脑「设置 → 设备」里的配对码配对。")
+  }
+  Write-Log "ready at $url"
+  if (-not $Headless) { Start-Process $url }
 } catch {
   Write-Log "ERROR: $($_.Exception.Message)"
+  if ($Headless) { Write-Error $_.Exception.Message; exit 1 }
   [System.Windows.Forms.MessageBox]::Show(
     "Research OS could not start:`n$($_.Exception.Message)`n`nLog: $Log", 'Research OS', 'OK', 'Error') | Out-Null
   exit 1

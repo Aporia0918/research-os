@@ -2,7 +2,8 @@ import { tr, type Lang } from '../i18n';
 import { useEffect, useState } from 'react';
 import { preferencesKV } from '../storage/kv';
 import { loadComputerSettings, saveComputerSettings, DEFAULT_COMPUTER_URL, type ComputerSettings } from '../settings';
-import { ResearchOsClient, describeError } from '../api/computer';
+import { ApiError, ResearchOsClient, describeError } from '../api/computer';
+import { loadSession, pairWith } from '../api/session';
 import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
 import { MeCard } from './MeCard';
@@ -22,14 +23,19 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onL
   async function updateComputer(next: ComputerSettings) { setComputer(next); await saveComputerSettings(preferencesKV, next); onComputer?.(next.enabled); }
   async function testComputer() {
     setStatus(tr('正在连接电脑,最多等 5 秒…'));
-    try { const h = await new ResearchOsClient(computer.url, undefined, 5000).health(); setStatus(tr('电脑已连接：{0}。', h.status === 'ok' ? tr('正常') : h.status)); }
+    try {
+      const c = new ResearchOsClient(computer.url, undefined, 5000, await loadSession());
+      const h = await c.health();
+      const paired = await c.authState().then(a => a.authenticated, (e: unknown) => (e instanceof ApiError && e.status === 401 ? false : null));
+      setStatus(tr('电脑已连接：{0}。', h.status === 'ok' ? tr('正常') : h.status) + (paired === false ? tr('这台手机还没配对，或者配对已过期，请在下面输入新的配对码。') : paired ? tr('已配对。') : ''));
+    }
     catch (e) { setStatus(describeError(e)); }
   }
   const [status, setStatus] = useState('');
   const [code, setCode] = useState('');
   async function pairComputer() {
     setStatus(tr('正在配对,最多等 5 秒…'));
-    try { await new ResearchOsClient(computer.url, undefined, 5000).pair(code); setCode(''); setStatus(tr('配对好了。这台手机现在能用电脑增强功能。')); }
+    try { await pairWith(computer.url, code); setCode(''); setStatus(tr('配对好了。这台手机现在能用电脑增强功能，关掉 App 再打开也不用重新配对。')); }
     catch (e) { setStatus(describeError(e)); }
   }
   const [trial, setTrial] = useState<string | null>(null);

@@ -220,7 +220,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Pair */
+        /**
+         * Pair
+         * @description Redeem a pairing code. Browsers get the session cookie; the phone app asks for the token itself, because a
+         *     cookie in the native HTTP layer's store is not reliably kept across app restarts.
+         */
         post: operations["pair_api_v1_auth_pair_post"];
         delete?: never;
         options?: never;
@@ -2148,7 +2152,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add Recall */
+        /**
+         * Add Recall
+         * @description A 召回单 from the phone; the owner's other devices get it pushed (the same one twice is pushed once).
+         */
         post: operations["add_recall_api_v1_mind_ledger_entries__entry_id__recalls_post"];
         delete?: never;
         options?: never;
@@ -2165,7 +2172,8 @@ export interface paths {
         };
         /**
          * Recalls
-         * @description Open 召回单, newest first, with the answer they came from and where the user used it.
+         * @description Open 召回单, newest first, with the answer they came from, where the user used it, and the paragraphs of the
+         *     user's notes that use the recalled sentence (affected, marked yellow on the page).
          */
         get: operations["recalls_api_v1_mind_ledger_recalls_get"];
         put?: never;
@@ -3029,6 +3037,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pushes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inbox */
+        get: operations["inbox_api_v1_pushes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pushes/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Seen
+         * @description Marking the same pushes seen again is harmless; another device's pushes are never touched.
+         */
+        post: operations["seen_api_v1_pushes_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3821,6 +3866,31 @@ export interface components {
              * @default iPad
              */
             device_name: string;
+            /**
+             * Want Token
+             * @default false
+             */
+            want_token: boolean;
+        };
+        /** PairOut */
+        PairOut: {
+            /** Initialized */
+            initialized: boolean;
+            /** Authenticated */
+            authenticated: boolean;
+            /** Setup Allowed */
+            setup_allowed: boolean;
+            /** Device Id */
+            device_id?: string | null;
+            /** Device Name */
+            device_name?: string | null;
+            /**
+             * Is Host
+             * @default false
+             */
+            is_host: boolean;
+            /** Token */
+            token?: string | null;
         };
         /** PairedIn */
         PairedIn: {
@@ -4089,6 +4159,16 @@ export interface components {
             notebook: boolean;
             /** Subject Columns */
             subject_columns?: string[];
+        };
+        /** SeenIn */
+        SeenIn: {
+            /** Ids */
+            ids: string[];
+        };
+        /** SeenOut */
+        SeenOut: {
+            /** Seen */
+            seen: number;
         };
         /** SelectionIn */
         SelectionIn: {
@@ -4741,7 +4821,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthState"];
+                    "application/json": components["schemas"]["PairOut"];
                 };
             };
             /** @description Validation Error */
@@ -10476,6 +10556,61 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inbox_api_v1_pushes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    seen_api_v1_pushes_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeenOut"];
                 };
             };
             /** @description Validation Error */

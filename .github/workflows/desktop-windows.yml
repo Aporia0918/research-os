@@ -1,0 +1,86 @@
+# Portable Windows folder (ADR-278): build scripts/build_portable.py on a GitHub-hosted Windows runner, start a copy
+# headless with both launchers (this computer only, then the phone mode on the runner's LAN address), check health,
+# stop it, and upload the untouched folder as the workflow artifact "ResearchOS-Windows". Artifacts only: no tag, no
+# secrets, nothing published outside this run's page. Download: the run's page > Artifacts > ResearchOS-Windows.
+name: desktop-windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["integrate/whole-app", "claude/project-thread-sg0rkr"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413  # v6.1.0
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 20.19.2
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Build the web app
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile && pnpm run build
+
+      - name: Build the portable folder
+        run: |
+          uv run --no-project --python 3.12 python scripts/build_portable.py out
+          Get-Content out/ResearchOS-portable.build.json
+
+      - name: Smoke test a copy (unzip-like copy, both launchers headless, health, stop)
+        shell: powershell  # Windows PowerShell 5.1, the one Start-ResearchOS.bat uses
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $want = (Get-Content out/ResearchOS-portable.build.json -Raw | ConvertFrom-Json).version
+          $dir = Join-Path $env:RUNNER_TEMP 'smoke\ResearchOS'
+          Copy-Item -Recurse out/ResearchOS $dir
+          $env:RESEARCHOS_HEADLESS = '1'
+          function Assert-Health([string]$url) {
+            $h = Invoke-RestMethod -Uri ($url + 'api/v1/health') -TimeoutSec 10
+            if ($h.version -ne $want) { throw "health at $url reports $($h.version), expected $want" }
+            Write-Host "health OK at $url ($($h.version))"
+          }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File "$dir\app\scripts\launch.ps1"
+          if ($LASTEXITCODE) { throw "launch.ps1 exit $LASTEXITCODE" }
+          Assert-Health 'http://127.0.0.1:8443/'
+          if (-not (Test-Path "$dir\data\db\researchos.db")) { throw 'the database is not in the data folder next to app' }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File "$dir\app\scripts\launch.ps1" -Phone
+          if ($LASTEXITCODE) { throw "launch.ps1 -Phone exit $LASTEXITCODE" }
+          $lan = (Select-String -Path "$dir\data\logs\launcher.log" -Pattern 'ready at (http://\S+)' | Select-Object -Last 1).Matches[0].Groups[1].Value
+          Assert-Health $lan
+          & powershell -NoProfile -ExecutionPolicy Bypass -File "$dir\app\scripts\stop.ps1" -DataDir "$dir\data"
+          if ($LASTEXITCODE) { throw "stop.ps1 exit $LASTEXITCODE" }
+
+      - name: Launcher log of the smoke test (setup token redacted)
+        if: always()
+        shell: powershell
+        run: >-
+          Get-Content "$env:RUNNER_TEMP\smoke\ResearchOS\data\logs\launcher.log" -ErrorAction SilentlyContinue |
+          ForEach-Object { $_ -replace '([Ss]etup [Tt]oken:).*', '$1 [redacted]' }
+
+      - name: The uploaded folder holds no data from the smoke test
+        shell: powershell
+        run: |
+          $extra = Get-ChildItem out/ResearchOS/data -Recurse -File | Where-Object { $_.Name -ne 'researchos.toml' }
+          if ($extra) { throw "unexpected files in data: $($extra.FullName -join ', ')" }
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: ResearchOS-Windows
+          path: out/ResearchOS
+          if-no-files-found: error
+          retention-days: 30

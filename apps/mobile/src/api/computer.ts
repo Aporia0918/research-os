@@ -5,6 +5,8 @@ import type { AuditReport } from '../logic/audit';
 export type { Answer, CompareResult, Guidance, GuidanceDecision, GuidanceDecisionIn, Hypothesis, HypothesisStatus, KeyAction, Plan, PlanCategory, PlanItemEdit, Passage, LocalLog as ServerLogEntry } from '../logic/types';
 export interface Health { status: string; version: string; db_ok: boolean }
 export interface ServerLog { id: string; client_id: string; created: boolean; kind: string }
+/** 多设备推送: what changed on the owner's other devices since this phone last asked. */
+export interface Push { id: string; kind: 'recall' | 'recall_settled' | 'entry' | 'used'; entity_id: string; text: string; created_at: string }
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 export function normalizeBaseUrl(url: string): string {
@@ -15,12 +17,18 @@ export function normalizeBaseUrl(url: string): string {
 /** Optional computer service; no construction is done by core screens. */
 export class ResearchOsClient {
   private base: string;
-  constructor(baseUrl: string, private fetchImpl: FetchLike = (i, init) => fetch(i, init), private timeoutMs = 5000) { this.base = normalizeBaseUrl(baseUrl); }
+  /** `token`: the session from pairing (api/session.ts keeps it), sent as a bearer header on every request. */
+  constructor(baseUrl: string, private fetchImpl: FetchLike = (i, init) => fetch(i, init), private timeoutMs = 5000, private token = '') { this.base = normalizeBaseUrl(baseUrl); }
   health(): Promise<Health> { return this.request('GET', '/api/v1/health'); }
-  /** Pairing: the 8-character code from the computer's 设置 → 设备 → 配对设备; the session lives in the native cookie store. */
-  pair(code: string, deviceName = 'Android'): Promise<{ authenticated: boolean; device_name?: string | null }> {
-    return this.request('POST', '/api/v1/auth/pair', { code: code.trim().toUpperCase(), device_name: deviceName });
+  /** Pairing: the 8-character code from the computer's 设置 → 设备 → 配对设备. The computer answers with the session token
+   * itself (want_token), because a cookie in the native HTTP layer is not reliably kept across app restarts. */
+  pair(code: string, deviceName = 'Android'): Promise<{ authenticated: boolean; device_name?: string | null; token?: string | null }> {
+    return this.request('POST', '/api/v1/auth/pair', { code: code.trim().toUpperCase(), device_name: deviceName, want_token: true });
   }
+  /** Whether the kept session still counts on the computer (it ends when it expires or is revoked there). */
+  authState(): Promise<{ authenticated: boolean; device_name?: string | null }> { return this.request('GET', '/api/v1/auth/state'); }
+  pushes(): Promise<Push[]> { return this.request('GET', '/api/v1/pushes'); }
+  seenPushes(ids: string[]): Promise<{ seen: number }> { return this.request('POST', '/api/v1/pushes/seen', { ids }); }
   createLog(form: FormData, idempotencyKey: string): Promise<ServerLog> { return this.request('POST', '/api/v1/mobile/logs', form, { 'Idempotency-Key': idempotencyKey }); }
   compare(logId: string, versionId: string, idempotencyKey: string, useModel = false): Promise<CompareResult> {
     return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });
@@ -60,6 +68,7 @@ export class ResearchOsClient {
     // Hard limit: Promise.race, because the native HTTP bridge on Android may ignore AbortSignal.
     const limit = new Promise<never>((_, rej) => { timer = setTimeout(() => { ctrl.abort(); rej(new Error('timeout')); }, Math.min(5000, Math.max(1000, this.timeoutMs))); });
     const headers: Record<string, string> = { Accept: 'application/json', ...extra, 'x-researchos-client': 'android' };
+    if (this.token) headers.Authorization = `Bearer ${this.token}`;
     if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
     let res: Response;
     let text: string;

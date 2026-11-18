@@ -20,7 +20,7 @@ describe('optional computer link', () => {
     expect(out.authenticated).toBe(true);
     expect(seen[0].url).toBe('http://computer:8443/api/v1/auth/pair');
     expect(seen[0].init?.method).toBe('POST');
-    expect(JSON.parse(String(seen[0].init?.body))).toEqual({ code: 'AB12CD34', device_name: 'Android' });
+    expect(JSON.parse(String(seen[0].init?.body))).toEqual({ code: 'AB12CD34', device_name: 'Android', want_token: true });
     expect((seen[0].init?.headers as Record<string, string>)['x-researchos-client']).toBe('android');
   });
   it('caps transport at five seconds and maps failure to plain wording', async () => {

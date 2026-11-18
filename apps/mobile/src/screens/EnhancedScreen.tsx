@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { tr } from '../i18n';
-import { ResearchOsClient } from '../api/computer';
-import { loadComputerSettings } from '../settings';
+import { computerClient } from '../api/session';
 import { preferencesKV } from '../storage/kv';
 import { LogQueue } from '../storage/queue';
 export function EnhancedScreen() {
@@ -11,9 +10,8 @@ export function EnhancedScreen() {
   const [busy, setBusy] = useState(false);
   async function recommendPapers() {
     setStatus(''); setIdeas([]); setBusy(true);
-    const s = await loadComputerSettings(preferencesKV); if (!s.enabled) { setStatus(tr('请先在设置里开启电脑增强功能。')); setBusy(false); return; }
+    const client = await computerClient(preferencesKV); if (!client) { setStatus(tr('请先在设置里开启电脑增强功能。')); setBusy(false); return; }
     try {
-      const client = new ResearchOsClient(s.url, undefined, 5000);
       const records = await client.listLogs(10);
       setIdeas(records.slice(0, 5).map(x => ({ title: x.text.slice(0, 120), why: tr('来自你在电脑上的实验记录;是否值得阅读由你判断。') })));
     } catch {

@@ -249,8 +249,12 @@ export interface LedgerRemote {
   mark?(serverId: string, m: { red: boolean; used_in: string; dropped_on: string | null }): Promise<unknown>;
   /** A 召回单 found on the phone, so the computer can show it and mark the sentence yellow. */
   recall?(serverId: string, r: { claim: string; paper: string; page: number; quote: string }): Promise<unknown>;
+  /** 多设备推送: what changed on the owner's other devices, then marked seen once taken in. */
+  pushes?(): Promise<{ id: string; kind: string; entity_id: string; text: string }[]>;
+  seen?(ids: string[]): Promise<unknown>;
 }
-export interface SyncResult { sent: number; pulled: number; stopped: boolean }
+/** news: changes the computer pushed and the book took in (用在哪里 found in a note, a 召回单 settled there). */
+export interface SyncResult { sent: number; pulled: number; stopped: boolean; news?: number }
 interface Pending { clientId: string; text: string; key: string }
 export type NewEntry = Pick<Entry, 'clientId' | 'board' | 'question' | 'helpLevel'> &
   Partial<Pick<Entry, 'topic' | 'answer' | 'ownIdea' | 'ai' | 'usedIn'>>;
@@ -562,11 +566,31 @@ export class Book {
           ...(d.kind ? { kind: d.kind } : {}), ...(d.used_in ? { usedIn: d.used_in } : {}), ...(d.red ? { red: true } : {}) });
         pulled += 1;
       }
+      const news = await this.takePushes(remote, es, today);
       await this.save(es);
-      return { sent, pulled, stopped: false };
+      return { sent, pulled, stopped: false, ...(news ? { news } : {}) };
     } catch {
       return { sent, pulled, stopped: true };
     }
+  }
+
+  /** 用在哪里 the computer found in a note fills the phone's (never over what the user wrote); a 召回单 accepted on the
+   * computer reopens the debt here too. Other pushes are only marked seen: the next due pull already brings them. */
+  private async takePushes(remote: LedgerRemote, es: Entry[], today: string): Promise<number> {
+    if (!remote.pushes || !remote.seen) return 0;
+    const box = await remote.pushes();
+    let news = 0;
+    for (const p of box) {
+      if (p.kind === 'used') {
+        const e = es.find((x) => x.serverId === p.entity_id);
+        if (e && !e.usedIn) { e.usedIn = p.text; news += 1; }
+      } else if (p.kind === 'recall_settled') {
+        const e = es.find((x) => x.recalls?.some((r) => r.state === 'open' && r.claim === p.text));
+        if (e?.weight) { await this.save(es); Object.assign(e, await this.acceptRecall(e.id, today)); news += 1; }
+      }
+    }
+    if (box.length) await remote.seen(box.map((p) => p.id));
+    return news;
   }
 
   // ---- small trial (1-2 weeks, classmates): numbers only, no question or answer text ever leaves the phone ----

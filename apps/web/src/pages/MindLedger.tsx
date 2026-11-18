@@ -1,12 +1,14 @@
 // 思维账本 on the computer, in the same look as the phone: 账账 and the board switch on a jelly hero, then the picked
 // board's open 召回单 (the recalled sentence marked yellow in the AI's answer, the paper's own sentence and page beside
-// it, and where the user used it), then what is due on that board. Repaying stays on the phone.
+// it, where the user used it, and the paragraphs of their notes that use it, marked yellow too), then what is due on
+// that board. Repaying stays on the phone.
 import { BookCheck, FileDown, Undo2 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { describeError } from "@/api/client";
-import { marked, useDebts, useRecalls, useReport, useSettleRecall, type Debt, type Mastery, type Recall } from "@/api/ledger";
+import { marked, useDebts, useRecalls, useReport, useSettleRecall, type Affected, type Debt, type Mastery, type Recall } from "@/api/ledger";
 import { Field, Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,10 +22,31 @@ import { RESIDENT } from "@jelly/mood";
 
 const BOARD_KEY = { 学习: "study", 科研: "research", 生活: "life" } as const;
 
+const Yellow = ({ text, sentence }: { text: string; sentence: string }) => {
+  const [before, hit, after] = marked(text, sentence);
+  return <>{before}{hit ? <mark className="rounded bg-warning/30 px-0.5 text-foreground">{hit}</mark> : null}{after}</>;
+};
+
+/** 标黄: where the user's own notes use the recalled sentence, so they know which paragraphs to fix. */
+function Affects({ list }: { list: Affected[] }) {
+  const { t } = useTranslation();
+  if (!list.length) return null;
+  return (
+    <div className="grid gap-2" data-testid="affected">
+      <span className="text-caption text-muted-foreground">{t("ledger.affected", { count: list.length })}</span>
+      {list.map((a) => (
+        <div key={`${a.doc_id}:${a.paragraph}`} className="grid gap-1 rounded-md border border-warning/40 p-2">
+          <Link to={`/projects/${a.project_id}`} className="text-caption font-medium underline-offset-2 hover:underline">{a.title || t("ledger.untitled")}</Link>
+          <p className="text-body-sm"><Yellow text={a.paragraph} sentence={a.sentence} /></p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function RecallCard({ r }: { r: Recall }) {
   const { t } = useTranslation();
   const settle = useSettleRecall();
-  const [before, claim, after] = marked(r.answer, r.claim);
   const go = (state: "accepted" | "dismissed") => settle.mutate({ id: r.id, state }, {
     onSuccess: () => toast.success(state === "accepted" ? t("ledger.reopened") : t("ledger.dismissed")),
     onError: (e) => toast.error(describeError(e)),
@@ -38,13 +61,14 @@ function RecallCard({ r }: { r: Recall }) {
       <div className="grid gap-3 md:grid-cols-2">
         <div className="grid gap-1">
           <span className="text-caption text-muted-foreground">{t("ledger.aiSaid")}</span>
-          <p className="text-body-sm">{before}{claim ? <mark className="rounded bg-warning/30 px-0.5 text-foreground">{claim}</mark> : null}{after}</p>
+          <p className="text-body-sm"><Yellow text={r.answer} sentence={r.claim} /></p>
         </div>
         <div className="grid gap-1">
           <span className="text-caption text-muted-foreground">{t("ledger.paperSays", { paper: r.paper, page: r.page })}</span>
           <blockquote className="border-l-2 border-warning pl-3 text-body-sm">{r.quote}</blockquote>
         </div>
       </div>
+      <Affects list={r.affected ?? []} />
       <div className="flex flex-wrap gap-2">
         <Button size="sm" loading={settle.isPending} onClick={() => go("accepted")}><Undo2 />{t("ledger.accept")}</Button>
         <Button size="sm" variant="outline" disabled={settle.isPending} onClick={() => go("dismissed")}>{t("ledger.dismiss")}</Button>
