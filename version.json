@@ -1,0 +1,28 @@
+{
+  "versionName": "1.4.138",
+  "versionCode": 138,
+  "minSupportedVersionCode": 1,
+  "sha256": "d512fffc8b41b33ddb1df201743a0974d9fd01944ee88077308decaace71dd95",
+  "size": 10379788,
+  "apk": [
+    {
+      "url": "https://gcore.jsdelivr.net/gh/Aporia0918/research-os@c112a9c113cbe6b28a5e887149009d8ce0b7df46/researchos-test-138.apk",
+      "priority": 10
+    },
+    {
+      "url": "https://fastly.jsdelivr.net/gh/Aporia0918/research-os@c112a9c113cbe6b28a5e887149009d8ce0b7df46/researchos-test-138.apk",
+      "priority": 20
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Aporia0918/research-os@c112a9c113cbe6b28a5e887149009d8ce0b7df46/researchos-test-138.apk",
+      "priority": 30
+    },
+    {
+      "url": "https://github.com/Aporia0918/research-os/releases/download/test-latest/researchos-test-138.apk",
+      "priority": 40
+    }
+  ],
+  "releaseNotes": "测试版 1.4.138（fd596c2）",
+  "publishedAt": "2026-11-18T12:00:43Z",
+  "channel": "test"
+}
