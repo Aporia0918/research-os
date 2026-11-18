@@ -1,47 +1,409 @@
 {
-  "note": "Written by the developers. The word list was frozen before 'heldout' was written; 'heldout' is scored once and never used to change the list. 'risk' means the care message should show.",
-  "dev": [
-    {"text": "我真的不想活了", "risk": true},
-    {"text": "活着好累，不知道为什么还要坚持", "risk": true},
-    {"text": "有时候觉得没有我大家会更好", "risk": true},
-    {"text": "我攒了一些安眠药", "risk": true},
-    {"text": "想从楼上跳下去", "risk": true},
-    {"text": "想一了百了", "risk": true},
-    {"text": "我想结束这一切", "risk": true},
-    {"text": "真想杀了他", "risk": true},
-    {"text": "割腕会很痛吗", "risk": true},
-    {"text": "I want to die", "risk": true},
-    {"text": "今天累死了，作业好多", "risk": false},
-    {"text": "笑死我了这个视频", "risk": false},
-    {"text": "电脑又死机了", "risk": false},
-    {"text": "这部电影的结局主角自杀了，好难过", "risk": false},
-    {"text": "deadline 快到了，死线压力好大", "risk": false},
-    {"text": "饿死了，去吃饭", "risk": false},
-    {"text": "这个游戏的 boss 好难打", "risk": false},
-    {"text": "我决定周末不去聚会了", "risk": false},
-    {"text": "今天被老师夸了，开心", "risk": false},
-    {"text": "好想消灭这道题", "risk": false}
-  ],
-  "heldout": [
-    {"text": "撑不下去了，想从天台下去", "risk": true},
-    {"text": "我觉得自己是个累赘，大家没我会轻松", "risk": true},
-    {"text": "不想再醒过来了", "risk": true},
-    {"text": "我在网上查怎么自杀", "risk": true},
-    {"text": "好想把那个人捅了", "risk": true},
-    {"text": "真的好想死", "risk": true},
-    {"text": "活着有什么意义", "risk": true},
-    {"text": "我手腕上又多了几道口子", "risk": true},
-    {"text": "hurt myself again last night", "risk": true},
-    {"text": "我准备了绳子", "risk": true},
-    {"text": "这道题难死了", "risk": false},
-    {"text": "新闻里说有人跳楼了，好可怕", "risk": false},
-    {"text": "我把这个 bug 杀掉了", "risk": false},
-    {"text": "气死我了，又排队", "risk": false},
-    {"text": "期末周活着就行哈哈", "risk": false},
-    {"text": "我打算明天早点睡", "risk": false},
-    {"text": "别人都说我们是死党", "risk": false},
-    {"text": "这个价格秒杀了", "risk": false},
-    {"text": "我们讨论了安乐死的伦理问题", "risk": false},
-    {"text": "想你了", "risk": false}
-  ]
+ "note": "Written by the developers. The word list was frozen before 'heldout' was written; 'heldout' is scored once and never used to change the list. 'risk' means the care message should show. List v2 (2026-11-18) was tuned on 'dev' and 'heldout' together; 'heldout2' (30 risk, 30 benign, including research and coursework wording) was written and committed before that tuning and is scored once.",
+ "dev": [
+  {
+   "text": "我真的不想活了",
+   "risk": true
+  },
+  {
+   "text": "活着好累，不知道为什么还要坚持",
+   "risk": true
+  },
+  {
+   "text": "有时候觉得没有我大家会更好",
+   "risk": true
+  },
+  {
+   "text": "我攒了一些安眠药",
+   "risk": true
+  },
+  {
+   "text": "想从楼上跳下去",
+   "risk": true
+  },
+  {
+   "text": "想一了百了",
+   "risk": true
+  },
+  {
+   "text": "我想结束这一切",
+   "risk": true
+  },
+  {
+   "text": "真想杀了他",
+   "risk": true
+  },
+  {
+   "text": "割腕会很痛吗",
+   "risk": true
+  },
+  {
+   "text": "I want to die",
+   "risk": true
+  },
+  {
+   "text": "今天累死了，作业好多",
+   "risk": false
+  },
+  {
+   "text": "笑死我了这个视频",
+   "risk": false
+  },
+  {
+   "text": "电脑又死机了",
+   "risk": false
+  },
+  {
+   "text": "这部电影的结局主角自杀了，好难过",
+   "risk": false
+  },
+  {
+   "text": "deadline 快到了，死线压力好大",
+   "risk": false
+  },
+  {
+   "text": "饿死了，去吃饭",
+   "risk": false
+  },
+  {
+   "text": "这个游戏的 boss 好难打",
+   "risk": false
+  },
+  {
+   "text": "我决定周末不去聚会了",
+   "risk": false
+  },
+  {
+   "text": "今天被老师夸了，开心",
+   "risk": false
+  },
+  {
+   "text": "好想消灭这道题",
+   "risk": false
+  }
+ ],
+ "heldout": [
+  {
+   "text": "撑不下去了，想从天台下去",
+   "risk": true
+  },
+  {
+   "text": "我觉得自己是个累赘，大家没我会轻松",
+   "risk": true
+  },
+  {
+   "text": "不想再醒过来了",
+   "risk": true
+  },
+  {
+   "text": "我在网上查怎么自杀",
+   "risk": true
+  },
+  {
+   "text": "好想把那个人捅了",
+   "risk": true
+  },
+  {
+   "text": "真的好想死",
+   "risk": true
+  },
+  {
+   "text": "活着有什么意义",
+   "risk": true
+  },
+  {
+   "text": "我手腕上又多了几道口子",
+   "risk": true
+  },
+  {
+   "text": "hurt myself again last night",
+   "risk": true
+  },
+  {
+   "text": "我准备了绳子",
+   "risk": true
+  },
+  {
+   "text": "这道题难死了",
+   "risk": false
+  },
+  {
+   "text": "新闻里说有人跳楼了，好可怕",
+   "risk": false
+  },
+  {
+   "text": "我把这个 bug 杀掉了",
+   "risk": false
+  },
+  {
+   "text": "气死我了，又排队",
+   "risk": false
+  },
+  {
+   "text": "期末周活着就行哈哈",
+   "risk": false
+  },
+  {
+   "text": "我打算明天早点睡",
+   "risk": false
+  },
+  {
+   "text": "别人都说我们是死党",
+   "risk": false
+  },
+  {
+   "text": "这个价格秒杀了",
+   "risk": false
+  },
+  {
+   "text": "我们讨论了安乐死的伦理问题",
+   "risk": false
+  },
+  {
+   "text": "想你了",
+   "risk": false
+  }
+ ],
+ "heldout2": [
+  {
+   "text": "最近总在想，要是我不在了会不会大家都轻松一点",
+   "risk": true
+  },
+  {
+   "text": "我把药都存起来了，够了",
+   "risk": true
+  },
+  {
+   "text": "站在阳台边上看了很久",
+   "risk": true
+  },
+  {
+   "text": "我已经写好给爸妈的信了，以后他们会明白的",
+   "risk": true
+  },
+  {
+   "text": "想用刀划自己，感觉疼一点会好受",
+   "risk": true
+  },
+  {
+   "text": "我不想再撑了，真的没力气活下去",
+   "risk": true
+  },
+  {
+   "text": "活着就是在受罪",
+   "risk": true
+  },
+  {
+   "text": "如果明天不用醒来就好了",
+   "risk": true
+  },
+  {
+   "text": "我查了哪种方式走得最不痛",
+   "risk": true
+  },
+  {
+   "text": "考砸了，我没脸活了",
+   "risk": true
+  },
+  {
+   "text": "我恨他，恨不得让他去死",
+   "risk": true
+  },
+  {
+   "text": "我要让欺负我的人都付出代价，拿刀去学校",
+   "risk": true
+  },
+  {
+   "text": "又开始掐自己的胳膊了",
+   "risk": true
+  },
+  {
+   "text": "我觉得自己是多余的，消失了也没人在意",
+   "risk": true
+  },
+  {
+   "text": "我在想怎么告别比较好",
+   "risk": true
+  },
+  {
+   "text": "这个世界没有值得我留下的东西了",
+   "risk": true
+  },
+  {
+   "text": "想喝很多酒然后吃很多药睡过去",
+   "risk": true
+  },
+  {
+   "text": "我站在桥边上，不知道该不该往下",
+   "risk": true
+  },
+  {
+   "text": "我活不长了，也不想治了，就这样吧",
+   "risk": true
+  },
+  {
+   "text": "我好想解脱",
+   "risk": true
+  },
+  {
+   "text": "每天都在想死这件事",
+   "risk": true
+  },
+  {
+   "text": "宿舍楼顶的门没锁，我上去过几次了",
+   "risk": true
+  },
+  {
+   "text": "感觉生不如死",
+   "risk": true
+  },
+  {
+   "text": "如果我出了什么事，你帮我把这些转给我妹妹",
+   "risk": true
+  },
+  {
+   "text": "我想伤害自己",
+   "risk": true
+  },
+  {
+   "text": "I don't want to be alive anymore",
+   "risk": true
+  },
+  {
+   "text": "thinking about ending my life",
+   "risk": true
+  },
+  {
+   "text": "我把自己关在屋里三天没吃东西，不想再继续了",
+   "risk": true
+  },
+  {
+   "text": "真想一刀捅死那个室友",
+   "risk": true
+  },
+  {
+   "text": "我已经安排好了后事",
+   "risk": true
+  },
+  {
+   "text": "这次考试要死了，一点没复习",
+   "risk": false
+  },
+  {
+   "text": "论文 ddl 要了我的命",
+   "risk": false
+  },
+  {
+   "text": "我们小组讨论了青少年自杀预防的文献",
+   "risk": false
+  },
+  {
+   "text": "历史课讲到项羽乌江自刎",
+   "risk": false
+  },
+  {
+   "text": "实验小鼠要处死后取脑组织",
+   "risk": false
+  },
+  {
+   "text": "细胞凋亡是程序性死亡",
+   "risk": false
+  },
+  {
+   "text": "这款游戏里角色死了可以复活",
+   "risk": false
+  },
+  {
+   "text": "我杀了一局王者，赢了",
+   "risk": false
+  },
+  {
+   "text": "今天跳绳跳了一千个",
+   "risk": false
+  },
+  {
+   "text": "冷死了，宿舍暖气还没来",
+   "risk": false
+  },
+  {
+   "text": "我药吃完了，明天去医院再开点感冒药",
+   "risk": false
+  },
+  {
+   "text": "好想睡一整天，太困了",
+   "risk": false
+  },
+  {
+   "text": "我想结束这段感情",
+   "risk": false
+  },
+  {
+   "text": "我想退出这个社团",
+   "risk": false
+  },
+  {
+   "text": "我准备了绳子和挂钩，用来晾衣服",
+   "risk": false
+  },
+  {
+   "text": "小说里男主跳崖了但没死",
+   "risk": false
+  },
+  {
+   "text": "老师说要杀掉这个进程",
+   "risk": false
+  },
+  {
+   "text": "我们去天台看星星吧",
+   "risk": false
+  },
+  {
+   "text": "我决定放弃这门选修课",
+   "risk": false
+  },
+  {
+   "text": "人生好难，但还是要加油",
+   "risk": false
+  },
+  {
+   "text": "我消失两天，去山里露营，别找我哈",
+   "risk": false
+  },
+  {
+   "text": "这个 bug 折磨死我了",
+   "risk": false
+  },
+  {
+   "text": "心理课作业：写一篇关于抑郁症的科普",
+   "risk": false
+  },
+  {
+   "text": "安眠药的药理机制是什么",
+   "risk": false
+  },
+  {
+   "text": "我家猫昨天去世了，很难过",
+   "risk": false
+  },
+  {
+   "text": "期末考完就解放了",
+   "risk": false
+  },
+  {
+   "text": "桥梁工程课讲了桥的承重",
+   "risk": false
+  },
+  {
+   "text": "刀工练习：今天切了土豆丝",
+   "risk": false
+  },
+  {
+   "text": "我想把这道题彻底搞死，弄懂为止",
+   "risk": false
+  },
+  {
+   "text": "this movie killed me lol",
+   "risk": false
+  }
+ ]
 }

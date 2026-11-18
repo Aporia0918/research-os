@@ -1,0 +1,80 @@
+# Tests on every push and pull request: the phone app (思维账本), the Python backend and the desktop web app.
+# Each job runs the same commands a developer runs locally, so a red check here means the same failure there.
+# android-debug.yml only packages the APK; this file is where the tests live.
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["integrate/whole-app", "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    name: phone app (types, lint, wording, unit tests, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - name: TypeScript
+        run: npx tsc --noEmit -p .
+      - name: ESLint
+        run: npx eslint src tests
+      - name: No untranslated or English-only UI text
+        run: node scripts/zh-scan.mjs
+      - name: Unit and judgement tests (vitest)
+        run: npx vitest run --reporter=default --reporter=junit --outputFile.junit=vitest-junit.xml
+      - name: Production build
+        run: npm run build
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: mobile-test-report
+          path: apps/mobile/vitest-junit.xml
+          if-no-files-found: ignore
+
+  backend:
+    name: backend (ruff, mypy, import rules, architecture, plugins, pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Install the locked environment
+        run: uv sync --frozen --python 3.13 --extra dev --extra experiments --extra plugins
+      - name: All backend gates (scripts/check.sh)
+        run: sh scripts/check.sh
+
+  web:
+    name: desktop web app (lint, types, tests, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 22
+      - run: npx -y pnpm@9 install --frozen-lockfile
+      - run: npx -y pnpm@9 run lint
+      - run: npx -y pnpm@9 run typecheck
+      - run: npx -y pnpm@9 run test
+      - run: npx -y pnpm@9 run build
