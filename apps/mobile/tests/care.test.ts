@@ -9,13 +9,14 @@ import { CARE, HOTLINE, risk } from '../src/rules/care';
 import { book } from '../src/ledger/book';
 import { LedgerScreen } from '../src/screens/LedgerScreen';
 
-const FX: Record<'dev' | 'heldout', { text: string; risk: boolean }[]> = fixture;
+const FX: Record<'dev' | 'heldout' | 'heldout2', { text: string; risk: boolean }[]> = fixture;
 
 describe('risk word list', () => {
-  // dev was written with the list; the list was frozen before heldout was written, and heldout was scored once.
-  it.each([['dev', 10, 1], ['heldout', 3, 1]] as const)('%s: caught and false alarms are pinned', (set, caught, alarms) => {
+  // v1 was written with dev and scored once on heldout (3/10). v2 was tuned on dev and heldout together; heldout2 was
+  // committed before that (v1 on it: 4/30 caught, 2/30 false alarms) and v2 was scored on it once. The plan reports heldout2.
+  it.each([['dev', 10, 10, 1], ['heldout', 10, 10, 1], ['heldout2', 30, 24, 1]] as const)('%s: caught and false alarms are pinned', (set, n, caught, alarms) => {
     const xs = FX[set];
-    expect(xs.filter(x => x.risk).length).toBe(10);
+    expect(xs.filter(x => x.risk).length).toBe(n);
     expect(xs.filter(x => x.risk && risk(x.text)).length).toBe(caught);
     expect(xs.filter(x => !x.risk && risk(x.text)).length).toBe(alarms);
   });
