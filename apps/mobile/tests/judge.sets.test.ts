@@ -1,9 +1,12 @@
-// The free grader (no model) on two answer sets the developers wrote and labelled (not real students' answers).
+// The free grader (no model) on three answer sets the developers wrote and labelled (not real students' answers).
 // Set A was scored before the contradiction guard (TURNS in ledger.ts) and then used to build it; set B was committed
-// before the guard and scored once after. The plan reports set B. A model, when the user sets one, is not measured here.
+// before the guard and scored once after. Set C was committed before the "said in other words" check (looseCover) and
+// scored once after; that check was tuned on set A only. The plan reports sets B and C. A model, when the user sets one,
+// is not measured here.
 import { describe, expect, it } from 'vitest';
 import A from './fixtures/judge/answers.json';
 import B from './fixtures/judge/answers-b.json';
+import C from './fixtures/judge/answers-c.json';
 import { gradeFree, unsureGrade } from '../src/ledger/ledger';
 
 type Set = { items: { ref: string; attempts: { text: string; label: string; kind: string }[] }[] };
@@ -23,10 +26,17 @@ function score(set: Set) {
 
 describe('free grader on labelled answers', () => {
   it.each([
-    ['A', { ok: 40, okPass: 20, okUnsure: 2, no: 60, noPass: 3, noUnsure: 13, closePass: 20, paraphrasePass: 0 }],
-    ['B', { ok: 40, okPass: 19, okUnsure: 1, no: 60, noPass: 4, noUnsure: 13, closePass: 19, paraphrasePass: 0 }],
-  ] as const)('set %s is pinned', (name, want) => {
-    expect(score(name === 'A' ? A : B)).toEqual(want);
+    ['A', A, { ok: 40, okPass: 20, okUnsure: 13, no: 60, noPass: 3, noUnsure: 14, closePass: 20, paraphrasePass: 0 }],
+    ['B', B, { ok: 40, okPass: 19, okUnsure: 14, no: 60, noPass: 4, noUnsure: 15, closePass: 19, paraphrasePass: 0 }],
+    ['C', C, { ok: 40, okPass: 19, okUnsure: 7, no: 60, noPass: 4, noUnsure: 12, closePass: 19, paraphrasePass: 0 }],
+  ] as const)('set %s is pinned', (_name, set, want) => {
+    expect(score(set)).toEqual(want);
+  });
+  it('an explanation in other words is 拿不准, never a pass and never a plain fail', () => {
+    const ref = '导数是函数在某一点的瞬时变化率。几何上，它等于函数图像在该点切线的斜率。导数为正时函数在该点附近递增。';
+    const g = gradeFree(ref, '表示函数在那一刻变得多快，画出图来就是那点切线有多陡，正的话说明附近往上走');
+    expect([g.passed, g.loose, unsureGrade(g)]).toEqual([false, true, true]);
+    expect(gradeFree(ref, '导数就是求导').loose).toBeUndefined();
   });
   it('a fluent answer that keeps the words and swaps 正比 for 反比 is never a pass', () => {
     const ref = '欧姆定律指出，在温度不变时，导体中的电流与两端电压成正比，与电阻成反比。';

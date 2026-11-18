@@ -20,6 +20,9 @@ const BIGRAM_HIT = 0.4;
 const CLEAR_PASS = 0.8;
 const MIN_ATTEMPT = 6;
 const UNSURE_FROM = 0.3; // a third of the points or more, but short of a pass
+// Said in other words (see looseCover): long enough, every point touched, a fair share of each point's characters, and no
+// point copied closely. Tuned on answer set A only; set C was scored once after (tests/judge.sets.test.ts).
+const LOOSE = { minChars: 16, eachPoint: 0.15, mean: 0.3, copied: 0.35 } as const;
 const FILLER = /[的了是在它上要先再就这那和与及也都]/g;
 
 // ---- rules ------------------------------------------------------------------------------------------------
@@ -61,6 +64,8 @@ export interface Grade {
   points: string[]; hits: number[]; passed: boolean; method: 'model' | 'deterministic';
   /** Points the attempt matched word for word but turned round (正比 → 反比, 是 → 不是): never a pass on their own. */
   turned?: number[];
+  /** Not a pass: the attempt covers every point in its own words (looseCover), which only a second try or a model can settle. */
+  loose?: boolean;
 }
 
 const norm = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, '').replace(FILLER, '');
@@ -122,18 +127,35 @@ function turned(point: string, said: string[]): boolean {
   return Boolean(region) && negated(point) !== negated(region);
 }
 
+const share = (part: Set<string>, whole: Set<string>): number =>
+  part.size ? [...part].filter((x) => whole.has(x)).length / part.size : 0;
+
+/**
+ * An explanation in the student's own words shares few word pairs with the reference but many of its characters, spread
+ * over every point (「切线有多陡」 for 「切线的斜率」). True when the attempt is long enough, touches every point, covers a
+ * fair share of the reference's characters, and copies no point closely. This is not a pass: on a fresh answer set it
+ * let as many fluent wrong answers through as right ones in other words, so it only makes the grade 拿不准.
+ */
+const han = (s: string): Set<string> => new Set(norm(s).match(/\p{Script=Han}/gu) ?? []); // letters say nothing alone
+
+function looseCover(points: string[], attempt: string): boolean {
+  if (norm(attempt).length < LOOSE.minChars || !points.length) return false;
+  const chars = han(attempt), pairs = bigrams(attempt);
+  const each = points.map((p) => share(han(p), chars));
+  return Math.min(...each) >= LOOSE.eachPoint && each.reduce((a, b) => a + b, 0) / each.length >= LOOSE.mean &&
+    points.every((p) => share(bigrams(p), pairs) < LOOSE.copied);
+}
+
 export function gradeFree(reference: string, attempt: string): Grade {
   const points = keyPoints(reference);
   const said = bigrams(attempt);
   const clauses = attempt.split(CLAUSE).filter((c) => norm(c).length >= 2);
-  const hits = points.flatMap((p, i) => {
-    const b = bigrams(p);
-    const shared = [...b].filter((x) => said.has(x)).length;
-    return b.size && shared / b.size >= BIGRAM_HIT ? [i] : [];
-  });
+  const hits = points.flatMap((p, i) => (share(bigrams(p), said) >= BIGRAM_HIT ? [i] : []));
   const flipped = hits.filter((i) => turned(points[i], clauses));
-  return { points, hits, passed: !flipped.length && verdict(hits.length, points.length), method: 'deterministic',
-    ...(flipped.length ? { turned: flipped } : {}) };
+  const passed = !flipped.length && verdict(hits.length, points.length);
+  const loose = !passed && !flipped.length && looseCover(points, attempt);
+  return { points, hits, passed, method: 'deterministic',
+    ...(flipped.length ? { turned: flipped } : {}), ...(loose ? { loose: true } : {}) };
 }
 
 /**
@@ -142,7 +164,7 @@ export function gradeFree(reference: string, attempt: string): Grade {
  * screen asks for the explanation again in other words instead of counting it (plan 2.2).
  */
 export function unsureGrade(g: Grade): boolean {
-  if (g.method === 'deterministic' && g.turned?.length) return true;
+  if (g.method === 'deterministic' && (g.turned?.length || g.loose)) return true;
   return g.method === 'deterministic' && !g.passed && g.hits.length > 0 && g.hits.length / g.points.length >= UNSURE_FROM;
 }
 
