@@ -20,6 +20,7 @@ import { DueView } from './ledger/DueView';
 import { BalanceView } from './ledger/BalanceView';
 import { SearchView } from './ledger/SearchView';
 import { cardsOf, toAnki, toCsv } from '../ledger/exportCards';
+import { aiUseOf, aiUseText } from '../ledger/aiUse';
 import { shareFile } from '../backup/native';
 import { boardName, importedPaper, missedOf, modelAsk, redTag } from './ledger/shared';
 import { fromShared } from '../me/shareIn';
@@ -44,6 +45,7 @@ const LEVELS: { id: HelpLevel; label: string; cost: string }[] = [
 type Board = Entry['board'];
 const ANKI_FILE = 'researchos-anki.txt';
 const CSV_FILE = 'researchos-ledger.csv';
+const AI_USE_FILE = 'ai-use-statement.txt';
 type View = 'home' | 'due' | 'add' | 'list' | 'recall' | 'quiz' | 'balance' | 'search';
 const BOARD_KEY = 'mindledger.board.v1';
 /** 学习 and 科研 share the debt ledger, each seeing only its own debts; 生活 (shown as 成长空间) is its own screen. */
@@ -196,6 +198,15 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
       setNote(how === 'copied' ? tr('已复制 {0} 笔。', es.length) : tr('导出了 {0} 笔，选一个地方存好。', es.length));
     } catch { setNote(tr('没能导出，请再试一次。')); }
   }
+  async function exportAiUse() {
+    const es = await book.all();
+    const r = aiUseOf(es, board);
+    if (!r.own.length && !r.borrowed.length) { setNote(tr('{0}还没有可以导出的账。', tr(board))); return; }
+    try {
+      const how = await shareFile(AI_USE_FILE, aiUseText(es, today(), board), tr('AI 使用说明'));
+      setNote(how === 'copied' ? tr('AI 使用说明已复制，可以粘到论文或报告后面。') : tr('AI 使用说明导出好了，可以附在论文或报告后面。'));
+    } catch { setNote(tr('没能导出，请再试一次。')); }
+  }
   const back = <button className="back" onClick={() => { setView('home'); setCourse(null); }}>{tr('‹ 账本')}</button>;
   const status = care ? <CareNote /> : note && <p className="note" role="status">{note}</p>;
 
@@ -279,6 +290,11 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
           <button className="ghost" onClick={() => void exportCards('anki')}>{tr('导出到 Anki')}</button>
           <button className="ghost" onClick={() => void exportCards('csv')}>{tr('导出表格')}</button>
         </div>
+      </div>
+      <div className="card" data-testid="ai-use">
+        <div><b>{tr('AI 使用说明')}</b></div>
+        <div className="muted">{tr('交论文、大创报告或课程项目时附在后面：哪些是你先想的，AI 帮到哪一档，哪些后来你自己讲清楚了。')}</div>
+        <div className="row"><button className="ghost" onClick={() => void exportAiUse()}>{tr('导出 AI 使用说明')}</button></div>
       </div>
     </section>
   );
