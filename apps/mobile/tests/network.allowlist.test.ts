@@ -7,7 +7,8 @@ describe('network allowlist (static scan)', () => {
   const out = execFileSync('bash', ['scripts/network-scan.sh', '.'], { encoding: 'utf8' });
   const sites = out.split('## call sites')[1].trim().split('\n').slice(1).map(l => l.split(':')[0]);
   it('only allowed files can start a request', () => {
-    const allowed = new Set(['src/App.tsx', 'src/logic/askLocal.ts', 'src/model/direct.ts', 'src/screens/EnhancedScreen.tsx', 'src/screens/ExamScreen.tsx',
+    const allowed = new Set(['src/App.tsx', 'src/api/session.ts', // the paired computer: pairing, and the client behind the toggle
+      'src/logic/askLocal.ts', 'src/model/direct.ts', 'src/screens/EnhancedScreen.tsx', 'src/screens/ExamScreen.tsx',
       'src/screens/LedgerScreen.tsx', // ledger sync with the user's own paired computer, only when computer features are on
       'src/screens/ledger/shared.ts', // the user's own model key: grade an unsure repayment, first feedback, suggest task steps
       'src/logic/photoAsk.ts', // the user's own model key, for one photographed page the user chose to ask about
@@ -17,10 +18,14 @@ describe('network allowlist (static scan)', () => {
   it('no axios / XMLHttpRequest / WebSocket anywhere in shipped code', () => {
     expect(out).not.toMatch(/\baxios\b|XMLHttpRequest|WebSocket|EventSource|sendBeacon/);
   });
-  // The ledger screen syncs only with the user's own paired computer, and only when computer features are on.
-  it('computer client is only built in the enhanced screen, the null-world exam, the ledger sync and the settings test button', () => {
+  // One place builds the computer client (session.ts: null while computer features are off, plus pairing); the
+  // settings test button builds its own so it can test before the toggle is on. Only these screens ask for it.
+  it('computer client is only built in session.ts and the settings test button, and used by the four screens', () => {
     const lines = out.split('\n').filter(l => /new ResearchOsClient/.test(l)).map(l => l.split(':')[0]);
-    expect([...new Set(lines)].sort()).toEqual(['src/screens/EnhancedScreen.tsx', 'src/screens/ExamScreen.tsx',
+    expect([...new Set(lines)].sort()).toEqual(['src/api/session.ts', 'src/screens/SettingsScreen.tsx']);
+    const users = execFileSync('grep', ['-rlE', 'computerClient\\(|pairWith\\(', 'src'], { encoding: 'utf8' })
+      .trim().split('\n').filter(f => f !== 'src/api/session.ts').sort();
+    expect(users).toEqual(['src/screens/EnhancedScreen.tsx', 'src/screens/ExamScreen.tsx',
       'src/screens/LedgerScreen.tsx', 'src/screens/SettingsScreen.tsx']);
   });
 });
