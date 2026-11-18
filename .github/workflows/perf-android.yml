@@ -1,7 +1,7 @@
 # Plan 2.5 cold start, measured on an Android emulator in the cloud (not a phone): build the debug APK, boot an
 # x86_64 API 34 emulator with KVM, then launch the app cold 20 times. Two numbers per launch:
 #   activity  `am start -W` TotalTime: process start to the first Android frame
-#   ready     launch to the app's own "[perf] ready" log line, i.e. the first screen painted and able to take input
+#   ready     launch to the app's own PerfReady logcat line, i.e. the first screen painted and able to take input
 # The summary prints the median and P90 of each and the machine it ran on; perf-android.json is uploaded.
 name: perf-android
 
@@ -83,7 +83,7 @@ jobs:
             ready=""
             for k in $(seq 1 60); do
               log=$("$adb" logcat -d -v epoch)
-              line=$(echo "$log" | grep -m1 '\[perf\] ready' || true)
+              line=$(echo "$log" | grep -m1 'PerfReady' || true)
               if [ -n "$line" ]; then  # from the system's START line for this launch to the app's ready line
                 t0=$(echo "$log" | grep -m1 "START u0.*$PKG" | awk '{print $1}')
                 ts=$(echo "$line" | awk '{print $1}'); [ -n "$t0" ] && ready=$(python3 -c "print(round(($ts - $t0) * 1000))"); break

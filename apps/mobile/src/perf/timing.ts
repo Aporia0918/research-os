@@ -1,3 +1,4 @@
+import { Capacitor, registerPlugin } from '@capacitor/core';
 /** Aggregate durations only. Never include file text, an address, or a secret in a timing record. */
 export const importStages: { stage: string; ms: number }[] = [];
 export function resetImportTimings(): void { importStages.length = 0; }
@@ -8,12 +9,13 @@ export async function timed<T>(stage: string, work: () => Promise<T> | T): Promi
 }
 
 /**
- * Logs one line the moment the first screen can take input, so a cold-start run can time it from logcat
- * (.github/workflows/perf-android.yml). Carries a number only, once per launch.
+ * Tells the native side, once per launch, that the first screen can take input; it writes one fixed logcat line that a
+ * cold-start run times (.github/workflows/perf-android.yml). No data goes with it, and nothing happens off Android.
  */
-let readyLogged = false;
+const perf = registerPlugin<{ ready(): Promise<void> }>('Perf');
+let readySent = false;
 export function markReady(): void {
-  if (readyLogged) return;
-  readyLogged = true;
-  console.info(`[perf] ready ${Math.round(performance.now())}`);
+  if (readySent || !Capacitor.isNativePlatform()) return;
+  readySent = true;
+  void perf.ready().catch(() => {});
 }
