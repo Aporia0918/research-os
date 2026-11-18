@@ -1,5 +1,6 @@
 // 思维账本 on the phone alone: no computer, no key. Port of services/api/researchos/services/mindledger
-// (rules.py + the free grader in judge.py + store.py); tests/ledger.test.ts pins parity with the Python grader.
+// (rules.py + the free grader in judge.py + store.py); tests/ledger.test.ts pins parity with the Python grader on points and hits.
+// The phone grader adds one guard the Python one lacks: a point said back turned round (正比 → 反比) is never a pass.
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
 import { ratingOf, review, type Memory } from './memory';
@@ -56,7 +57,11 @@ export function statusOf(passes: number, attempts: number, w: Weight | null): St
 }
 
 // ---- free grader ------------------------------------------------------------------------------------------
-export interface Grade { points: string[]; hits: number[]; passed: boolean; method: 'model' | 'deterministic' }
+export interface Grade {
+  points: string[]; hits: number[]; passed: boolean; method: 'model' | 'deterministic';
+  /** Points the attempt matched word for word but turned round (正比 → 反比, 是 → 不是): never a pass on their own. */
+  turned?: number[];
+}
 
 const norm = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, '').replace(FILLER, '');
 
@@ -73,29 +78,78 @@ export function keyPoints(reference: string): string[] {
   return parts.length ? parts.slice(0, MAX_POINTS) : reference.trim() ? [reference.trim()] : [];
 }
 
+// Word pairs that turn a statement round when the attempt keeps the words and swaps one side. A fluent explanation that
+// copies the reference's words but says 反比 for 正比 shares nearly all its bigrams, so the overlap alone would pass it.
+const TURNS: [RegExp, RegExp][] = [
+  [/正比/, /反比/],
+  [/递增|增函数|上升|增大|增加|提高|升高|增强|加快|越大|更快|更强|更高|更久|更大/, /递减|减函数|下降|减小|减少|降低|减弱|减慢|越小|更慢|更弱|更低|更短|更小/],
+  [/高于|大于|多于|超过|以上/, /低于|小于|少于|不到|以下/],
+  [/内流|流入|进入|吸收/, /外流|流出|释放|放出/],
+  [/为正|正的|上方|正方向/, /为负|负的|下方|反方向/],
+  [/相同|一致|一样/, /相反/],
+  [/打开|开放/, /关闭/],
+  [/之前|以前/, /之后|以后/],
+  [/时域到频域|时域转换?到频域|时域转到频域/, /频域转换?到时域|频域到时域/],
+  [/去极化/, /复极化/],
+  [/相乘|乘以|乘上|之积/, /相加|加上|之和/],
+  [/分散|离散/, /集中/],
+];
+// Negation as a spoken explanation says it: 无 and 没 count, conditionals (否则, 不然) and fixed words (不同, 无论) do not.
+const NOT_NEG = /不同|不仅|不断|不久|不少|不过|不管|不论|不但|不如|不错|不然|否则|非常|无论|无数|未来/g;
+const NEG = /[不没未无]|并非|\b(?:not|no|never|cannot)\b|n't\b/i;
+const negated = (s: string): boolean => NEG.test(s.replace(NOT_NEG, ' '));
+const turnOf = (s: string): number[] => TURNS.map(([a, b]) => Number(a.test(s)) - Number(b.test(s)));
+const CLAUSE = /[，,、。；;！？!?\n]+/;
+
+/** The attempt clause that shares the most bigrams with this clause of a point; null below three shared. */
+function closest(clause: string, said: string[]): string | null {
+  const b = bigrams(clause);
+  let best: string | null = null, most = 2;
+  for (const c of said) { const n = [...bigrams(c)].filter((x) => b.has(x)).length; if (n > most) { most = n; best = c; } }
+  return best;
+}
+
+/**
+ * True when the point is said back turned round: a clause with a word swapped for its pair, or the whole point negated
+ * where the closest part of the attempt is not (or the other way). Negation is judged on the whole point, because a
+ * spoken explanation moves 不失真 from one clause to the next.
+ */
+function turned(point: string, said: string[]): boolean {
+  const parts = point.split(CLAUSE).filter((c) => norm(c).length >= 4);
+  const near = parts.map((c) => closest(c, said));
+  if (near.some((a, i) => a && turnOf(parts[i]).some((d, k) => d !== 0 && turnOf(a)[k] === -d))) return true;
+  const region = [...new Set(near.filter((a): a is string => a !== null))].join('，');
+  return Boolean(region) && negated(point) !== negated(region);
+}
+
 export function gradeFree(reference: string, attempt: string): Grade {
   const points = keyPoints(reference);
   const said = bigrams(attempt);
+  const clauses = attempt.split(CLAUSE).filter((c) => norm(c).length >= 2);
   const hits = points.flatMap((p, i) => {
     const b = bigrams(p);
     const shared = [...b].filter((x) => said.has(x)).length;
     return b.size && shared / b.size >= BIGRAM_HIT ? [i] : [];
   });
-  return { points, hits, passed: verdict(hits.length, points.length), method: 'deterministic' };
+  const flipped = hits.filter((i) => turned(points[i], clauses));
+  return { points, hits, passed: !flipped.length && verdict(hits.length, points.length), method: 'deterministic',
+    ...(flipped.length ? { turned: flipped } : {}) };
 }
 
 /**
  * 拿不准: the free grader found some of the points but not enough, so it cannot tell a muddled explanation from one said
- * in other words. The screen asks for the explanation again in other words instead of counting it (plan 2.2).
+ * in other words; or it matched a point but turned it round (turned), which only a second try or a model can settle. The
+ * screen asks for the explanation again in other words instead of counting it (plan 2.2).
  */
 export function unsureGrade(g: Grade): boolean {
+  if (g.method === 'deterministic' && g.turned?.length) return true;
   return g.method === 'deterministic' && !g.passed && g.hits.length > 0 && g.hits.length / g.points.length >= UNSURE_FROM;
 }
 
 /** Compute follows the debt: heavy debts always get the model, lighter ones only when the free grade is unsure. */
 export function needsModel(w: Weight | null, free: Grade, attempt: string): boolean {
   if (w === 'heavy') return true;
-  const clearPass = free.points.length > 0 && free.hits.length / free.points.length >= CLEAR_PASS;
+  const clearPass = !free.turned?.length && free.points.length > 0 && free.hits.length / free.points.length >= CLEAR_PASS;
   return !(clearPass || norm(attempt).length < MIN_ATTEMPT);
 }
 
