@@ -59,3 +59,9 @@ def test_workflow_publishes_an_artifact_only_after_a_windows_start() -> None:
     assert "upload-artifact" in WORKFLOW
     for never in ("release", "gh release", "softprops", "secrets."):
         assert never not in WORKFLOW.lower().replace("releases", ""), never
+
+
+def test_cli_helper_returns_only_the_exit_code() -> None:
+    """Found by the first Windows run: `migrate` prints a line, and a function returns its pipeline output too."""
+    common = (ROOT / "scripts" / "_common.ps1").read_text(encoding="utf-8")
+    assert "@CliArgs | Write-Host; return $LASTEXITCODE" in common

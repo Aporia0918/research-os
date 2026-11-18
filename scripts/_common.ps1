@@ -10,4 +10,6 @@ $PyW = Join-Path $PyDir 'pythonw.exe'   # no console window (owner rule: never p
 $PidDir = Join-Path $DataDir 'run'
 $env:PYTHONUTF8 = '1'
 function Assert-Venv { if (-not (Test-Path $Py)) { throw "Python not found at $Py. Reinstall Research OS." } }
-function Invoke-Api([string[]]$CliArgs) { & $Py -m researchos.app.cli @CliArgs; return $LASTEXITCODE }
+# The CLI's output goes to the host: a function returns everything written to its pipeline, so `migrate` printing
+# "core schema version N" made the result a non-empty array (truthy) and start.ps1 threw 'migration failed'.
+function Invoke-Api([string[]]$CliArgs) { & $Py -m researchos.app.cli @CliArgs | Write-Host; return $LASTEXITCODE }
