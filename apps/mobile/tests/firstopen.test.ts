@@ -84,11 +84,13 @@ describe('第一次打开', () => {
   it('who you are, one thing explained, booked as your own idea, then into the app', async () => {
     const done = vi.fn();
     const h = await mount(createElement(Welcome, { onDone: done }));
+    expect(h.querySelector('[data-testid=ai-identity]')!.textContent).toContain('账账是 AI，不是真人');
     await click(button(h, '大学生'));
     expect(h.textContent).toContain('最近在学什么？');
     type(h.querySelector('textarea'), '导数就是瞬时变化率。比如速度是位移对时间的导数');
     await click(button(h, '讲完了'));
     expect(h.querySelector('[data-testid=welcome-reply]')!.textContent).toContain('进账');
+    expect(h.querySelector('[data-testid=ai-note]')).toBeNull(); // the fixed reply, no model: nothing to label
     const es = await book.all();
     expect(es).toHaveLength(1);
     expect(es[0]).toMatchObject({ board: '学习', helpLevel: 'own', question: '导数就是瞬时变化率', weight: null });

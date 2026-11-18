@@ -16,6 +16,7 @@ import { askDebts } from '../rules/understand';
 import { importStages, resetImportTimings, timed } from '../perf/timing';
 import { PhotoAsk } from './PhotoAsk';
 import { risk } from '../rules/care';
+import { AiNote } from './AiNote';
 import { CareNote } from './CareNote';
 
 export function AskScreen({ demo }: { demo: boolean }) {
@@ -133,7 +134,7 @@ export function AskScreen({ demo }: { demo: boolean }) {
     {local && <div className="card" data-testid="local-answer">
       <div className="muted">{local.mode === 'model' ? tr('模型回答(手机直连模型,辅助定位原文、由你判断)') : tr('规则模式:下面是找到的原文段落(带页码),辅助定位原文、由你判断')}</div>
       {local.reason && <div className="verdict warn" role="status">{local.reason}</div>}
-      {local.mode === 'model' && <p className="prewrap">{local.text}</p>}
+      {local.mode === 'model' && <><p className="prewrap">{local.text}</p><AiNote /></>}
       {local.mode === 'model' && (local.pages.length ? <div className="muted">{tr('引用页码:')}{local.pages.map(n => <span className="cite" key={n}>[p.{n}]</span>)}</div> : <div className="verdict warn">{tr('模型回答没有标出页码,请对照下面的原文段落。')}</div>)}
       {local.passages.map((p, i) => <div className="passage" key={i}><span className="cite">p.{p.page}</span><div>{p.text.length > 400 ? p.text.slice(0, 400) + '…' : p.text}</div></div>)}
     </div>}

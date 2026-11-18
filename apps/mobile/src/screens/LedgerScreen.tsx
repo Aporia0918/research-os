@@ -457,7 +457,7 @@ function TrialCard({ onEnd, onCopy }: { onEnd: () => void; onCopy: (t: string, d
   if (!start) return null;
   return (
     <div className="card" data-testid="trial-card">
-      <p className="muted">{tr('两周试用从 {0} 开始。', start)}</p>
+      <p className="muted">{tr('一周试用从 {0} 开始。', start)}</p>
       <button className="ghost" onClick={onEnd}>{tr('现在做结束小测')}</button>
       <button className="ghost" onClick={() => void book.trialSummary(today()).then(s => onCopy(JSON.stringify(s), tr('试用结果已复制，只有数字，没有题目和回答。')))}>
         {tr('复制试用结果')}

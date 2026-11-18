@@ -9,6 +9,7 @@ import { askPhoto, photoDebt, type PhotoBoard } from '../logic/photoAsk';
 import { book, today } from '../ledger/book';
 import type { Entry } from '../ledger/ledger';
 import { newId } from '../local/store';
+import { AiNote } from './AiNote';
 
 const BOARDS: PhotoBoard[] = ['学习', '科研'];
 
@@ -58,7 +59,7 @@ export function PhotoAsk() {
       <div className="muted">{tr('要用能读图的模型。没填密钥或模型读不了图时，会直接告诉你原因。')}</div>
     </div>}
     {error && <div className="card error" role="alert">{error}</div>}
-    {answer && <div className="card" data-testid="photo-answer"><p className="prewrap">{answer}</p></div>}
+    {answer && <div className="card" data-testid="photo-answer"><p className="prewrap">{answer}</p><AiNote /></div>}
     {booked && <div className="card" data-testid="photo-booked">
       <h2>{tr('记了 1 笔理解债')}</h2>
       <div>{booked.question}</div>

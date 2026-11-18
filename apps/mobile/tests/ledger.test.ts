@@ -61,7 +61,7 @@ describe('思维账本 on the phone, no key', () => {
     expect(JSON.stringify(s)).not.toContain('导数');
   });
 
-  it('trial switch: persisted start, half held back, quiz opens after two weeks or on request', async () => {
+  it('trial switch: persisted start, half held back, quiz opens after one week or on request', async () => {
     const kv = memoryKV();
     const book = new Book(kv);
     await book.add({ clientId: 'pre', board: '学习', question: '试用前', answer: DERIV, helpLevel: 'answer' }, '2026-11-30');
@@ -70,11 +70,11 @@ describe('思维账本 on the phone, no key', () => {
     expect(await new Book(kv).trialStart()).toBe(D0); // survives a restart, first start wins
     for (let i = 0; i < 20; i++) await book.add({ clientId: `s${i}`, board: '学习', question: `题 ${i}`, answer: DERIV, helpLevel: 'answer' }, D0);
     expect((await book.all()).filter((e) => e.held).length).toBeGreaterThan(5);
-    expect(await book.quizDue('2026-12-14')).toEqual([]);
-    expect((await book.quizDue('2026-12-14', true)).length).toBe(20); // ending early opens it, pre-trial debt left out
-    const due = await book.quizDue('2026-12-15');
+    expect(await book.quizDue('2026-12-07')).toEqual([]);
+    expect((await book.quizDue('2026-12-07', true)).length).toBe(20); // ending early opens it, pre-trial debt left out
+    const due = await book.quizDue('2026-12-08');
     await book.quiz(due[0].id, '不会');
-    expect((await book.quizDue('2026-12-15')).length).toBe(19);
+    expect((await book.quizDue('2026-12-08')).length).toBe(19);
   });
 
   it('process record stays on the phone: one pass is half explained, own ideas count as independent', async () => {

@@ -9,6 +9,7 @@ import { newId } from '../local/store';
 import { fromShared } from '../me/shareIn';
 import { preset, WHO, type Profile, type Who } from '../me/profile';
 import { firstFeedback } from './ledger/shared';
+import { AiNote } from './AiNote';
 import { risk } from '../rules/care';
 import { CareNote } from './CareNote';
 
@@ -16,6 +17,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
   const [who, setWho] = useState<Who | null>(null);
   const [step, setStep] = useState<'who' | 'talk' | 'reply'>('who');
   const [said, setSaid] = useState('');
+  const [byModel, setByModel] = useState(false);
   const [reply, setReply] = useState('');
   const [busy, setBusy] = useState(false);
   const [zz, setZz] = useState<ZzState>('wave');
@@ -32,6 +34,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
     const q = fromShared(said).question || said.trim();
     await book.add({ clientId: newId(), board: research ? '科研' : '学习', question: q, ownIdea: said.trim(), helpLevel: 'own' }, today());
     const r = await firstFeedback(said);
+    setByModel(r !== null);
     setReply(r ?? tr('你先自己讲了一遍，这算一笔进账，思考结余 +1。以后问 AI 之前先说一句自己的想法，账就会轻一档。'));
     setZz('paid'); setBusy(false); setStep('reply');
   }
@@ -44,6 +47,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
           {step === 'who' && <>
             <h1>{tr('你好，我是账账')}</h1>
             <p>{tr('你主要用它来做什么？说一句就好，之后随时能改。')}</p>
+            <p className="muted" data-testid="ai-identity">{tr('账账是 AI，不是真人。它的回答可能有错，重要的事请自己核对。')}</p>
             <div className="chips" role="group" aria-label={tr('我是')}>{WHO.map(w => (
               <button key={w.id} type="button" className="chip" onClick={() => pick(w.id)}>{tr(w.label)}</button>
             ))}</div>
@@ -60,6 +64,7 @@ export function Welcome({ onDone }: { onDone: (p: Profile, board: '学习' | '�
           </>}
           {step === 'reply' && <>
             <p className="bubble helper" data-testid="welcome-reply">{reply}</p>
+            {byModel && <AiNote />}
             <p className="muted">{tr('以后问 AI 时记一笔，过几天我来问你「这个你给我讲讲？」，讲顺了就还清。')}</p>
             <button className="primary" onClick={finish}>{tr('开始用')}</button>
           </>}

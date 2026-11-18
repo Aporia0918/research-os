@@ -260,7 +260,7 @@ const DAYS = 'mindledger.days.v1';
 const OUTBOX = 'mindledger.outbox.v1'; // repayments the computer has not seen yet, oldest first
 const DRAFT = 'mindledger.draft.v1.'; // + entry id: what the user had said when they were interrupted
 const TRIAL = 'mindledger.trial.v1'; // the day the two-week trial started; absent = no trial
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 7;
 
 /** Stable coin flip per entry: the trial holds back half the debts from repayment, so each user is their own control. */
 const heldBack = (clientId: string): boolean => [...clientId].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 2 === 1;

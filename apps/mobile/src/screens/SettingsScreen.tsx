@@ -132,10 +132,10 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onL
         <button className="ghost" disabled={!keyOnPhone} onClick={removeKey}>{tr('删除本机密钥')}</button>
       </div>
       <div className="card" data-testid="trial-settings">
-        <div><b>{tr('两周试用')}</b></div>
-        <div className="muted">{tr('开始后，新记的债随机一半不排还账，用来和排了还账的那一半比；两周后在账本页做一次小测。交回的只有数字，没有题目和回答。')}</div>
-        {trial ? <div className="muted">{tr('两周试用从 {0} 开始。', trial)}</div>
-          : <button className="ghost" onClick={() => void joinTrial()}>{tr('开始两周试用')}</button>}
+        <div><b>{tr('一周试用')}</b></div>
+        <div className="muted">{tr('开始后，新记的债随机一半不排还账，用来和排了还账的那一半比；一周后在账本页做一次小测。交回的只有数字，没有题目和回答。')}</div>
+        {trial ? <div className="muted">{tr('一周试用从 {0} 开始。', trial)}</div>
+          : <button className="ghost" onClick={() => void joinTrial()}>{tr('开始一周试用')}</button>}
       </div>
       <BackupCard />
       <UpdateCard />
