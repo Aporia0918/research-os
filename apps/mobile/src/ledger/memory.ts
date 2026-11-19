@@ -33,6 +33,12 @@ export function review(m: Memory | undefined, booked: string, today: string, rat
   return { s: round(card.stability), d: round(card.difficulty), reps: card.reps, lapses: card.lapses, state: card.state, last: today, due };
 }
 
+/**
+ * A debt explained right after booking (讲给我听 on the computer) starts with that as its first review: 1 again, 2 hard,
+ * 3 good. Only the reviews after the first repayment follow it; the first repayment day stays on the fixed steps.
+ */
+export const seed = (booked: string, rating: 1 | 2 | 3): Memory => review(undefined, booked, booked, rating as FsrsGrade);
+
 /** Predicted chance of recalling it today (R), or null before the first repayment. */
 export function recallChance(m: Memory | undefined, today: string): number | null {
   if (!m) return null;

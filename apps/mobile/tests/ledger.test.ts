@@ -232,4 +232,18 @@ describe('电脑端认得标红、用在哪里、这个不用了和召回单', (
     const [got] = await book.all();
     expect(got).toMatchObject({ board: '科研', kind: 'citation', red: true, usedIn: '第一章', weight: 'heavy', fromComputer: true });
   });
+  it('a debt explained on the computer starts its memory there: a weak explanation brings later repayments sooner', async () => {
+    const pulled = async (first_rating: 1 | 3) => {
+      const book = new Book(memoryKV());
+      await book.sync({ entry: async () => ({ id: 'x' }), attempt: async () => ({}), due: async () => [{ id: 's1', client_id: 'c1',
+        topic: '', question: '什么是标准误', answer: '标准误是样本均值的标准差。', own_idea: '', help_level: 'answer' as const,
+        due_on: '2026-12-02', created_on: D0, first_rating }] }, D0);
+      const [e] = await book.all();
+      expect(e.dueOn).toBe('2026-12-02'); // the first repayment day stays on the fixed steps
+      return (await book.repay(e.id, '标准误是样本均值的标准差', '2026-12-02')).mem;
+    };
+    const [weak, clean] = [await pulled(1), await pulled(3)];
+    expect(weak.s).toBeLessThan(clean.s);
+    expect(weak.due < clean.due).toBe(true);
+  });
 });

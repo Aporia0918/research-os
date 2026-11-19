@@ -3,7 +3,7 @@
 // The phone grader adds one guard the Python one lacks: a point said back turned round (正比 → 反比) is never a pass.
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
-import { ratingOf, review, type Memory } from './memory';
+import { ratingOf, review, seed, type Memory } from './memory';
 import { backs, opposing, type Source } from '../rules/recall';
 import { findSpan } from '../rules/text';
 
@@ -244,7 +244,7 @@ export interface LedgerRemote {
   attempt(serverId: string, text: string, key: string): Promise<unknown>;
   due(): Promise<{ id: string; client_id: string; topic: string; question: string; answer: string; own_idea: string;
     help_level: HelpLevel; due_on: string | null; created_on: string; board?: Entry['board']; kind?: Entry['kind'] | null;
-    used_in?: string; red?: boolean }[]>;
+    used_in?: string; red?: boolean; first_rating?: 1 | 2 | 3 | null }[]>;
   /** 讲不出来 / 用在哪里 / 这个不用了 after the entry was sent (a computer from before these fields leaves it out). */
   mark?(serverId: string, m: { red: boolean; used_in: string; dropped_on: string | null }): Promise<unknown>;
   /** A 召回单 found on the phone, so the computer can show it and mark the sentence yellow. */
@@ -563,7 +563,8 @@ export class Book {
         es.push({ id: `mind_${d.client_id}`, clientId: d.client_id, board: d.board ?? '学习', topic: d.topic, question: d.question,
           answer: d.answer, ownIdea: d.own_idea, helpLevel: d.help_level, weight: d.kind ? 'heavy' : weightOf(d.help_level, Boolean(d.own_idea.trim())),
           passes: 0, attempts: 0, dueOn: d.due_on ?? today, createdOn: d.created_on, serverId: d.id, fromComputer: true,
-          ...(d.kind ? { kind: d.kind } : {}), ...(d.used_in ? { usedIn: d.used_in } : {}), ...(d.red ? { red: true } : {}) });
+          ...(d.kind ? { kind: d.kind } : {}), ...(d.used_in ? { usedIn: d.used_in } : {}), ...(d.red ? { red: true } : {}),
+          ...(d.first_rating ? { mem: seed(d.created_on, d.first_rating) } : {}) });
         pulled += 1;
       }
       const news = await this.takePushes(remote, es, today);
