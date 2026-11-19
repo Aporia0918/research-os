@@ -38,23 +38,23 @@ class Grade:
     method: str  # model | deterministic (free grader only: no model asked, unsure, or none usable)
 
 
-def _norm(s: str) -> str:
+def norm(s: str) -> str:
     return FILLER.sub("", re.sub(r"[\W_]+", "", s.lower()))
 
 
-def _bigrams(s: str) -> set[str]:
-    t = _norm(s)
+def bigrams(s: str) -> set[str]:
+    t = norm(s)
     return {t[i:i + 2] for i in range(len(t) - 1)} or ({t} if t else set())
 
 
 def key_points(reference: str) -> list[str]:
-    parts = [p.strip() for p in re.split(r"[。！？!?；;\n]+|(?<=[.])\s+", reference) if len(_norm(p)) >= 4]
+    parts = [p.strip() for p in re.split(r"[。！？!?；;\n]+|(?<=[.])\s+", reference) if len(norm(p)) >= 4]
     return parts[:MAX_POINTS] or ([reference.strip()] if reference.strip() else [])
 
 
 def grade_deterministic(reference: str, attempt: str) -> Grade:
-    points, said = key_points(reference), _bigrams(attempt)
-    hits = [i for i, p in enumerate(points) if (b := _bigrams(p)) and len(b & said) / len(b) >= BIGRAM_HIT]
+    points, said = key_points(reference), bigrams(attempt)
+    hits = [i for i, p in enumerate(points) if (b := bigrams(p)) and len(b & said) / len(b) >= BIGRAM_HIT]
     return Grade(points, hits, verdict(len(hits), len(points)), "deterministic")
 
 
@@ -86,7 +86,7 @@ def needs_model(weight: str | None, free: Grade, attempt: str) -> bool:
     if weight == "heavy":
         return True
     clear_pass = bool(free.points) and len(free.hits) / len(free.points) >= CLEAR_PASS
-    return not (clear_pass or len(_norm(attempt)) < MIN_ATTEMPT)
+    return not (clear_pass or len(norm(attempt)) < MIN_ATTEMPT)
 
 
 def grade(conn: sqlite3.Connection, gw: Gateway | None, *, question: str, reference: str, attempt: str,
