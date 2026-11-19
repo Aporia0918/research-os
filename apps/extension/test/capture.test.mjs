@@ -37,3 +37,8 @@ test("an edited question wins; an empty one is refused", () => {
   assert.throws(() => toEntry({ question: "", answer: "x" }, { help: "hint" }, "c"), /question is empty/);
   assert.throws(() => toEntry({ question: "q", answer: "x" }, { help: "copy" }, "c"), /help must be/);
 });
+
+test("hashed class names: the block before the answer is the question, nested answers count once", () => {
+  assert.deepEqual(extractLastTurn(page("deepseek-hashed"), "chat.deepseek.com"),
+    { question: "什么是过拟合？", answer: "过拟合是模型把训练数据里的噪声也学了进去。\nmodel.fit(x, y)" });
+});

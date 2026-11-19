@@ -1,7 +1,8 @@
 // 思维账本 capture: find the last question/answer pair on a web AI chat page, or use the selected text.
 // Pure DOM reading, no network. Runs as a content script (window.MindCapture) and under node tests (module.exports).
-// The site selectors are a best guess at each site's structure and break when a site changes its markup;
-// selecting text and pressing the button always works as the fallback.
+// The site selectors are a best guess at each site's structure (not yet checked on the live pages) and break when a
+// site changes its markup. Two fallbacks: when no message of the user's matches, the nearest text block before the
+// answer is taken as the question (the user can edit it); and selecting text before pressing always works.
 (function (root) {
   "use strict";
 
@@ -21,14 +22,27 @@
   const clean = (s) => (s || "").replace(/[ \t]+/g, " ").replace(/ ?\n\s*/g, "\n").trim().slice(0, MAX_TEXT);
   const before = (a, b) => Boolean(a.compareDocumentPosition(b) & 4); // b follows a
 
+  const last = (xs) => xs[xs.length - 1];
+  // Answers nested in answers (a code block's own .markdown) count once, as the outermost.
+  const outermost = (els) => els.filter((el) => !els.some((o) => o !== el && o.contains(el)));
+
+  /** The closest block with text before `el`, climbing at most six levels: the message above an answer. */
+  function previousText(el) {
+    for (let node = el, depth = 0; node && depth < 6; node = node.parentElement, depth += 1) {
+      for (let sib = node.previousElementSibling; sib; sib = sib.previousElementSibling) {
+        if (clean(sib.textContent)) return sib;
+      }
+    }
+    return null;
+  }
+
   /** Last AI answer and the user message right before it; null when the page shows neither. */
   function extractLastTurn(doc, host) {
     const site = SITES[host] || GENERIC;
-    const answers = [...doc.querySelectorAll(site.ai)];
-    const answer = answers[answers.length - 1];
+    const find = (sel) => outermost([...doc.querySelectorAll(sel)]);
+    const answer = last(find(site.ai)) || (site !== GENERIC && last(find(GENERIC.ai)));
     if (!answer) return null;
-    const asks = [...doc.querySelectorAll(site.user)].filter((u) => before(u, answer));
-    const question = asks[asks.length - 1];
+    const question = last(find(site.user).filter((u) => before(u, answer))) || previousText(answer);
     const turn = { question: clean(question && question.textContent), answer: clean(answer.textContent) };
     return turn.answer ? turn : null;
   }

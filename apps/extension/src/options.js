@@ -11,5 +11,5 @@ form.addEventListener("submit", async (ev) => {
   if (!(await chrome.permissions.request({ origins: [`${server}/*`] }))) return void (msg.textContent = "没有授权访问这个地址");
   await chrome.storage.local.set({ server });
   const res = await chrome.runtime.sendMessage({ type: "pair", code: form.code.value.replace(/[\s-]/g, "").toUpperCase() });
-  msg.textContent = res.ok ? "配对成功，可以在 DeepSeek 或豆包网页上点「记这一条」了" : res.error;
+  msg.textContent = res.ok ? "配对成功，可以在 DeepSeek 或豆包网页上点「记一笔」了" : res.error;
 });

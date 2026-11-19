@@ -84,4 +84,6 @@ jobs:
       - run: npx -y pnpm@9 run lint
       - run: npx -y pnpm@9 run typecheck
       - run: npx -y pnpm@9 run test
+      - name: 记一笔 browser extension (node --test, jsdom from apps/web)
+        run: node --test ../extension/test/*.test.mjs
       - run: npx -y pnpm@9 run build

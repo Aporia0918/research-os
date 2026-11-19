@@ -20,12 +20,17 @@ async function post(path, body, key) {
   return data;
 }
 
+const entry = (id) => `/api/v1/mind-ledger/entries/${encodeURIComponent(id)}`;
+const HANDLERS = {
+  record: (m) => post("/api/v1/mind-ledger/entries", m.entry, m.entry.client_id)
+    .then((e) => ({ ok: true, id: e.id, weight: e.weight, due: e.due_on })),
+  explain: (m) => post(`${entry(m.id)}/explain`, { text: m.text }, crypto.randomUUID()).then((r) => ({ ok: true, reply: r })),
+  hint: (m) => post(`${entry(m.id)}/explain/hint`, {}, crypto.randomUUID()).then((h) => ({ ok: true, hint: h })),
+  pair: (m) => post("/api/v1/auth/pair", { code: m.code, device_name: "浏览器插件" }, crypto.randomUUID()).then(() => ({ ok: true })),
+};
+
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
-  const run = msg.type === "record"
-    ? post("/api/v1/mind-ledger/entries", msg.entry, msg.entry.client_id).then((e) => ({ ok: true, due: e.due_on }))
-    : msg.type === "pair"
-      ? post("/api/v1/auth/pair", { code: msg.code, device_name: "浏览器插件" }, crypto.randomUUID()).then(() => ({ ok: true }))
-      : Promise.resolve({ ok: false, error: "unknown message" });
+  const run = HANDLERS[msg.type] ? HANDLERS[msg.type](msg) : Promise.resolve({ ok: false, error: "unknown message" });
   run.catch((e) => ({ ok: false, error: e.message })).then(reply);
   return true; // async reply
 });

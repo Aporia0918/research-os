@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "思维账本 · 记这一条",
-  "version": "0.1.0",
-  "description": "在网页 AI 对话里点一下，把这次借 AI 的帮助记进自己的思维账本。",
+  "name": "思维账本 · 记一笔",
+  "version": "0.2.0",
+  "description": "在网页 AI 对话里点「记一笔」，把这次借 AI 的帮助记进思维账本，再当场讲给我听。",
   "permissions": ["storage"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": { "service_worker": "src/background.js" },
@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["https://chat.deepseek.com/*", "https://www.doubao.com/*"],
-      "js": ["src/capture.js", "src/content.js"],
+      "js": ["src/capture.js", "src/explain.js", "src/content.js"],
       "run_at": "document_idle"
     }
   ]
