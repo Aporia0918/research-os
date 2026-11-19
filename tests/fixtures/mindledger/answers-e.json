@@ -1,0 +1,645 @@
+{
+ "note": "Held-out set E, written 2026-11-19 by the team (Claude) after set D had been scored and its three wrong passes (operation words swapped in method answers) were known, and committed before the operation-word fix. 20 questions, 5 per knowledge type, 5 answers each; fluent wrong answers include swapped operations and steps. Not real students' answers; the writer also writes the grader. Score once with the grader frozen (scripts/judge_eval.py).",
+ "items": [
+  {
+   "type": "concept",
+   "q": "什么是假阳性？",
+   "ref": "假阳性是实际没有效应却判断为有效应。它对应第一类错误。显著性水平控制假阳性的概率。",
+   "attempts": [
+    {
+     "text": "假阳性就是实际上没有效应却判断成有效应，它对应第一类错误，显著性水平控制假阳性的概率",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "本来什么都没有，我们却说发现了东西，这就是犯了第一种错；我们定的那个显著门槛就是在管这种错出现的机会",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "假阳性是实际有效应却判断为没有效应，它对应第二类错误，检验效能控制假阳性的概率",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "假阳性是一种错误",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "灵敏度是真阳性率",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "concept",
+   "q": "什么是正则化？",
+   "ref": "正则化是在损失函数里加上惩罚项。它限制模型参数不要太大。这样可以减少过拟合。",
+   "attempts": [
+    {
+     "text": "正则化是在损失函数里加惩罚项，限制模型参数不要太大，这样可以减少过拟合",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "训练时的目标里多扣一项分，参数一大就罚，逼着模型别把系数搞得很夸张，模型就不容易死记训练数据",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "正则化是在损失函数里减去奖励项，鼓励模型参数变大，这样可以增加过拟合",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "正则化是一种技巧",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "批量大小影响训练速度",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "concept",
+   "q": "什么是心输出量？",
+   "ref": "心输出量是心脏每分钟泵出的血量。它等于每搏输出量乘以心率。运动时心输出量增加。",
+   "attempts": [
+    {
+     "text": "心输出量是心脏每分钟泵出的血量，等于每搏输出量乘以心率，运动时会增加",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "一分钟里心脏总共打出去多少血就是它，算法是每跳一次打出的量再乘上一分钟跳几次，人一运动这个数就往上走",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "心输出量是心脏每分钟泵出的血量，等于每搏输出量加上心率，运动时心输出量减少",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "心输出量和心脏有关",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "血压分为收缩压和舒张压",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "concept",
+   "q": "什么是信噪比？",
+   "ref": "信噪比是信号功率与噪声功率之比。信噪比越高信号越清楚。常用分贝表示。",
+   "attempts": [
+    {
+     "text": "信噪比是信号功率与噪声功率之比，越高信号越清楚，常用分贝表示",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "有用的部分有多强，跟干扰有多强相比的倍数；这个倍数越大，听到看到的东西越干净，一般换算成分贝来写",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "信噪比是噪声功率与信号功率之和，信噪比越高信号越模糊，不能用分贝表示",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "信噪比是一个比值",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "滤波器分为低通和高通",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "concept",
+   "q": "什么是中位数？",
+   "ref": "中位数是把数据从小到大排序后位于中间的数。它不受极端值影响。偏态数据常用中位数描述中心。",
+   "attempts": [
+    {
+     "text": "中位数是把数据从小到大排序后位于中间的数，不受极端值影响，偏态数据常用它描述中心",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "把所有数排好队，站在正中间那个就是；个别特别大或特别小的数拽不动它，所以分布歪的时候拿它代表一般水平",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "中位数是把所有数据相加后除以个数，它很容易受极端值影响，偏态数据不能用中位数",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "中位数是一种统计量",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "方差描述数据的离散程度",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "cause",
+   "q": "为什么抽样误差无法避免？",
+   "ref": "样本只是总体的一部分。每次抽到的个体不同。所以样本统计量和总体参数之间总有差异。",
+   "attempts": [
+    {
+     "text": "样本只是总体的一部分，每次抽到的个体不同，所以样本统计量和总体参数之间总会有差异",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "我们只看了一小撮人，换一批人结果就会变一点，所以从这一小撮算出来的数跟全体真实的数总会有出入",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "样本就是总体本身，每次抽到的个体相同，所以样本统计量和总体参数之间没有差异",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "因为抽样不完美",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "抽样方法有简单随机抽样",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "cause",
+   "q": "为什么神经冲动在有髓纤维上传导更快？",
+   "ref": "髓鞘起绝缘作用。动作电位只在郎飞结处产生。冲动跳跃式传导所以速度更快。",
+   "attempts": [
+    {
+     "text": "髓鞘起绝缘作用，动作电位只在郎飞结处产生，冲动跳跃式传导所以更快",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "外面包的那层鞘把电隔开了，只有中间露出来的那些小节点才放电，信号一跳一跳地往前走，自然就快",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "髓鞘起导电作用，动作电位在整条纤维上连续产生，冲动逐点传导所以速度更慢",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "和髓鞘有关",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "突触传递是单向的",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "cause",
+   "q": "为什么增加训练数据能减轻过拟合？",
+   "ref": "数据多了噪声更难被全部记住。模型被迫学习更普遍的规律。所以在新数据上表现更好。",
+   "attempts": [
+    {
+     "text": "数据多了噪声更难被全部记住，模型被迫学更普遍的规律，所以在新数据上表现更好",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "题目一多，那些偶然的小毛病就背不过来了，只好去抓真正共同的东西，换了新题也能做对",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "数据多了噪声更容易被全部记住，模型只学到个别特例，所以在新数据上表现更差",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "数据越多越好",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "学习率决定每一步更新的大小",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "cause",
+   "q": "为什么大样本时t分布接近正态分布？",
+   "ref": "t分布的尾部比正态分布更厚。自由度增大时尾部变薄。样本量大时自由度大所以接近正态分布。",
+   "attempts": [
+    {
+     "text": "t分布的尾部比正态更厚，自由度增大时尾部变薄，样本量大自由度大所以接近正态",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "t分布两头比钟形曲线拖得更长；能自由变动的数越多，两头就收得越紧，人多的时候它就几乎和钟形曲线一样",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "t分布的尾部比正态分布更薄，自由度增大时尾部变厚，样本量大时自由度小所以接近正态分布",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "因为样本大",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "正态分布是对称的",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "cause",
+   "q": "为什么运动后心率会加快？",
+   "ref": "运动时肌肉需要更多氧气。交感神经兴奋。心率加快以增加供血。",
+   "attempts": [
+    {
+     "text": "运动时肌肉需要更多氧气，交感神经兴奋，心率加快以增加供血",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "一动起来肌肉要的氧变多了，身体那套让人紧张兴奋的神经被调动起来，心就跳得更快，把更多血送过去",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "运动时肌肉需要更少氧气，副交感神经兴奋，心率减慢以减少供血",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "运动消耗能量",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "血红蛋白负责运输氧气",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "method",
+   "q": "怎么计算均值的95%置信区间？",
+   "ref": "先求样本均值和标准误。再查出对应的临界值。用均值减去和加上临界值乘以标准误。",
+   "attempts": [
+    {
+     "text": "先求样本均值和标准误，再查出对应的临界值，用均值减去和加上临界值乘以标准误",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "算出平均数和它的误差大小，查表拿到那个对应百分之九十五的倍数，然后平均数往下扣、往上加这个倍数乘误差，两头就是区间",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "先求样本均值和标准差，再查出对应的临界值，用均值乘以临界值再除以标准误",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "置信区间要用到标准误",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "假设检验有原假设和备择假设",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "method",
+   "q": "怎么做卡方检验？",
+   "ref": "先列出观察频数的列联表。再根据行列合计算出期望频数。最后用观察与期望之差的平方除以期望求和得到卡方值。",
+   "attempts": [
+    {
+     "text": "先列出观察频数的列联表，再根据行列合计算出期望频数，最后用观察与期望之差的平方除以期望求和得到卡方值",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "把实际数到的个数排成一张表，按每行每列的总数推出理论上该有多少，然后每格的实际减理论，平方后除以理论数，全部加起来",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "先列出观察频数的列联表，再根据行列合计算出期望频数，最后用观察与期望之和的平方乘以期望求和得到卡方值",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "卡方检验用于分类数据",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "t检验比较两组均值",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "method",
+   "q": "怎么把模拟信号转成数字信号？",
+   "ref": "先用抗混叠滤波器滤掉高频。再按采样频率采样。最后对采样值量化编码。",
+   "attempts": [
+    {
+     "text": "先用抗混叠滤波器滤掉高频，再按采样频率采样，最后对采样值量化编码",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "先过一道滤波把太高的频率去掉免得混叠，然后按固定的节奏取点，最后把取到的值变成一个个整数编码",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "先对信号量化编码，再按采样频率采样，最后用滤波器把低频滤掉",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "用模数转换器",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "傅里叶变换可以看频谱",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "method",
+   "q": "怎么计算皮尔逊相关系数？",
+   "ref": "先求两个变量的协方差。再求两个变量各自的标准差。用协方差除以两个标准差的乘积。",
+   "attempts": [
+    {
+     "text": "先求两个变量的协方差，再求各自的标准差，用协方差除以两个标准差的乘积",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "看两个量一起变动的程度，再看它们各自分散得多厉害，拿前者除以两个分散程度相乘的结果",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "先求两个变量的协方差，再求两个变量各自的均值，用协方差乘以两个均值的和",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "相关系数在负一到一之间",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "回归可以预测因变量",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "method",
+   "q": "怎么计算BMI？",
+   "ref": "先测量体重，单位是千克。再测量身高，单位是米。用体重除以身高的平方。",
+   "attempts": [
+    {
+     "text": "先测体重，单位千克，再测身高，单位米，用体重除以身高的平方",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "称一下有多少公斤，量一下多少米高，拿公斤数去除以身高自己乘自己的结果",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "先测量体重，单位是克。再测量身高，单位是厘米。用体重乘以身高的平方",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "BMI和体重有关",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "血糖可以用血糖仪测量",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "claim",
+   "q": "报告结论：问卷显示学生平均每天学习5小时，所以学生都很努力。这句结论有什么问题？",
+   "ref": "平均数不能代表每个人。可能少数人学得很长拉高了均值。还要看分布和自我报告是否可靠。",
+   "attempts": [
+    {
+     "text": "平均数不能代表每个人，可能少数人学得很长拉高了均值，还要看分布和自我报告可不可靠",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "一个平均值说明不了每个人都这样，也许几个特别拼的人把数拉上去了；而且得看看大家分布成什么样，自己填的时长准不准",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "平均数可以代表每个人，少数人不会影响均值，自我报告一定可靠，所以结论没有问题",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "样本可能有偏差",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "问卷要设计好问题",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "claim",
+   "q": "报告结论：新药组治愈率比安慰剂组高10%（p=0.03），所以新药对所有病人都有效。这句结论有什么问题？",
+   "ref": "结果是两组平均水平的差异。不能说明对每个病人都有效。还要考虑亚组差异和不良反应。",
+   "attempts": [
+    {
+     "text": "这是两组平均水平的差异，不能说明对每个病人都有效，还要考虑亚组差异和不良反应",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "显著只说明整体看新药那组好一些，并不代表每个人吃了都好；不同类型的病人可能反应不同，还得看副作用",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "结果说明每个病人都会被治愈，不需要考虑亚组差异，新药没有不良反应",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "p值小说明有效",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "安慰剂是没有药效的物质",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "claim",
+   "q": "报告结论：模型的AUC是0.98，所以这个模型可以直接用于临床诊断。这句结论有什么问题？",
+   "ref": "AUC高只说明区分能力好。还要看在实际阈值下的灵敏度和特异度。还需要前瞻性临床验证。",
+   "attempts": [
+    {
+     "text": "AUC高只说明区分能力好，还要看实际阈值下的灵敏度和特异度，还需要前瞻性临床验证",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "这个数大只能说模型分得开两类人，真要用还得看定下一个分界线后漏掉多少、错抓多少，而且要在新病人身上提前试过才行",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "AUC高说明模型在任何阈值下都完美，不需要看灵敏度和特异度，也不需要临床验证",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "AUC越高越好",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "ROC曲线以假阳性率为横轴",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "claim",
+   "q": "报告结论：实验组脑电信号功率增加，说明受试者注意力提高了。这句结论有什么问题？",
+   "ref": "功率变化不一定只由注意力引起。可能有肌电或眼动伪迹。需要排除伪迹并用行为指标佐证。",
+   "attempts": [
+    {
+     "text": "功率变化不一定只是注意力引起的，可能有肌电或眼动伪迹，要排除伪迹并用行为指标佐证",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "信号强了可能有别的原因，比如咬牙眨眼带来的干扰也会让它变强；得先把这些干扰去掉，再拿做题表现之类的结果对照一下",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "功率变化只能由注意力引起，不可能有肌电或眼动伪迹，不需要行为指标",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "脑电信号需要预处理",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "脑电图电极按10-20系统放置",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  },
+  {
+   "type": "claim",
+   "q": "报告结论：用AI生成的文献综述说某方法已被广泛证实有效，所以我在论文里直接引用这句。这样做有什么问题？",
+   "ref": "AI可能编造或误读文献。要找到原文核对原句和数据。不能把没核实的说法当作已证实。",
+   "attempts": [
+    {
+     "text": "AI可能编造或误读文献，要找到原文核对原句和数据，不能把没核实的说法当成已证实",
+     "label": "ok",
+     "kind": "close"
+    },
+    {
+     "text": "AI给的出处可能是假的或者读错了，得自己把原始论文翻出来看那句话和数据是不是真这么写，没对过就不能说成定论",
+     "label": "ok",
+     "kind": "paraphrase"
+    },
+    {
+     "text": "AI不会编造文献，不需要找原文核对，AI说已证实的就可以直接当作已证实",
+     "label": "no",
+     "kind": "fluent-wrong"
+    },
+    {
+     "text": "要注意引用格式",
+     "label": "no",
+     "kind": "partial"
+    },
+    {
+     "text": "参考文献要按格式排列",
+     "label": "no",
+     "kind": "off-topic"
+    }
+   ]
+  }
+ ]
+}
