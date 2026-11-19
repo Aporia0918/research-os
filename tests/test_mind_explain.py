@@ -40,6 +40,17 @@ def test_three_states_per_point() -> None:
     assert explain.shown("turned") == explain.shown("maybe") == "review"
 
 
+def test_swapped_operations_and_steps_are_turned_round() -> None:
+    ref = "先计算每个变量的均值和标准差。每个值减去均值。再除以标准差。"
+    pts = [p.text for p in explain.points_of("怎么做数据标准化？", ref)]
+    assert "turned" in explain.judge_points(pts, "先计算每个变量的均值和标准差，每个值加上均值，再乘以标准差")
+    steps = [p.text for p in explain.points_of("怎么做？", "先把数据随机打乱。再切成K份。最后轮流验证。")]
+    backwards = "最后轮流验证，再切成K份，先把数据随机打乱"
+    assert explain.judge_points(steps, backwards) == ["ok"] * 3  # order is only read for a method
+    assert "turned" in explain.judge_points(steps, backwards, ordered=True)
+    assert explain.judge_points(steps, "先把数据随机打乱，再切成K份，最后轮流验证", ordered=True) == ["ok"] * 3
+
+
 def test_a_matcher_can_only_make_a_point_uncertain() -> None:
     pts = [p.text for p in explain.points_of("什么是标准误？", SE)]
     sure = explain.judge_points(pts, "完全不相干的一句话，讲的是别的事情", lambda ps, a: [0.99] * len(ps))

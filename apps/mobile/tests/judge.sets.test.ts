@@ -2,7 +2,8 @@
 // Set A was scored before the contradiction guard (TURNS in ledger.ts) and then used to build it; set B was committed
 // before the guard and scored once after. Set C was committed before the "said in other words" check (looseCover) and
 // scored once after; that check was tuned on set A only. The plan reports sets B and C. A model, when the user sets one,
-// is not measured here.
+// is not measured here. The two operation pairs (减/加, 除/乘) were added after the computer's held-out set D showed
+// swapped operations passing; they change no grade on sets A, B or C.
 import { describe, expect, it } from 'vitest';
 import A from './fixtures/judge/answers.json';
 import B from './fixtures/judge/answers-b.json';

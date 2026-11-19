@@ -5,7 +5,9 @@ It only answers "might this attempt say this point in other words?" and can only
 
 Off unless RESEARCHOS_SEMANTIC names a model fastembed supports (BAAI/bge-reranker-base for Chinese) and fastembed
 is installed (pip install fastembed). The model is downloaded from Hugging Face on first use; in mainland China set
-HF_ENDPOINT=https://hf-mirror.com. Any failure leaves the matcher off and the free grader alone.
+HF_ENDPOINT=https://hf-mirror.com, or download the model folder yourself (for example from ModelScope:
+modelscope download --model BAAI/bge-reranker-base --local_dir <dir>) and point RESEARCHOS_SEMANTIC_DIR at it; the
+folder must hold onnx/model.onnx and the tokenizer files. Any failure leaves the matcher off and the free grader alone.
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ from typing import Any
 from .explain import Matcher
 
 ENV = "RESEARCHOS_SEMANTIC"
+DIR_ENV = "RESEARCHOS_SEMANTIC_DIR"  # a model folder already on disk, so nothing is downloaded
 _why = ""
 
 
@@ -35,7 +38,8 @@ def matcher() -> Matcher | None:
     try:
         from fastembed.rerank.cross_encoder import TextCrossEncoder
 
-        model: Any = TextCrossEncoder(model_name=name)
+        local = os.environ.get(DIR_ENV, "").strip()
+        model: Any = TextCrossEncoder(model_name=name, **({"specific_model_path": local} if local else {}))
     except Exception as err:  # noqa: BLE001 - missing package, unknown model or no download: stay off
         _why = f"{type(err).__name__}: {err}"
         return None

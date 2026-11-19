@@ -29,11 +29,12 @@ def score(items: list[dict], match: explain.Matcher | None) -> dict:
     ms, typed = [], []
     for it in items:
         points = [p.text for p in explain.points_of(it["q"], it["ref"])]
+        kind = explain.type_of(it["q"])
         if "type" in it:
-            typed.append(explain.type_of(it["q"]) == it["type"])
+            typed.append(kind == it["type"])
         for a in it["attempts"]:
             t0 = time.perf_counter()
-            got = explain.outcome(explain.judge_points(points, a["text"], match))
+            got = explain.outcome(explain.judge_points(points, a["text"], match, ordered=kind == "method"))
             ms.append((time.perf_counter() - t0) * 1000)
             seen[(a["label"], got)] += 1
             seen[(a["kind"], got)] += 1

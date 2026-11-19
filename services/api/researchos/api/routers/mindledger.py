@@ -123,8 +123,9 @@ def explain_round(entry_id: str, data: ExplainIn, request: Request, p: Principal
                   conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
     """讲给我听 right after 记一笔: one round of the student's explanation. Graded before the write transaction;
     the reply says which points are said (通过 / 需补充 / 待复核), the follow-up if any, and at the end the result."""
-    pts = [x.text for x in session.points(conn, p.user_id, entry_id)]
-    now = explain.judge_points(pts, data.text, semantic.matcher())
+    pts = session.points(conn, p.user_id, entry_id)
+    now = explain.judge_points([x.text for x in pts], data.text, semantic.matcher(),
+                               ordered=any(x.type == "method" for x in pts))
 
     def run() -> tuple[int, Any]:
         return 200, session.round_(conn, p.user_id, p.actor, entry_id, data.text, now, date.today(), data.exam)

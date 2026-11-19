@@ -98,6 +98,8 @@ const TURNS: [RegExp, RegExp][] = [
   [/去极化/, /复极化/],
   [/相乘|乘以|乘上|之积/, /相加|加上|之和/],
   [/分散|离散/, /集中/],
+  [/减去|减掉|扣掉|扣除|减1|减一/, /加上|加1|加一/],
+  [/除以|相除|之商/, /乘以|乘上|相乘|之积/],
 ];
 // Negation as a spoken explanation says it: 无 and 没 count, conditionals (否则, 不然) and fixed words (不同, 无论) do not.
 const NOT_NEG = /不同|不仅|不断|不久|不少|不过|不管|不论|不但|不如|不错|不然|否则|非常|无论|无数|未来/g;

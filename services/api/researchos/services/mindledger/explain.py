@@ -61,6 +61,8 @@ _TURNS = tuple((re.compile(a), re.compile(b)) for a, b in (
     ("去极化", "复极化"),
     ("相乘|乘以|乘上|之积", "相加|加上|之和"),
     ("分散|离散", "集中"),
+    ("减去|减掉|扣掉|扣除|减1|减一", "加上|加1|加一"),
+    ("除以|相除|之商", "乘以|乘上|相乘|之积"),
 ))
 _NOT_NEG = re.compile(r"不同|不仅|不断|不久|不少|不过|不管|不论|不但|不如|不错|不然|否则|非常|无论|无数|未来")
 _NEG = re.compile(r"[不没未无]|并非|\b(?:not|no|never|cannot)\b|n't\b", re.I)
@@ -141,8 +143,19 @@ def shown(state: str) -> str:
     return "review" if state in ("turned", "maybe") else state
 
 
-def judge_points(points: Sequence[str], attempt: str, match: Matcher | None = None) -> list[str]:
-    """One state per point for one attempt."""
+def _where(point: str, clauses: Sequence[str]) -> int | None:
+    """Index of the attempt clause sharing the most word pairs with the point; None below three shared."""
+    b, best, most = bigrams(point), None, 2
+    for i, c in enumerate(clauses):
+        if (n := len(bigrams(c) & b)) > most:
+            best, most = i, n
+    return best
+
+
+def judge_points(points: Sequence[str], attempt: str, match: Matcher | None = None,
+                 ordered: bool = False) -> list[str]:
+    """One state per point for one attempt. `ordered` (a method's steps): a step said before the step the
+    reference puts ahead of it is turned round."""
     said = bigrams(attempt)
     clauses = [c for c in _CLAUSE.split(attempt) if len(norm(c)) >= 2]
     scores = match(points, attempt) if match and points else [0.0] * len(points)
@@ -152,6 +165,11 @@ def judge_points(points: Sequence[str], attempt: str, match: Matcher | None = No
             out.append("turned" if turned(p, clauses) else "ok")
         else:
             out.append("maybe" if _loose(p, attempt) or score >= SEMANTIC_REVIEW else "more")
+    if ordered:
+        at = [(i, w) for i, s in enumerate(out) if s == "ok" and (w := _where(points[i], clauses)) is not None]
+        for (_, a), (j, b) in zip(at, at[1:], strict=False):
+            if b < a:
+                out[j] = "turned"
     return out
 
 
