@@ -33,6 +33,8 @@
     "mindEmptyQuestion": "an entry needs the question",
     "mindEntryNotFound": "entry not found",
     "mindNothingToRepay": "this entry has nothing left to repay",
+    "mindNoReference": "this entry has no AI answer to explain",
+    "mindExplainFinished": "this explanation is already finished",
     "aiBusy": "another AI call is in progress; try again shortly",
     "aiOutcomeUnknown": "the AI call timed out and may have been billed; cost kept as 'unknown' until reconciled",
     "aiOutputRejected": "no allowed model produced a valid answer",

@@ -91,6 +91,8 @@ const FIXED: readonly (readonly [string, string, string])[] = [
   ["not_found", "user not found", "userNotFound"],
   ["not_in_review", "candidate is not part of this review", "notInReview"],
   ["nothing_to_repay", "this entry has nothing left to repay", "mindNothingToRepay"],
+  ["no_reference", "this entry has no AI answer to explain", "mindNoReference"],
+  ["explain_finished", "this explanation is already finished", "mindExplainFinished"],
   ["operation_in_progress", "This operation is running; retry the same key.", "operationInProgress"],
   ["operation_uncertain", "Card field has no saved answer after interruption; inspect the gateway call before starting a new intent.", "operationUncertain"],
   ["plan_not_approved", "approve both canary plans first", "canaryPlansNotApproved"],
