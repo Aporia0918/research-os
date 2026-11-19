@@ -196,7 +196,7 @@ def hint(point: Point, level: int, said: str) -> str:
 
 def _keyword(point: str, said: str) -> str:
     """The longest run of the point's characters the student has not said, at most six."""
-    known, runs, run = _han(said), [], ""
+    known, runs, run = _han(said), [""], ""
     for ch in norm(point):
         if _HAN.match(ch) and ch not in known:
             run += ch

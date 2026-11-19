@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from ...kernel.db import tx
 from ...services.identity import pushes
 from ...services.identity.sessions import Principal
-from ...services.mindledger import judge, store, uses
+from ...services.mindledger import explain, judge, semantic, session, store, uses
 from ..deps import cid, db, idempotent, principal, services
 
 router = APIRouter(prefix="/api/v1/mind-ledger", tags=["mind-ledger"])
@@ -47,6 +47,11 @@ class RecallIn(BaseModel):
 
 class SettleIn(BaseModel):
     state: str
+
+
+class ExplainIn(BaseModel):
+    text: str = Field(min_length=1, max_length=store.MAX_TEXT)
+    exam: date | None = None
 
 
 class AttemptIn(BaseModel):
@@ -111,6 +116,34 @@ def settle_recall(recall_id: str, data: SettleIn, p: Principal = Depends(princip
         r = store.settle_recall(conn, p.user_id, p.actor, recall_id, data.state, date.today())
         pushes.fan_out(conn, p.user_id, p.device_id, "recall_settled", recall_id, r["claim"])
     return r
+
+
+@router.post("/entries/{entry_id}/explain")
+def explain_round(entry_id: str, data: ExplainIn, request: Request, p: Principal = Depends(principal),
+                  conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    """讲给我听 right after 记一笔: one round of the student's explanation. Graded before the write transaction;
+    the reply says which points are said (通过 / 需补充 / 待复核), the follow-up if any, and at the end the result."""
+    pts = [x.text for x in session.points(conn, p.user_id, entry_id)]
+    now = explain.judge_points(pts, data.text, semantic.matcher())
+
+    def run() -> tuple[int, Any]:
+        return 200, session.round_(conn, p.user_id, p.actor, entry_id, data.text, now, date.today(), data.exam)
+
+    _, body = idempotent(request, conn, f"mindledger.explain.{entry_id}", data.model_dump(mode="json"), run)
+    result: dict[str, Any] = body
+    return result
+
+
+@router.post("/entries/{entry_id}/explain/hint")
+def explain_hint(entry_id: str, request: Request, p: Principal = Depends(principal),
+                 conn: sqlite3.Connection = Depends(db)) -> dict[str, Any]:
+    """One more level of help (0 names the gap, 3 gives the point); the level reached weighs on the debt."""
+    def run() -> tuple[int, Any]:
+        return 200, session.hint(conn, p.user_id, p.actor, entry_id)
+
+    _, body = idempotent(request, conn, f"mindledger.explain_hint.{entry_id}", {}, run)
+    result: dict[str, Any] = body
+    return result
 
 
 @router.post("/entries/{entry_id}/attempts")

@@ -6170,6 +6170,106 @@
     }
    }
   },
+  "/api/v1/mind-ledger/entries/{entry_id}/explain": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Explain Round",
+    "description": "\u8bb2\u7ed9\u6211\u542c right after \u8bb0\u4e00\u7b14: one round of the student's explanation. Graded before the write transaction;\nthe reply says which points are said (\u901a\u8fc7 / \u9700\u8865\u5145 / \u5f85\u590d\u6838), the follow-up if any, and at the end the result.",
+    "operationId": "explain_round_api_v1_mind_ledger_entries__entry_id__explain_post",
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ExplainIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Explain Round Api V1 Mind Ledger Entries  Entry Id  Explain Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/mind-ledger/entries/{entry_id}/explain/hint": {
+   "post": {
+    "tags": [
+     "mind-ledger"
+    ],
+    "summary": "Explain Hint",
+    "description": "One more level of help (0 names the gap, 3 gives the point); the level reached weighs on the debt.",
+    "operationId": "explain_hint_api_v1_mind_ledger_entries__entry_id__explain_hint_post",
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Explain Hint Api V1 Mind Ledger Entries  Entry Id  Explain Hint Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/mind-ledger/entries/{entry_id}/attempts": {
    "post": {
     "tags": [
@@ -9657,6 +9757,33 @@
      "created_at"
     ],
     "title": "EvidenceOut"
+   },
+   "ExplainIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Text"
+     },
+     "exam": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exam"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "ExplainIn"
    },
    "FeasibilityIn": {
     "properties": {

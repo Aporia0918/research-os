@@ -2201,6 +2201,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mind-ledger/entries/{entry_id}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Explain Round
+         * @description 讲给我听 right after 记一笔: one round of the student's explanation. Graded before the write transaction;
+         *     the reply says which points are said (通过 / 需补充 / 待复核), the follow-up if any, and at the end the result.
+         */
+        post: operations["explain_round_api_v1_mind_ledger_entries__entry_id__explain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mind-ledger/entries/{entry_id}/explain/hint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Explain Hint
+         * @description One more level of help (0 names the gap, 3 gives the point); the level reached weighs on the debt.
+         */
+        post: operations["explain_hint_api_v1_mind_ledger_entries__entry_id__explain_hint_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mind-ledger/entries/{entry_id}/attempts": {
         parameters: {
             query?: never;
@@ -3475,6 +3516,13 @@ export interface components {
             trust: string;
             /** Created At */
             created_at: string;
+        };
+        /** ExplainIn */
+        ExplainIn: {
+            /** Text */
+            text: string;
+            /** Exam */
+            exam?: string | null;
         };
         /** FeasibilityIn */
         FeasibilityIn: {
@@ -8875,6 +8923,76 @@ export interface operations {
                 "application/json": components["schemas"]["SettleIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explain_round_api_v1_mind_ledger_entries__entry_id__explain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExplainIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explain_hint_api_v1_mind_ledger_entries__entry_id__explain_hint_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

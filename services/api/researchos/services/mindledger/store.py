@@ -18,7 +18,7 @@ SOURCES = ("app", "extension", "manual")
 BOARDS = ("学习", "科研", "生活")
 KINDS = ("conclusion", "citation")  # 结论债 (repaid by the null-world exam), 引用债 (repaid by finding the original)
 _PUBLIC = ("id", "client_id", "source", "board", "kind", "topic", "question", "answer", "own_idea", "help_level",
-           "weight", "passes", "due_on", "created_on", "created_at", "used_in", "red", "dropped_on")
+           "weight", "passes", "due_on", "created_on", "created_at", "used_in", "red", "dropped_on", "first_rating")
 
 
 @dataclass(frozen=True)
