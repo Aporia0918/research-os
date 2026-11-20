@@ -80,12 +80,21 @@ def _params(spec: Spec) -> Iterator[tuple[Spec, Change]]:
                 yield replace(spec, params=params), Change("param", f"参数 {k}", str(v), str(w))
 
 
+def _hidden_one(n: sp.Expr, parent: sp.Expr) -> bool:
+    """题面上不写出来的系数 1：sin(x) 里的 x，或 1/x + 1 这种和式里的单项。"""
+    if isinstance(parent, sp.Function) and n == X:
+        return True
+    return isinstance(parent, sp.Add) and not n.is_number and n.as_coeff_Mul()[0] == 1
+
+
 def _numbers(spec: Spec) -> Iterator[tuple[Spec, Change]]:
-    """改式子里的一个数字。"""
+    """改式子里的一个数字（包括题面上省略不写的系数 1）。"""
     for path, n, parent in _walk(spec.expr):
         if n.is_Rational:
             for m, c in _edits(n, parent, path[-1]):
                 yield replace(spec, expr=_put(spec.expr, path, m)), c
+        elif _hidden_one(n, parent):
+            yield replace(spec, expr=_put(spec.expr, path, 2 * n)), Change("coefficient", "系数", "1", "2")
 
 
 def variants(spec: Spec) -> list[tuple[Spec, Change]]:

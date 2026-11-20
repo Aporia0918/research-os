@@ -8,9 +8,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "∞",
-  "tried": 11,
+  "tried": 12,
   "valid": 5,
-  "seconds": 0.25,
+  "seconds": 0.23,
+  "orig_hard": true,
+  "pool_mis": [
+   1,
+   4
+  ],
   "picks": [
    {
     "text": "设 k=3，求极限 lim(x→-∞) e^x/x^k",
@@ -43,7 +48,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -56,9 +62,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1/4",
-  "tried": 18,
-  "valid": 16,
-  "seconds": 0.16,
+  "tried": 20,
+  "valid": 18,
+  "seconds": 0.19,
+  "orig_hard": true,
+  "pool_mis": [
+   3,
+   21
+  ],
   "picks": [
    {
     "text": "设 a=2，求极限 lim(x→∞) (-a + x)/(-a^2 + x^2)",
@@ -70,6 +81,11 @@
       "kind": "ignore",
       "value": "1/4",
       "why": "漏看了「趋向点」从 a 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -87,9 +103,21 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
      ]
     ]
    },
@@ -103,6 +131,16 @@
       "kind": "ignore",
       "value": "1/4",
       "why": "漏看了「参数 a」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -135,6 +173,16 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "-1/6",
       "sign",
       "sign"
@@ -149,23 +197,35 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
     ]
    },
    {
-    "text": "设 a=2，求极限 lim(x→a) (-a + x)/(-a^2 + x^3)",
-    "change": "指数：2 → 3",
-    "kind": "exponent",
+    "text": "设 a=2，求极限 lim(x→a) (-a + x)/(-a^2 + 2x^2)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
     "answer": "0",
     "traps": [
      {
       "kind": "ignore",
       "value": "1/4",
-      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
      },
      {
       "kind": "method",
-      "value": "1/12",
-      "why": "「指数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+      "value": "1/8",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
      }
     ],
     "clear": true,
@@ -183,7 +243,7 @@
       "ignore"
      ],
      [
-      "1/12",
+      "1/8",
       "method",
       "method"
      ],
@@ -191,6 +251,13 @@
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1/8",
+      "method",
+      "method"
      ]
     ]
    }
@@ -205,9 +272,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1/12",
-  "tried": 18,
-  "valid": 14,
-  "seconds": 0.16,
+  "tried": 20,
+  "valid": 16,
+  "seconds": 0.22,
+  "orig_hard": true,
+  "pool_mis": [
+   1,
+   20
+  ],
   "picks": [
    {
     "text": "设 n=3，a=2，求极限 lim(x→∞) (-a + x)/(-a^n + x^n)",
@@ -219,6 +291,11 @@
       "kind": "ignore",
       "value": "1/12",
       "why": "漏看了「趋向点」从 a 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -236,9 +313,21 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
      ]
     ]
    },
@@ -252,6 +341,16 @@
       "kind": "ignore",
       "value": "1/12",
       "why": "漏看了「参数 n」从 3 改成 4，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -284,6 +383,16 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "-1/32",
       "sign",
       "sign"
@@ -298,18 +407,35 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
     ]
    },
    {
-    "text": "设 n=3，a=2，求极限 lim(x→a) (a + x)/(-a^n + x^n)",
-    "change": "减号：− → +",
-    "kind": "sign",
-    "answer": "不存在",
+    "text": "设 n=3，a=2，求极限 lim(x→a) (-a + x)/(-a^n + 2x^n)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
     "traps": [
      {
       "kind": "ignore",
       "value": "1/12",
-      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/24",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
      }
     ],
     "clear": true,
@@ -317,7 +443,7 @@
     "readback": true,
     "sims": [
      [
-      "不存在",
+      "0",
       "correct",
       "correct"
      ],
@@ -327,9 +453,21 @@
       "ignore"
      ],
      [
+      "1/24",
+      "method",
+      "method"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1/24",
+      "method",
+      "method"
      ]
     ]
    }
@@ -344,9 +482,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "6",
-  "tried": 14,
-  "valid": 12,
-  "seconds": 0.12,
+  "tried": 16,
+  "valid": 14,
+  "seconds": 0.16,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   14
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) (x^2 - 9)/(x - 3)",
@@ -409,6 +552,63 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "0",
+      "method",
+      "method"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→3) (x^2 - 9)/(2x - 3)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "3",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "3",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "3",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -421,6 +621,11 @@
       "kind": "ignore",
       "value": "6",
       "why": "漏看了「常数项」从 -9 改成 9，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -436,44 +641,23 @@
       "6",
       "ignore",
       "ignore"
+     ],
+     [
+      "∞",
+      "form",
+      "form"
      ],
      [
       "7",
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "求极限 lim(x→3) (x^3 - 9)/(x - 3)",
-    "change": "指数：2 → 3",
-    "kind": "exponent",
-    "answer": "不存在",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "6",
-      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
-     }
     ],
-    "clear": true,
-    "hard": false,
-    "readback": true,
-    "sims": [
+    "published": [
      [
-      "不存在",
-      "correct",
-      "correct"
-     ],
-     [
-      "6",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "7",
-      "unknown",
-      "unknown"
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -488,9 +672,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-2",
-  "tried": 12,
-  "valid": 10,
-  "seconds": 0.12,
+  "tried": 14,
+  "valid": 12,
+  "seconds": 0.19,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   14
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) (-1 + (x + 1)^(-2))/x",
@@ -502,6 +691,11 @@
       "kind": "ignore",
       "value": "-2",
       "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -519,27 +713,49 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
+     ]
     ]
    },
    {
-    "text": "求极限 lim(x→0) (-1 + 1/(x + 1))/x",
-    "change": "指数：2 → 1",
-    "kind": "exponent",
-    "answer": "-1",
+    "text": "求极限 lim(x→0) (-1 + (x - 1)^(-2))/x",
+    "change": "常数项：1 → -1",
+    "kind": "constant",
+    "answer": "2",
     "traps": [
      {
       "kind": "ignore",
       "value": "-2",
-      "why": "漏看了「指数」从 2 改成 1，答的还是原题结果"
+      "why": "漏看了「常数项」从 1 改成 -1，答的还是原题结果"
      },
      {
-      "kind": "sign",
-      "value": "1",
-      "why": "符号弄反了"
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/2",
+      "why": "上下颠倒了（算成了倒数）"
      }
     ],
     "clear": true,
@@ -547,7 +763,7 @@
     "readback": true,
     "sims": [
      [
-      "-1",
+      "2",
       "correct",
       "correct"
      ],
@@ -557,35 +773,77 @@
       "ignore"
      ],
      [
-      "1",
-      "sign",
-      "sign"
+      "0",
+      "form",
+      "form"
      ],
      [
-      "6",
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "1/2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "9",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    },
    {
-    "text": "求极限 lim(x→0) (1 + (x + 1)^(-2))/x",
-    "change": "常数项：-1 → 1",
-    "kind": "constant",
-    "answer": "不存在",
+    "text": "求极限 lim(x→0) (-1 + (2x + 1)^(-2))/x",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "-4",
     "traps": [
      {
       "kind": "ignore",
       "value": "-2",
-      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "4",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "-1/4",
+      "why": "上下颠倒了（算成了倒数）"
      }
     ],
     "clear": true,
-    "hard": false,
+    "hard": true,
     "readback": true,
     "sims": [
      [
-      "不存在",
+      "-4",
       "correct",
       "correct"
      ],
@@ -595,9 +853,41 @@
       "ignore"
      ],
      [
-      "7",
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "4",
+      "sign",
+      "sign"
+     ],
+     [
+      "-1/4",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "3",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    }
@@ -612,10 +902,105 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-1",
-  "tried": 9,
-  "valid": 5,
-  "seconds": 0.18,
+  "tried": 11,
+  "valid": 7,
+  "seconds": 0.16,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   8
+  ],
   "picks": [
+   {
+    "text": "求极限 lim(x→π) (x - π)/sin(2x)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "1/2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "1/2",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.5",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "-1/2",
+      "sign",
+      "sign"
+     ],
+     [
+      "2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "15/2",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
+    ]
+   },
    {
     "text": "求极限 lim(x→1) (x - π)/sin(x)",
     "change": "趋向点：pi → 1",
@@ -682,6 +1067,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "1/cos(1)",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -694,6 +1086,11 @@
       "kind": "ignore",
       "value": "-1",
       "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -711,9 +1108,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -728,9 +1137,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "3",
-  "tried": 13,
-  "valid": 11,
-  "seconds": 0.16,
+  "tried": 15,
+  "valid": 13,
+  "seconds": 0.19,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   17
+  ],
   "picks": [
    {
     "text": "设 n=4，求极限 lim(x→0) ((x + 1)^n - 1)/x",
@@ -742,6 +1156,16 @@
       "kind": "ignore",
       "value": "3",
       "why": "漏看了「参数 n」从 3 改成 4，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -769,6 +1193,16 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "-4",
       "sign",
       "sign"
@@ -782,6 +1216,103 @@
       "11",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "设 n=3，求极限 lim(x→0) ((2x + 1)^n - 1)/x",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "6",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "-6",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/6",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "6",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "-6",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/6",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "13",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    },
@@ -846,38 +1377,12 @@
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "设 n=3，求极限 lim(x→0) ((x + 1)^n + 1)/x",
-    "change": "常数项：-1 → 1",
-    "kind": "constant",
-    "answer": "不存在",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "3",
-      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
-     }
     ],
-    "clear": true,
-    "hard": false,
-    "readback": true,
-    "sims": [
+    "published": [
      [
-      "不存在",
-      "correct",
-      "correct"
-     ],
-     [
-      "3",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "7",
-      "unknown",
-      "unknown"
+      "12",
+      "method",
+      "method"
      ]
     ]
    }
@@ -892,9 +1397,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-1/2",
-  "tried": 10,
-  "valid": 6,
-  "seconds": 0.19,
+  "tried": 13,
+  "valid": 9,
+  "seconds": 0.22,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   13
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) (sin(x) - tan(x))/x^2",
@@ -906,6 +1416,11 @@
       "kind": "ignore",
       "value": "-1/2",
       "why": "漏看了「指数」从 3 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -923,9 +1438,21 @@
       "ignore"
      ],
      [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    },
@@ -939,6 +1466,16 @@
       "kind": "ignore",
       "value": "-1/2",
       "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -961,6 +1498,16 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "-∞",
       "sign",
       "sign"
@@ -970,46 +1517,53 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
     ]
    },
    {
-    "text": "求极限 lim(x→1) (sin(x) - tan(x))/x^3",
-    "change": "趋向点：0 → 1",
-    "kind": "point",
-    "answer": "-tan(1) + sin(1)",
+    "text": "求极限 lim(x→0) (sin(x) - tan(2x))/x^3",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "-∞",
     "traps": [
      {
       "kind": "ignore",
       "value": "-1/2",
-      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
      },
      {
-      "kind": "method",
-      "value": "-tan(1)^2/3 - 1/3 + cos(1)/3",
-      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
-      "value": "-sin(1) + tan(1)",
-      "why": "符号弄反了"
-     },
-     {
-      "kind": "reciprocal",
-      "value": "1/(-tan(1) + sin(1))",
-      "why": "上下颠倒了（算成了倒数）"
+      "value": "∞",
+      "why": "符号弄反了（正负无穷）"
      }
     ],
     "clear": true,
-    "hard": false,
+    "hard": true,
     "readback": true,
     "sims": [
      [
-      "-tan(1) + sin(1)",
-      "correct",
-      "correct"
-     ],
-     [
-      "-0.7159",
+      "-∞",
       "correct",
       "correct"
      ],
@@ -1019,24 +1573,36 @@
       "ignore"
      ],
      [
-      "-tan(1)^2/3 - 1/3 + cos(1)/3",
-      "method",
-      "method"
+      "0",
+      "form",
+      "form"
      ],
      [
-      "-sin(1) + tan(1)",
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "∞",
       "sign",
       "sign"
      ],
      [
-      "1/(-tan(1) + sin(1))",
-      "reciprocal",
-      "reciprocal"
-     ],
-     [
-      "-tan(1) + sin(1) + 7",
+      "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    }
@@ -1051,9 +1617,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1/2",
-  "tried": 11,
-  "valid": 9,
-  "seconds": 0.35,
+  "tried": 13,
+  "valid": 11,
+  "seconds": 0.33,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   9
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→-∞) (-x + e^x - 1)/x^2",
@@ -1065,6 +1636,11 @@
       "kind": "ignore",
       "value": "1/2",
       "why": "漏看了「趋向点」从 0 改成 -∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -1082,9 +1658,21 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
      ]
     ]
    },
@@ -1098,6 +1686,11 @@
       "kind": "ignore",
       "value": "1/2",
       "why": "漏看了「指数」从 2 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -1115,9 +1708,21 @@
       "ignore"
      ],
      [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    },
@@ -1131,6 +1736,11 @@
       "kind": "ignore",
       "value": "1/2",
       "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -1148,9 +1758,21 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
      ]
     ]
    }
@@ -1165,9 +1787,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1",
-  "tried": 8,
-  "valid": 3,
-  "seconds": 0.14,
+  "tried": 10,
+  "valid": 5,
+  "seconds": 0.18,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   5
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→2) (x - 1)/ln(x)",
@@ -1235,6 +1862,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "2",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -1247,6 +1881,11 @@
       "kind": "ignore",
       "value": "1",
       "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -1264,9 +1903,71 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (2x - 1)/ln(x)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -1281,9 +1982,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1/6",
-  "tried": 9,
-  "valid": 4,
-  "seconds": 0.17,
+  "tried": 11,
+  "valid": 6,
+  "seconds": 0.23,
+  "orig_hard": true,
+  "pool_mis": [
+   1,
+   6
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) (-x^(1/3) + sqrt(x))/(x - 1)",
@@ -1295,6 +2001,11 @@
       "kind": "ignore",
       "value": "1/6",
       "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -1312,9 +2023,71 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (-x^(1/3) + sqrt(x))/(2x - 1)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/6",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/12",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/12",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1/12",
+      "method",
+      "method"
      ]
     ]
    },
@@ -1328,6 +2101,11 @@
       "kind": "ignore",
       "value": "1/6",
       "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -1345,42 +2123,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "求极限 lim(x→1) (-x^(1/3) + sqrt(x))/(x + 1)",
-    "change": "常数项：-1 → 1",
-    "kind": "constant",
-    "answer": "0",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "1/6",
-      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
-     }
     ],
-    "clear": false,
-    "hard": false,
-    "readback": true,
-    "sims": [
+    "published": [
      [
-      "0",
-      "correct",
-      "correct"
-     ],
-     [
-      "1/6",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "7",
-      "unknown",
-      "unknown"
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -1397,7 +2154,12 @@
   "truth": "1",
   "tried": 5,
   "valid": 4,
-  "seconds": 0.06,
+  "seconds": 0.08,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) x*sin(1/x)",
@@ -1430,7 +2192,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -1446,6 +2209,11 @@
   "tried": 9,
   "valid": 3,
   "seconds": 0.12,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→2+) x*ln(x^4)",
@@ -1503,7 +2271,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -1518,7 +2287,12 @@
   "truth": "0",
   "tried": 8,
   "valid": 5,
-  "seconds": 0.13,
+  "seconds": 0.16,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   2
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→-1) x^2*e^(-x)",
@@ -1586,6 +2360,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "-2*e",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -1629,7 +2410,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -1642,28 +2424,33 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-1",
-  "tried": 11,
-  "valid": 5,
-  "seconds": 0.05,
+  "tried": 12,
+  "valid": 6,
+  "seconds": 0.08,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   1
+  ],
   "picks": [
    {
-    "text": "求极限 lim(x→-1) (1 + 1/x)/(1 - 1/x)",
-    "change": "趋向点：0 → -1",
+    "text": "求极限 lim(x→∞) (1 + 1/x)/(1 - 1/x)",
+    "change": "趋向点：0 → ∞",
     "kind": "point",
-    "answer": "0",
+    "answer": "1",
     "traps": [
      {
       "kind": "ignore",
       "value": "-1",
-      "why": "漏看了「趋向点」从 0 改成 -1，答的还是原题结果"
+      "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
      }
     ],
     "clear": true,
-    "hard": false,
+    "hard": true,
     "readback": true,
     "sims": [
      [
-      "0",
+      "1",
       "correct",
       "correct"
      ],
@@ -1673,11 +2460,66 @@
       "ignore"
      ],
      [
-      "7",
+      "8",
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
+   },
+   {
+    "text": "求极限 lim(x→0) (1 + 2/x)/(1 - 1/x)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "-2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "-1/2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "-2",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "2",
+      "sign",
+      "sign"
+     ],
+     [
+      "-1/2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "5",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": []
    }
   ]
  },
@@ -1692,7 +2534,12 @@
   "truth": "∞",
   "tried": 5,
   "valid": 5,
-  "seconds": 0.11,
+  "seconds": 0.1,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   1
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) x*e^(1/x)",
@@ -1704,6 +2551,11 @@
       "kind": "ignore",
       "value": "∞",
       "why": "漏看了「趋向点」从 ∞ 改成 0，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0·∞ 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
@@ -1721,9 +2573,21 @@
       "ignore"
      ],
      [
+      "0",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
      ]
     ]
    }
@@ -1740,7 +2604,12 @@
   "truth": "0",
   "tried": 7,
   "valid": 3,
-  "seconds": 0.13,
+  "seconds": 0.11,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) x^(1/x)",
@@ -1783,7 +2652,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -1798,8 +2668,78 @@
   "truth": "e^(-1)",
   "tried": 8,
   "valid": 4,
-  "seconds": 0.49,
+  "seconds": 0.51,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   1
+  ],
   "picks": [
+   {
+    "text": "求极限 lim(x→∞) (1 + 1/x)^x",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "e",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "e^(-1)",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 1^∞ 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "-e",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "e",
+      "correct",
+      "correct"
+     ],
+     [
+      "2.718",
+      "correct",
+      "correct"
+     ],
+     [
+      "e^(-1)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1",
+      "form",
+      "form"
+     ],
+     [
+      "-e",
+      "sign",
+      "sign"
+     ],
+     [
+      "e + 7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
+     ]
+    ]
+   },
    {
     "text": "求极限 lim(x→-1) (1 - 1/x)^x",
     "change": "趋向点：∞ → -1",
@@ -1856,7 +2796,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→∞) (2 - 1/x)^x",
@@ -1899,55 +2840,8 @@
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "求极限 lim(x→∞) (1 + 1/x)^x",
-    "change": "减号：− → +",
-    "kind": "sign",
-    "answer": "e",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "e^(-1)",
-      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
-     },
-     {
-      "kind": "sign",
-      "value": "-e",
-      "why": "符号弄反了"
-     }
     ],
-    "clear": false,
-    "hard": true,
-    "readback": true,
-    "sims": [
-     [
-      "e",
-      "correct",
-      "correct"
-     ],
-     [
-      "2.718",
-      "correct",
-      "correct"
-     ],
-     [
-      "e^(-1)",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "-e",
-      "sign",
-      "sign"
-     ],
-     [
-      "e + 7",
-      "unknown",
-      "unknown"
-     ]
-    ]
+    "published": []
    }
   ]
  },
@@ -1963,30 +2857,45 @@
   "tried": 7,
   "valid": 5,
   "seconds": 0.07,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   2
+  ],
   "picks": [
    {
-    "text": "求极限 lim(x→∞) x*sin(1/x)",
-    "change": "趋向点：0 → ∞",
+    "text": "求极限 lim(x→1) x*sin(1/x)",
+    "change": "趋向点：0 → 1",
     "kind": "point",
-    "answer": "1",
+    "answer": "sin(1)",
     "traps": [
      {
       "kind": "ignore",
       "value": "0",
-      "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
      },
      {
       "kind": "sign",
-      "value": "-1",
+      "value": "-sin(1)",
       "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/sin(1)",
+      "why": "上下颠倒了（算成了倒数）"
      }
     ],
     "clear": true,
-    "hard": true,
+    "hard": false,
     "readback": true,
     "sims": [
      [
-      "1",
+      "sin(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.8415",
       "correct",
       "correct"
      ],
@@ -1996,16 +2905,22 @@
       "ignore"
      ],
      [
-      "-1",
+      "-sin(1)",
       "sign",
       "sign"
      ],
      [
-      "8",
+      "1/sin(1)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "sin(1) + 7",
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2018,9 +2933,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1",
-  "tried": 10,
-  "valid": 8,
-  "seconds": 0.26,
+  "tried": 13,
+  "valid": 11,
+  "seconds": 0.31,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   10
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→-∞) (e^(x - 1) - 1)/(x - 1)",
@@ -2053,6 +2973,57 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": []
+   },
+   {
+    "text": "求极限 lim(x→1) (e^(x - 1) - 1)/(2x - 1)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/2",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/2",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1/2",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -2065,6 +3036,11 @@
       "kind": "ignore",
       "value": "1",
       "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -2082,9 +3058,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -2099,9 +3087,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "0",
-  "tried": 10,
-  "valid": 6,
-  "seconds": 0.15,
+  "tried": 13,
+  "valid": 8,
+  "seconds": 0.18,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   8
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→1) (cos(x) + 1)/sin(x)",
@@ -2169,6 +3162,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "-sin(1)/cos(1)",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -2181,6 +3181,11 @@
       "kind": "ignore",
       "value": "0",
       "why": "漏看了「常数项」从 1 改成 -1，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -2198,9 +3203,71 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→π) (2cos(x) + 1)/sin(x)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -2218,6 +3285,11 @@
   "tried": 7,
   "valid": 2,
   "seconds": 0.07,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→-∞) tan(x^x)",
@@ -2250,7 +3322,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2263,10 +3336,100 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "2",
-  "tried": 8,
-  "valid": 6,
-  "seconds": 0.24,
+  "tried": 10,
+  "valid": 8,
+  "seconds": 0.38,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   8
+  ],
   "picks": [
+   {
+    "text": "求极限 lim(x→0) (e^(2x) - e^(-x))/x",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "3",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "2",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "-3",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/3",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "3",
+      "correct",
+      "correct"
+     ],
+     [
+      "2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "-3",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/3",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "10",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
+    ]
+   },
    {
     "text": "求极限 lim(x→1) (e^x - e^(-x))/x",
     "change": "趋向点：0 → 1",
@@ -2333,6 +3496,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "e",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -2345,6 +3515,11 @@
       "kind": "ignore",
       "value": "2",
       "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -2362,9 +3537,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -2381,7 +3568,12 @@
   "truth": "3",
   "tried": 15,
   "valid": 7,
-  "seconds": 0.05,
+  "seconds": 0.07,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   1
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→1) 4x^2 - 2x + 3",
@@ -2434,7 +3626,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→0) 4x^2 - 2x + 4",
@@ -2487,7 +3680,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2500,9 +3694,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "√(19)",
-  "tried": 14,
-  "valid": 9,
-  "seconds": 0.14,
+  "tried": 15,
+  "valid": 10,
+  "seconds": 0.16,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) sqrt(x^2 - 6x + 3)",
@@ -2560,7 +3759,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→-2) sqrt(x^2 - 6x - 3)",
@@ -2618,27 +3818,28 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
-    "text": "求极限 lim(x→-2) sqrt(x^3 - 6x + 3)",
-    "change": "指数：2 → 3",
-    "kind": "exponent",
-    "answer": "√(7)",
+    "text": "求极限 lim(x→-2) sqrt(2x^2 - 6x + 3)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "√(23)",
     "traps": [
      {
       "kind": "ignore",
       "value": "√(19)",
-      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
      },
      {
       "kind": "sign",
-      "value": "-√(7)",
+      "value": "-√(23)",
       "why": "符号弄反了"
      },
      {
       "kind": "reciprocal",
-      "value": "√(7)/7",
+      "value": "√(23)/23",
       "why": "上下颠倒了（算成了倒数）"
      }
     ],
@@ -2647,12 +3848,12 @@
     "readback": true,
     "sims": [
      [
-      "√(7)",
+      "√(23)",
       "correct",
       "correct"
      ],
      [
-      "2.646",
+      "4.796",
       "correct",
       "correct"
      ],
@@ -2662,21 +3863,22 @@
       "ignore"
      ],
      [
-      "-√(7)",
+      "-√(23)",
       "sign",
       "sign"
      ],
      [
-      "√(7)/7",
+      "√(23)/23",
       "reciprocal",
       "reciprocal"
      ],
      [
-      "√(7) + 7",
+      "√(23) + 7",
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2692,6 +3894,11 @@
   "tried": 10,
   "valid": 8,
   "seconds": 0.01,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) x^2",
@@ -2724,7 +3931,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→7) x^3",
@@ -2777,7 +3985,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2790,30 +3999,25 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "1",
-  "tried": 9,
+  "tried": 11,
   "valid": 5,
-  "seconds": 0.08,
+  "seconds": 0.1,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
-    "text": "求极限 lim(x→0) 1/(sin(x) + 2)",
-    "change": "常数项：1 → 2",
+    "text": "求极限 lim(x→0) 1/(sin(x) - 1)",
+    "change": "常数项：1 → -1",
     "kind": "constant",
-    "answer": "1/2",
+    "answer": "-1",
     "traps": [
      {
       "kind": "ignore",
       "value": "1",
-      "why": "漏看了「常数项」从 1 改成 2，答的还是原题结果"
-     },
-     {
-      "kind": "sign",
-      "value": "-1/2",
-      "why": "符号弄反了"
-     },
-     {
-      "kind": "reciprocal",
-      "value": "2",
-      "why": "上下颠倒了（算成了倒数）"
+      "why": "漏看了「常数项」从 1 改成 -1，答的还是原题结果"
      }
     ],
     "clear": true,
@@ -2821,12 +4025,7 @@
     "readback": true,
     "sims": [
      [
-      "1/2",
-      "correct",
-      "correct"
-     ],
-     [
-      "0.5",
+      "-1",
       "correct",
       "correct"
      ],
@@ -2836,21 +4035,12 @@
       "ignore"
      ],
      [
-      "-1/2",
-      "sign",
-      "sign"
-     ],
-     [
-      "2",
-      "reciprocal",
-      "reciprocal"
-     ],
-     [
-      "15/2",
+      "6",
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→1) 1/(sin(x) + 1)",
@@ -2908,7 +4098,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -2921,9 +4112,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-5/7",
-  "tried": 13,
-  "valid": 11,
-  "seconds": 0.05,
+  "tried": 14,
+  "valid": 12,
+  "seconds": 0.1,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   2
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) (2 - 7x)/(x + 6)",
@@ -2935,6 +4131,11 @@
       "kind": "ignore",
       "value": "-5/7",
       "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -2962,6 +4163,11 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "sign",
       "sign"
@@ -2975,6 +4181,13 @@
       "0",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
      ]
     ]
    },
@@ -3019,7 +4232,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→1) (7x + 2)/(x + 6)",
@@ -3077,7 +4291,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -3090,9 +4305,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "8",
-  "tried": 14,
-  "valid": 12,
-  "seconds": 0.07,
+  "tried": 16,
+  "valid": 14,
+  "seconds": 0.12,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   14
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) (x^2 - 16)/(x - 4)",
@@ -3155,6 +4375,63 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "0",
+      "method",
+      "method"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→4) (x^2 - 16)/(2x - 4)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "8",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "4",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "8",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "4",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "4",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -3167,6 +4444,11 @@
       "kind": "ignore",
       "value": "8",
       "why": "漏看了「常数项」从 -16 改成 16，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -3182,44 +4464,23 @@
       "8",
       "ignore",
       "ignore"
+     ],
+     [
+      "∞",
+      "form",
+      "form"
      ],
      [
       "7",
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "求极限 lim(x→4) (x^3 - 16)/(x - 4)",
-    "change": "指数：2 → 3",
-    "kind": "exponent",
-    "answer": "不存在",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "8",
-      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
-     }
     ],
-    "clear": true,
-    "hard": false,
-    "readback": true,
-    "sims": [
+    "published": [
      [
-      "不存在",
-      "correct",
-      "correct"
-     ],
-     [
-      "8",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "7",
-      "unknown",
-      "unknown"
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -3236,7 +4497,12 @@
   "truth": "3/2",
   "tried": 16,
   "valid": 8,
-  "seconds": 0.06,
+  "seconds": 0.09,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   4
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→6) (3x - 18)/(2x + 12)",
@@ -3269,7 +4535,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    },
    {
     "text": "求极限 lim(x→6) (3x - 18)/(3x - 12)",
@@ -3302,7 +4569,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -3315,9 +4583,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "6",
-  "tried": 12,
-  "valid": 7,
-  "seconds": 0.11,
+  "tried": 14,
+  "valid": 9,
+  "seconds": 0.17,
+  "orig_hard": true,
+  "pool_mis": [
+   2,
+   9
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→1) (x - 9)/(sqrt(x) - 3)",
@@ -3380,6 +4653,63 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "2",
+      "method",
+      "method"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→9) (x - 9)/(2sqrt(x) - 3)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "3",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "3",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "3",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -3392,6 +4722,11 @@
       "kind": "ignore",
       "value": "6",
       "why": "漏看了「常数项」从 -9 改成 9，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -3409,9 +4744,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -3426,48 +4773,43 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-1",
-  "tried": 8,
-  "valid": 4,
-  "seconds": 0.12,
+  "tried": 10,
+  "valid": 6,
+  "seconds": 0.14,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   9
+  ],
   "picks": [
    {
-    "text": "求极限 lim(x→1) sin(x)/tan(x)",
-    "change": "趋向点：pi → 1",
+    "text": "求极限 lim(x→0) sin(x)/tan(x)",
+    "change": "趋向点：pi → 0",
     "kind": "point",
-    "answer": "sin(1)/tan(1)",
+    "answer": "1",
     "traps": [
      {
       "kind": "ignore",
       "value": "-1",
-      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+      "why": "漏看了「趋向点」从 pi 改成 0，答的还是原题结果"
      },
      {
-      "kind": "method",
-      "value": "cos(1)/(1 + tan(1)^2)",
-      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      },
      {
-      "kind": "sign",
-      "value": "-sin(1)/tan(1)",
-      "why": "符号弄反了"
-     },
-     {
-      "kind": "reciprocal",
-      "value": "tan(1)/sin(1)",
-      "why": "上下颠倒了（算成了倒数）"
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
      }
     ],
     "clear": true,
-    "hard": false,
+    "hard": true,
     "readback": true,
     "sims": [
      [
-      "sin(1)/tan(1)",
-      "correct",
-      "correct"
-     ],
-     [
-      "0.5403",
+      "1",
       "correct",
       "correct"
      ],
@@ -3477,24 +4819,116 @@
       "ignore"
      ],
      [
-      "cos(1)/(1 + tan(1)^2)",
-      "method",
-      "method"
+      "0",
+      "form",
+      "form"
      ],
      [
-      "-sin(1)/tan(1)",
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "8",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→π) sin(2x)/tan(x)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "0",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "form",
+      "value": "不存在",
+      "why": "把 0/0 当成了一个定值，它是不定式，得变形再算"
+     },
+     {
+      "kind": "sign",
+      "value": "-2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "2",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
+     ],
+     [
+      "-2",
       "sign",
       "sign"
      ],
      [
-      "tan(1)/sin(1)",
+      "1/2",
       "reciprocal",
       "reciprocal"
      ],
      [
-      "sin(1)/tan(1) + 7",
+      "9",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "0",
+      "form",
+      "form"
+     ],
+     [
+      "不存在",
+      "form",
+      "form"
      ]
     ]
    }
@@ -3511,7 +4945,12 @@
   "truth": "5/2",
   "tried": 19,
   "valid": 17,
-  "seconds": 0.13,
+  "seconds": 0.19,
+  "orig_hard": true,
+  "pool_mis": [
+   1,
+   17
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→0) (2x^2 + 3x - 2)/(2x - 1)",
@@ -3574,6 +5013,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "3/2",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -3617,6 +5063,13 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "5/3",
+      "method",
+      "method"
+     ]
     ]
    },
    {
@@ -3629,6 +5082,11 @@
       "kind": "ignore",
       "value": "5/2",
       "why": "漏看了「常数项」从 -2 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "∞",
+      "why": "把 1/0 直接当成 ∞，没看正负和左右"
      }
     ],
     "clear": true,
@@ -3646,9 +5104,21 @@
       "ignore"
      ],
      [
+      "∞",
+      "form",
+      "form"
+     ],
+     [
       "7",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "∞",
+      "form",
+      "form"
      ]
     ]
    }
@@ -3663,9 +5133,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-∞",
-  "tried": 20,
-  "valid": 12,
-  "seconds": 0.13,
+  "tried": 22,
+  "valid": 14,
+  "seconds": 0.16,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   12
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) (2x^2 + 7x - 4)/(x^2 + x - 2)",
@@ -3677,6 +5152,11 @@
       "kind": "ignore",
       "value": "-∞",
       "why": "漏看了「趋向点」从 -2 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -3704,6 +5184,11 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "-2",
       "sign",
       "sign"
@@ -3717,6 +5202,83 @@
       "9",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→-2-) (2x^2 + 7x - 4)/(x^2 + 2x - 2)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "5",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/2",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-5",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/5",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "5",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/2",
+      "method",
+      "method"
+     ],
+     [
+      "-5",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/5",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "12",
+      "unknown",
+      "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1/2",
+      "method",
+      "method"
      ]
     ]
    },
@@ -3781,73 +5343,12 @@
       "unknown",
       "unknown"
      ]
-    ]
-   },
-   {
-    "text": "求极限 lim(x→-2-) (2x^2 + 7x - 4)/(x^3 + x - 2)",
-    "change": "指数：2 → 3",
-    "kind": "exponent",
-    "answer": "5/6",
-    "traps": [
-     {
-      "kind": "ignore",
-      "value": "-∞",
-      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
-     },
-     {
-      "kind": "method",
-      "value": "-1/13",
-      "why": "「指数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
-     },
-     {
-      "kind": "sign",
-      "value": "-5/6",
-      "why": "符号弄反了"
-     },
-     {
-      "kind": "reciprocal",
-      "value": "6/5",
-      "why": "上下颠倒了（算成了倒数）"
-     }
     ],
-    "clear": true,
-    "hard": false,
-    "readback": true,
-    "sims": [
+    "published": [
      [
-      "5/6",
-      "correct",
-      "correct"
-     ],
-     [
-      "0.8333",
-      "correct",
-      "correct"
-     ],
-     [
-      "-∞",
-      "ignore",
-      "ignore"
-     ],
-     [
-      "-1/13",
+      "1/3",
       "method",
       "method"
-     ],
-     [
-      "-5/6",
-      "sign",
-      "sign"
-     ],
-     [
-      "6/5",
-      "reciprocal",
-      "reciprocal"
-     ],
-     [
-      "47/6",
-      "unknown",
-      "unknown"
      ]
     ]
    }
@@ -3862,9 +5363,14 @@
   "expect_flag": false,
   "status": "ok",
   "truth": "-∞",
-  "tried": 19,
-  "valid": 10,
-  "seconds": 0.09,
+  "tried": 21,
+  "valid": 12,
+  "seconds": 0.11,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   10
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→∞) (2x^2 + 7x - 4)/(x^2 + x - 2)",
@@ -3876,6 +5382,11 @@
       "kind": "ignore",
       "value": "-∞",
       "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "form",
+      "value": "1",
+      "why": "把 ∞/∞ 当成了一个定值，它是不定式，得变形再算"
      },
      {
       "kind": "sign",
@@ -3903,6 +5414,11 @@
       "ignore"
      ],
      [
+      "1",
+      "form",
+      "form"
+     ],
+     [
       "-2",
       "sign",
       "sign"
@@ -3916,6 +5432,13 @@
       "9",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "1",
+      "form",
+      "form"
      ]
     ]
    },
@@ -3980,18 +5503,40 @@
       "unknown",
       "unknown"
      ]
+    ],
+    "published": [
+     [
+      "11/3",
+      "method",
+      "method"
+     ]
     ]
    },
    {
-    "text": "求极限 lim(x→1) (2x^2 + 7x - 4)/(x^2 + x - 2)",
-    "change": "单侧/双侧：左侧 → 双侧",
-    "kind": "dir",
-    "answer": "不存在",
+    "text": "求极限 lim(x→1-) (2x^2 + 7x - 4)/(x^2 + 2x - 2)",
+    "change": "系数：1 → 2",
+    "kind": "coefficient",
+    "answer": "5",
     "traps": [
      {
       "kind": "ignore",
       "value": "-∞",
-      "why": "漏看了「单侧/双侧」从 左侧 改成 双侧，答的还是原题结果"
+      "why": "漏看了「系数」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "11/4",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-5",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/5",
+      "why": "上下颠倒了（算成了倒数）"
      }
     ],
     "clear": true,
@@ -3999,7 +5544,7 @@
     "readback": true,
     "sims": [
      [
-      "不存在",
+      "5",
       "correct",
       "correct"
      ],
@@ -4009,9 +5554,31 @@
       "ignore"
      ],
      [
-      "7",
+      "11/4",
+      "method",
+      "method"
+     ],
+     [
+      "-5",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/5",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "12",
       "unknown",
       "unknown"
+     ]
+    ],
+    "published": [
+     [
+      "11/4",
+      "method",
+      "method"
      ]
     ]
    }
@@ -4028,7 +5595,12 @@
   "truth": "0",
   "tried": 9,
   "valid": 5,
-  "seconds": 0.1,
+  "seconds": 0.08,
+  "orig_hard": true,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": [
    {
     "text": "求极限 lim(x→1) x^2*cos(1/x)",
@@ -4086,7 +5658,8 @@
       "unknown",
       "unknown"
      ]
-    ]
+    ],
+    "published": []
    }
   ]
  },
@@ -4101,7 +5674,12 @@
   "truth": "1/2",
   "tried": 0,
   "valid": 0,
-  "seconds": 0.06,
+  "seconds": 0.0,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": []
  },
  {
@@ -4116,6 +5694,11 @@
   "tried": 0,
   "valid": 0,
   "seconds": 0.01,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": []
  },
  {
@@ -4129,7 +5712,12 @@
   "truth": "8",
   "tried": 0,
   "valid": 0,
-  "seconds": 0.0,
+  "seconds": 0.02,
+  "orig_hard": false,
+  "pool_mis": [
+   0,
+   0
+  ],
   "picks": []
  }
 ]

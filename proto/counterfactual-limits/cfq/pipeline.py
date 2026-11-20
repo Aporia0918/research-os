@@ -50,6 +50,8 @@ class Result:
     given: Answer | None = None
     truth: Answer | None = None
     picks: list[Variant] = field(default_factory=list)
+    found: list[Variant] = field(default_factory=list)  # 全部有效变式（评测用）
+    was_hard: bool = False  # 原题不能直接代入
     tried: int = 0
     valid: int = 0
     seconds: float = 0.0
@@ -72,8 +74,8 @@ def run(text: str, given_text: str | None, read=parse, keep: int = 3) -> Result:
             res.status = "flagged"  # 给的答案和求解器对不上：不出变式
             return _done(res, t0)
 
-    was_hard = direct(spec) is None
-    found: list[Variant] = []
+    res.was_hard = was_hard = direct(spec) is None
+    found = res.found
     cands = variants(spec)
     res.tried = len(cands)
     for s, change in cands:

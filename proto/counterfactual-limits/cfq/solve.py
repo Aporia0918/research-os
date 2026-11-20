@@ -59,7 +59,8 @@ def _numeric(f: sp.Expr, p: sp.Expr, d: str, v: sp.Expr) -> bool:
         ys = [mp.re(y) for y in ys]
         if v.is_infinite:
             sign = 1 if v == sp.oo else -1
-            return all(sign * y > 0 for y in ys) and abs(ys[-1]) > 1e3 and abs(ys[-1]) > abs(ys[0])
+            mags = [abs(y) for y in ys]  # 一路变大；ln 这类慢发散在 10^-8 处也只有 18 左右
+            return all(sign * y > 0 for y in ys) and mags[0] < mags[1] < mags[2] and mags[2] > max(10, 1.5 * mags[0])
         target = mp.mpf(sp.N(v, 60))
         errs = [abs(y - target) for y in ys]
         return errs[-1] < 1e-3 * max(1, abs(target)) and errs[-1] <= errs[0] + mp.mpf(10) ** -40
