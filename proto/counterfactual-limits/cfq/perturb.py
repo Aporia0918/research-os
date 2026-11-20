@@ -25,7 +25,7 @@ class Change:
 
 
 def show_point(p: sp.Expr) -> str:
-    return {sp.oo: "∞", -sp.oo: "-∞"}.get(p, sp.sstr(p))
+    return {sp.oo: "∞", -sp.oo: "-∞"}.get(p, sp.sstr(p).replace("pi", "π"))
 
 
 def _walk(e: sp.Expr, path: tuple[int, ...] = ()) -> Iterator[tuple[tuple[int, ...], sp.Expr, sp.Expr]]:

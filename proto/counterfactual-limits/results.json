@@ -10,7 +10,7 @@
   "truth": "∞",
   "tried": 12,
   "valid": 5,
-  "seconds": 0.23,
+  "seconds": 0.36,
   "orig_hard": true,
   "pool_mis": [
    1,
@@ -64,7 +64,7 @@
   "truth": "1/4",
   "tried": 20,
   "valid": 18,
-  "seconds": 0.19,
+  "seconds": 0.25,
   "orig_hard": true,
   "pool_mis": [
    3,
@@ -274,7 +274,7 @@
   "truth": "1/12",
   "tried": 20,
   "valid": 16,
-  "seconds": 0.22,
+  "seconds": 0.31,
   "orig_hard": true,
   "pool_mis": [
    1,
@@ -484,7 +484,7 @@
   "truth": "6",
   "tried": 16,
   "valid": 14,
-  "seconds": 0.16,
+  "seconds": 0.21,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -674,7 +674,7 @@
   "truth": "-2",
   "tried": 14,
   "valid": 12,
-  "seconds": 0.19,
+  "seconds": 0.25,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -904,7 +904,7 @@
   "truth": "-1",
   "tried": 11,
   "valid": 7,
-  "seconds": 0.16,
+  "seconds": 0.22,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -1003,14 +1003,14 @@
    },
    {
     "text": "求极限 lim(x→1) (x - π)/sin(x)",
-    "change": "趋向点：pi → 1",
+    "change": "趋向点：π → 1",
     "kind": "point",
     "answer": "(1 - π)/sin(1)",
     "traps": [
      {
       "kind": "ignore",
       "value": "-1",
-      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+      "why": "漏看了「趋向点」从 π 改成 1，答的还是原题结果"
      },
      {
       "kind": "method",
@@ -1139,7 +1139,7 @@
   "truth": "3",
   "tried": 15,
   "valid": 13,
-  "seconds": 0.19,
+  "seconds": 0.27,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -1399,7 +1399,7 @@
   "truth": "-1/2",
   "tried": 13,
   "valid": 9,
-  "seconds": 0.22,
+  "seconds": 0.28,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -1619,7 +1619,7 @@
   "truth": "1/2",
   "tried": 13,
   "valid": 11,
-  "seconds": 0.33,
+  "seconds": 0.44,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -1789,7 +1789,7 @@
   "truth": "1",
   "tried": 10,
   "valid": 5,
-  "seconds": 0.18,
+  "seconds": 0.23,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -1984,7 +1984,7 @@
   "truth": "1/6",
   "tried": 11,
   "valid": 6,
-  "seconds": 0.23,
+  "seconds": 0.29,
   "orig_hard": true,
   "pool_mis": [
    1,
@@ -2154,7 +2154,7 @@
   "truth": "1",
   "tried": 5,
   "valid": 4,
-  "seconds": 0.08,
+  "seconds": 0.09,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2208,7 +2208,7 @@
   "truth": "0",
   "tried": 9,
   "valid": 3,
-  "seconds": 0.12,
+  "seconds": 0.17,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2287,7 +2287,7 @@
   "truth": "0",
   "tried": 8,
   "valid": 5,
-  "seconds": 0.16,
+  "seconds": 0.22,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2426,7 +2426,7 @@
   "truth": "-1",
   "tried": 12,
   "valid": 6,
-  "seconds": 0.08,
+  "seconds": 0.1,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2534,7 +2534,7 @@
   "truth": "∞",
   "tried": 5,
   "valid": 5,
-  "seconds": 0.1,
+  "seconds": 0.13,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2604,7 +2604,7 @@
   "truth": "0",
   "tried": 7,
   "valid": 3,
-  "seconds": 0.11,
+  "seconds": 0.14,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2668,7 +2668,7 @@
   "truth": "e^(-1)",
   "tried": 8,
   "valid": 4,
-  "seconds": 0.51,
+  "seconds": 0.71,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -2856,7 +2856,7 @@
   "truth": "0",
   "tried": 7,
   "valid": 5,
-  "seconds": 0.07,
+  "seconds": 0.1,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -2935,7 +2935,7 @@
   "truth": "1",
   "tried": 13,
   "valid": 11,
-  "seconds": 0.31,
+  "seconds": 0.48,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -3089,7 +3089,7 @@
   "truth": "0",
   "tried": 13,
   "valid": 8,
-  "seconds": 0.18,
+  "seconds": 0.27,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -3098,14 +3098,14 @@
   "picks": [
    {
     "text": "求极限 lim(x→1) (cos(x) + 1)/sin(x)",
-    "change": "趋向点：pi → 1",
+    "change": "趋向点：π → 1",
     "kind": "point",
     "answer": "(cos(1) + 1)/sin(1)",
     "traps": [
      {
       "kind": "ignore",
       "value": "0",
-      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+      "why": "漏看了「趋向点」从 π 改成 1，答的还是原题结果"
      },
      {
       "kind": "method",
@@ -3284,7 +3284,7 @@
   "truth": "tan(1)",
   "tried": 7,
   "valid": 2,
-  "seconds": 0.07,
+  "seconds": 0.12,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -3338,7 +3338,7 @@
   "truth": "2",
   "tried": 10,
   "valid": 8,
-  "seconds": 0.38,
+  "seconds": 0.58,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -3568,7 +3568,7 @@
   "truth": "3",
   "tried": 15,
   "valid": 7,
-  "seconds": 0.07,
+  "seconds": 0.09,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -3696,7 +3696,7 @@
   "truth": "√(19)",
   "tried": 15,
   "valid": 10,
-  "seconds": 0.16,
+  "seconds": 0.22,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -3893,7 +3893,7 @@
   "truth": "49",
   "tried": 10,
   "valid": 8,
-  "seconds": 0.01,
+  "seconds": 0.03,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -4001,7 +4001,7 @@
   "truth": "1",
   "tried": 11,
   "valid": 5,
-  "seconds": 0.1,
+  "seconds": 0.15,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -4114,7 +4114,7 @@
   "truth": "-5/7",
   "tried": 14,
   "valid": 12,
-  "seconds": 0.1,
+  "seconds": 0.11,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -4307,7 +4307,7 @@
   "truth": "8",
   "tried": 16,
   "valid": 14,
-  "seconds": 0.12,
+  "seconds": 0.19,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -4497,7 +4497,7 @@
   "truth": "3/2",
   "tried": 16,
   "valid": 8,
-  "seconds": 0.09,
+  "seconds": 0.13,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -4585,7 +4585,7 @@
   "truth": "6",
   "tried": 14,
   "valid": 9,
-  "seconds": 0.17,
+  "seconds": 0.3,
   "orig_hard": true,
   "pool_mis": [
    2,
@@ -4775,7 +4775,7 @@
   "truth": "-1",
   "tried": 10,
   "valid": 6,
-  "seconds": 0.14,
+  "seconds": 0.23,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -4784,14 +4784,14 @@
   "picks": [
    {
     "text": "求极限 lim(x→0) sin(x)/tan(x)",
-    "change": "趋向点：pi → 0",
+    "change": "趋向点：π → 0",
     "kind": "point",
     "answer": "1",
     "traps": [
      {
       "kind": "ignore",
       "value": "-1",
-      "why": "漏看了「趋向点」从 pi 改成 0，答的还是原题结果"
+      "why": "漏看了「趋向点」从 π 改成 0，答的还是原题结果"
      },
      {
       "kind": "form",
@@ -4945,7 +4945,7 @@
   "truth": "5/2",
   "tried": 19,
   "valid": 17,
-  "seconds": 0.19,
+  "seconds": 0.28,
   "orig_hard": true,
   "pool_mis": [
    1,
@@ -5135,7 +5135,7 @@
   "truth": "-∞",
   "tried": 22,
   "valid": 14,
-  "seconds": 0.16,
+  "seconds": 0.23,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -5365,7 +5365,7 @@
   "truth": "-∞",
   "tried": 21,
   "valid": 12,
-  "seconds": 0.11,
+  "seconds": 0.14,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -5595,7 +5595,7 @@
   "truth": "0",
   "tried": 9,
   "valid": 5,
-  "seconds": 0.08,
+  "seconds": 0.13,
   "orig_hard": true,
   "pool_mis": [
    0,
@@ -5674,7 +5674,7 @@
   "truth": "1/2",
   "tried": 0,
   "valid": 0,
-  "seconds": 0.0,
+  "seconds": 0.08,
   "orig_hard": false,
   "pool_mis": [
    0,
@@ -5712,7 +5712,7 @@
   "truth": "8",
   "tried": 0,
   "valid": 0,
-  "seconds": 0.02,
+  "seconds": 0.01,
   "orig_hard": false,
   "pool_mis": [
    0,
