@@ -1,0 +1,4135 @@
+[
+ {
+  "id": "os48-2",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 2 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "设 k=3，求极限 lim(x→∞) e^x/x^k",
+  "given": "∞",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "∞",
+  "tried": 11,
+  "valid": 5,
+  "seconds": 0.25,
+  "picks": [
+   {
+    "text": "设 k=3，求极限 lim(x→-∞) e^x/x^k",
+    "change": "趋向点：∞ → -∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "∞",
+      "why": "漏看了「趋向点」从 ∞ 改成 -∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-4",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 4 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "设 a=2，求极限 lim(x→a) (x-a)/(x^2-a^2)",
+  "given": "1/(2a)",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1/4",
+  "tried": 18,
+  "valid": 16,
+  "seconds": 0.16,
+  "picks": [
+   {
+    "text": "设 a=2，求极限 lim(x→∞) (-a + x)/(-a^2 + x^2)",
+    "change": "趋向点：a → ∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/4",
+      "why": "漏看了「趋向点」从 a 改成 ∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/4",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 a=3，求极限 lim(x→a) (-a + x)/(-a^2 + x^2)",
+    "change": "参数 a：2 → 3",
+    "kind": "param",
+    "answer": "1/6",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/4",
+      "why": "漏看了「参数 a」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/6",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "6",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "1/6",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.1667",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/4",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/6",
+      "sign",
+      "sign"
+     ],
+     [
+      "6",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "43/6",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 a=2，求极限 lim(x→a) (-a + x)/(-a^2 + x^3)",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/4",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/12",
+      "why": "「指数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/4",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/12",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-6",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 6 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "设 n=3，a=2，求极限 lim(x→a) (x-a)/(x^n-a^n)",
+  "given": "1/(n a^(n-1))",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1/12",
+  "tried": 18,
+  "valid": 14,
+  "seconds": 0.16,
+  "picks": [
+   {
+    "text": "设 n=3，a=2，求极限 lim(x→∞) (-a + x)/(-a^n + x^n)",
+    "change": "趋向点：a → ∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/12",
+      "why": "漏看了「趋向点」从 a 改成 ∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/12",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 n=4，a=2，求极限 lim(x→a) (-a + x)/(-a^n + x^n)",
+    "change": "参数 n：3 → 4",
+    "kind": "param",
+    "answer": "1/32",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/12",
+      "why": "漏看了「参数 n」从 3 改成 4，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/32",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "32",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "1/32",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.03125",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/12",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/32",
+      "sign",
+      "sign"
+     ],
+     [
+      "32",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "225/32",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 n=3，a=2，求极限 lim(x→a) (a + x)/(-a^n + x^n)",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/12",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/12",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-12",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 12 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→3) (x^2-9)/(x-3)",
+  "given": "6",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "6",
+  "tried": 14,
+  "valid": 12,
+  "seconds": 0.12,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) (x^2 - 9)/(x - 3)",
+    "change": "趋向点：3 → 0",
+    "kind": "point",
+    "answer": "3",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「趋向点」从 3 改成 0，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "0",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-3",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/3",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "3",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "method",
+      "method"
+     ],
+     [
+      "-3",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/3",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "10",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→3) (x^2 + 9)/(x - 3)",
+    "change": "常数项：-9 → 9",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「常数项」从 -9 改成 9，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→3) (x^3 - 9)/(x - 3)",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-14",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 14 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) ((1+x)^(-2)-1)/x",
+  "given": "-2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-2",
+  "tried": 12,
+  "valid": 10,
+  "seconds": 0.12,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) (-1 + (x + 1)^(-2))/x",
+    "change": "趋向点：0 → ∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-2",
+      "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "-2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (-1 + 1/(x + 1))/x",
+    "change": "指数：2 → 1",
+    "kind": "exponent",
+    "answer": "-1",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-2",
+      "why": "漏看了「指数」从 2 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "1",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "-1",
+      "correct",
+      "correct"
+     ],
+     [
+      "-2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1",
+      "sign",
+      "sign"
+     ],
+     [
+      "6",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (1 + (x + 1)^(-2))/x",
+    "change": "常数项：-1 → 1",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-2",
+      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "-2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-16",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 16 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→π) (x-π)/sin(x)",
+  "given": "-1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-1",
+  "tried": 9,
+  "valid": 5,
+  "seconds": 0.18,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) (x - π)/sin(x)",
+    "change": "趋向点：pi → 1",
+    "kind": "point",
+    "answer": "(1 - π)/sin(1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/cos(1)",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-(1 - π)/sin(1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "sin(1)/(1 - π)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "(1 - π)/sin(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "-2.545",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/cos(1)",
+      "method",
+      "method"
+     ],
+     [
+      "-(1 - π)/sin(1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "sin(1)/(1 - π)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "(1 - π)/sin(1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→π) (x + π)/sin(x)",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-18",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 18 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "设 n=3，求极限 lim(x→0) ((1+x)^n-1)/x",
+  "given": "n",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "3",
+  "tried": 13,
+  "valid": 11,
+  "seconds": 0.16,
+  "picks": [
+   {
+    "text": "设 n=4，求极限 lim(x→0) ((x + 1)^n - 1)/x",
+    "change": "参数 n：3 → 4",
+    "kind": "param",
+    "answer": "4",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「参数 n」从 3 改成 4，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-4",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/4",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "4",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-4",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/4",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "11",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 n=3，求极限 lim(x→1) ((x + 1)^n - 1)/x",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "7",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "12",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-7",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/7",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "7",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "12",
+      "method",
+      "method"
+     ],
+     [
+      "-7",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/7",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "14",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "设 n=3，求极限 lim(x→0) ((x + 1)^n + 1)/x",
+    "change": "常数项：-1 → 1",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-20",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 20 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) (sin(x)-tan(x))/x^3",
+  "given": "-1/2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-1/2",
+  "tried": 10,
+  "valid": 6,
+  "seconds": 0.19,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) (sin(x) - tan(x))/x^2",
+    "change": "指数：3 → 2",
+    "kind": "exponent",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1/2",
+      "why": "漏看了「指数」从 3 改成 2，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (sin(x) + tan(x))/x^3",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "∞",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1/2",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-∞",
+      "why": "符号弄反了（正负无穷）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "∞",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-∞",
+      "sign",
+      "sign"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (sin(x) - tan(x))/x^3",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "-tan(1) + sin(1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1/2",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "-tan(1)^2/3 - 1/3 + cos(1)/3",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-sin(1) + tan(1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/(-tan(1) + sin(1))",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "-tan(1) + sin(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "-0.7159",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-tan(1)^2/3 - 1/3 + cos(1)/3",
+      "method",
+      "method"
+     ],
+     [
+      "-sin(1) + tan(1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/(-tan(1) + sin(1))",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "-tan(1) + sin(1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-22",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 22 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) (e^x-x-1)/x^2",
+  "given": "1/2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1/2",
+  "tried": 11,
+  "valid": 9,
+  "seconds": 0.35,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-∞) (-x + e^x - 1)/x^2",
+    "change": "趋向点：0 → -∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/2",
+      "why": "漏看了「趋向点」从 0 改成 -∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (-x + e^x - 1)/x",
+    "change": "指数：2 → 1",
+    "kind": "exponent",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/2",
+      "why": "漏看了「指数」从 2 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (x + e^x - 1)/x^2",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/2",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-24",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 24 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→1) (x-1)/ln(x)",
+  "given": "1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1",
+  "tried": 8,
+  "valid": 3,
+  "seconds": 0.14,
+  "picks": [
+   {
+    "text": "求极限 lim(x→2) (x - 1)/ln(x)",
+    "change": "趋向点：1 → 2",
+    "kind": "point",
+    "answer": "1/ln(2)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「趋向点」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "2",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/ln(2)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "ln(2)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "1/ln(2)",
+      "correct",
+      "correct"
+     ],
+     [
+      "1.443",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "2",
+      "method",
+      "method"
+     ],
+     [
+      "-1/ln(2)",
+      "sign",
+      "sign"
+     ],
+     [
+      "ln(2)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "1/ln(2) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (x + 1)/ln(x)",
+    "change": "常数项：-1 → 1",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-26",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 26 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→1) (sqrt(x)-cbrt(x))/(x-1)",
+  "given": "1/6",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1/6",
+  "tried": 9,
+  "valid": 4,
+  "seconds": 0.17,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) (-x^(1/3) + sqrt(x))/(x - 1)",
+    "change": "趋向点：1 → ∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/6",
+      "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (x^(1/3) + sqrt(x))/(x - 1)",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/6",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (-x^(1/3) + sqrt(x))/(x + 1)",
+    "change": "常数项：-1 → 1",
+    "kind": "constant",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1/6",
+      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": false,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1/6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-28",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 28 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→∞) x sin(1/x)",
+  "given": "1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1",
+  "tried": 5,
+  "valid": 4,
+  "seconds": 0.06,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) x*sin(1/x)",
+    "change": "趋向点：∞ → 0",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「趋向点」从 ∞ 改成 0，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-30",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 30 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0+) x ln(x^4)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 9,
+  "valid": 3,
+  "seconds": 0.12,
+  "picks": [
+   {
+    "text": "求极限 lim(x→2+) x*ln(x^4)",
+    "change": "趋向点：0 → 2",
+    "kind": "point",
+    "answer": "2*ln(16)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 0 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-2*ln(16)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/(2*ln(16))",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "2*ln(16)",
+      "correct",
+      "correct"
+     ],
+     [
+      "5.545",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-2*ln(16)",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/(2*ln(16))",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "2*ln(16) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-32",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 32 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→∞) x^2 e^(-x)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 8,
+  "valid": 5,
+  "seconds": 0.13,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-1) x^2*e^(-x)",
+    "change": "趋向点：∞ → -1",
+    "kind": "point",
+    "answer": "e",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 ∞ 改成 -1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "-2*e",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-e",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "e^(-1)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "e",
+      "correct",
+      "correct"
+     ],
+     [
+      "2.718",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-2*e",
+      "method",
+      "method"
+     ],
+     [
+      "-e",
+      "sign",
+      "sign"
+     ],
+     [
+      "e^(-1)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "e + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→∞) x^2*e^x",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "∞",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-∞",
+      "why": "符号弄反了（正负无穷）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "∞",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-∞",
+      "sign",
+      "sign"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-34",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 34 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) (1+1/x)/(1-1/x)",
+  "given": "-1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-1",
+  "tried": 11,
+  "valid": 5,
+  "seconds": 0.05,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-1) (1 + 1/x)/(1 - 1/x)",
+    "change": "趋向点：0 → -1",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「趋向点」从 0 改成 -1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-36",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 36 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→∞) x e^(1/x)",
+  "given": "∞",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "∞",
+  "tried": 5,
+  "valid": 5,
+  "seconds": 0.11,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) x*e^(1/x)",
+    "change": "趋向点：∞ → 0",
+    "kind": "point",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "∞",
+      "why": "漏看了「趋向点」从 ∞ 改成 0，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-38",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 38 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0+) x^(1/x)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 7,
+  "valid": 3,
+  "seconds": 0.13,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) x^(1/x)",
+    "change": "趋向点：0 → ∞",
+    "kind": "point",
+    "answer": "1",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "1",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1",
+      "sign",
+      "sign"
+     ],
+     [
+      "8",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-40",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 40 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→∞) (1-1/x)^x",
+  "given": "1/e",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "e^(-1)",
+  "tried": 8,
+  "valid": 4,
+  "seconds": 0.49,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-1) (1 - 1/x)^x",
+    "change": "趋向点：∞ → -1",
+    "kind": "point",
+    "answer": "1/2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "e^(-1)",
+      "why": "漏看了「趋向点」从 ∞ 改成 -1，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "1/2",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.5",
+      "correct",
+      "correct"
+     ],
+     [
+      "e^(-1)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/2",
+      "sign",
+      "sign"
+     ],
+     [
+      "2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "15/2",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→∞) (2 - 1/x)^x",
+    "change": "常数项：1 → 2",
+    "kind": "constant",
+    "answer": "∞",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "e^(-1)",
+      "why": "漏看了「常数项」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-∞",
+      "why": "符号弄反了（正负无穷）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "∞",
+      "correct",
+      "correct"
+     ],
+     [
+      "e^(-1)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-∞",
+      "sign",
+      "sign"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→∞) (1 + 1/x)^x",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "e",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "e^(-1)",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-e",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": false,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "e",
+      "correct",
+      "correct"
+     ],
+     [
+      "2.718",
+      "correct",
+      "correct"
+     ],
+     [
+      "e^(-1)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-e",
+      "sign",
+      "sign"
+     ],
+     [
+      "e + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-42",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 42 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) x sin(1/x)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 7,
+  "valid": 5,
+  "seconds": 0.07,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) x*sin(1/x)",
+    "change": "趋向点：0 → ∞",
+    "kind": "point",
+    "answer": "1",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 0 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "1",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1",
+      "sign",
+      "sign"
+     ],
+     [
+      "8",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-44",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 44 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→1) (e^(x-1)-1)/(x-1)",
+  "given": "1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1",
+  "tried": 10,
+  "valid": 8,
+  "seconds": 0.26,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-∞) (e^(x - 1) - 1)/(x - 1)",
+    "change": "趋向点：1 → -∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「趋向点」从 1 改成 -∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (e^(x - 1) + 1)/(x - 1)",
+    "change": "常数项：-1 → 1",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「常数项」从 -1 改成 1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-46",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 46 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→π) (1+cos(x))/sin(x)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 10,
+  "valid": 6,
+  "seconds": 0.15,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) (cos(x) + 1)/sin(x)",
+    "change": "趋向点：pi → 1",
+    "kind": "point",
+    "answer": "(cos(1) + 1)/sin(1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "-sin(1)/cos(1)",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-(cos(1) + 1)/sin(1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "sin(1)/(cos(1) + 1)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "(cos(1) + 1)/sin(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "1.83",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-sin(1)/cos(1)",
+      "method",
+      "method"
+     ],
+     [
+      "-(cos(1) + 1)/sin(1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "sin(1)/(cos(1) + 1)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "(cos(1) + 1)/sin(1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→π) (cos(x) - 1)/sin(x)",
+    "change": "常数项：1 → -1",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「常数项」从 1 改成 -1，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-48",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 48 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0+) tan(x^x)",
+  "given": "tan 1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "tan(1)",
+  "tried": 7,
+  "valid": 2,
+  "seconds": 0.07,
+  "picks": [
+   {
+    "text": "求极限 lim(x→-∞) tan(x^x)",
+    "change": "趋向点：0 → -∞",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "tan(1)",
+      "why": "漏看了「趋向点」从 0 改成 -∞，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "tan(1)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-50",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 50 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) (e^x-e^(-x))/x",
+  "given": "2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "2",
+  "tried": 8,
+  "valid": 6,
+  "seconds": 0.24,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) (e^x - e^(-x))/x",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "e - e^(-1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "2",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "e",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-e + e^(-1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/(e - e^(-1))",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "e - e^(-1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "2.35",
+      "correct",
+      "correct"
+     ],
+     [
+      "2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "e",
+      "method",
+      "method"
+     ],
+     [
+      "-e + e^(-1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/(e - e^(-1))",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "-e^(-1) + e + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) (e^x + e^(-x))/x",
+    "change": "减号：− → +",
+    "kind": "sign",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "2",
+      "why": "漏看了「减号」从 − 改成 +，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-1",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 1 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→0) (4x^2-2x+3)",
+  "given": "3",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "3",
+  "tried": 15,
+  "valid": 7,
+  "seconds": 0.05,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) 4x^2 - 2x + 3",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "5",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-5",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/5",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "5",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-5",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/5",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "12",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→0) 4x^2 - 2x + 4",
+    "change": "常数项：3 → 4",
+    "kind": "constant",
+    "answer": "4",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3",
+      "why": "漏看了「常数项」从 3 改成 4，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-4",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/4",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "4",
+      "correct",
+      "correct"
+     ],
+     [
+      "3",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-4",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/4",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "11",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-3",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 3 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→-2) sqrt(x^2-6x+3)",
+  "given": "sqrt(19)",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "√(19)",
+  "tried": 14,
+  "valid": 9,
+  "seconds": 0.14,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) sqrt(x^2 - 6x + 3)",
+    "change": "趋向点：-2 → 0",
+    "kind": "point",
+    "answer": "√(3)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "√(19)",
+      "why": "漏看了「趋向点」从 -2 改成 0，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-√(3)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "√(3)/3",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "√(3)",
+      "correct",
+      "correct"
+     ],
+     [
+      "1.732",
+      "correct",
+      "correct"
+     ],
+     [
+      "√(19)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-√(3)",
+      "sign",
+      "sign"
+     ],
+     [
+      "√(3)/3",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "√(3) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→-2) sqrt(x^2 - 6x - 3)",
+    "change": "常数项：3 → -3",
+    "kind": "constant",
+    "answer": "√(13)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "√(19)",
+      "why": "漏看了「常数项」从 3 改成 -3，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-√(13)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "√(13)/13",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "√(13)",
+      "correct",
+      "correct"
+     ],
+     [
+      "3.606",
+      "correct",
+      "correct"
+     ],
+     [
+      "√(19)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-√(13)",
+      "sign",
+      "sign"
+     ],
+     [
+      "√(13)/13",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "√(13) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→-2) sqrt(x^3 - 6x + 3)",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "√(7)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "√(19)",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-√(7)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "√(7)/7",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "√(7)",
+      "correct",
+      "correct"
+     ],
+     [
+      "2.646",
+      "correct",
+      "correct"
+     ],
+     [
+      "√(19)",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-√(7)",
+      "sign",
+      "sign"
+     ],
+     [
+      "√(7)/7",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "√(7) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-5",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 5 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→7) x^2",
+  "given": "49",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "49",
+  "tried": 10,
+  "valid": 8,
+  "seconds": 0.01,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) x^2",
+    "change": "趋向点：7 → 0",
+    "kind": "point",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "49",
+      "why": "漏看了「趋向点」从 7 改成 0，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "49",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→7) x^3",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "343",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "49",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-343",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/343",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "343",
+      "correct",
+      "correct"
+     ],
+     [
+      "49",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-343",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/343",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "350",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-7",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 7 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→0) 1/(1+sin(x))",
+  "given": "1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "1",
+  "tried": 9,
+  "valid": 5,
+  "seconds": 0.08,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) 1/(sin(x) + 2)",
+    "change": "常数项：1 → 2",
+    "kind": "constant",
+    "answer": "1/2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「常数项」从 1 改成 2，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "1/2",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.5",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/2",
+      "sign",
+      "sign"
+     ],
+     [
+      "2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "15/2",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) 1/(sin(x) + 1)",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "1/(sin(1) + 1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "1",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1/(sin(1) + 1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "sin(1) + 1",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "1/(sin(1) + 1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.543",
+      "correct",
+      "correct"
+     ],
+     [
+      "1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/(sin(1) + 1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "sin(1) + 1",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "1/(sin(1) + 1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-9",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 9 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→1) (2-7x)/(x+6)",
+  "given": "-5/7",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-5/7",
+  "tried": 13,
+  "valid": 11,
+  "seconds": 0.05,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) (2 - 7x)/(x + 6)",
+    "change": "趋向点：1 → ∞",
+    "kind": "point",
+    "answer": "-7",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-5/7",
+      "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "7",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "-1/7",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "-7",
+      "correct",
+      "correct"
+     ],
+     [
+      "-5/7",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "sign",
+      "sign"
+     ],
+     [
+      "-1/7",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "0",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (2 - 7x)/(x - 6)",
+    "change": "常数项：6 → -6",
+    "kind": "constant",
+    "answer": "1",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-5/7",
+      "why": "漏看了「常数项」从 6 改成 -6，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-1",
+      "why": "符号弄反了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "1",
+      "correct",
+      "correct"
+     ],
+     [
+      "-5/7",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1",
+      "sign",
+      "sign"
+     ],
+     [
+      "8",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (7x + 2)/(x + 6)",
+    "change": "系数：-7 → 7",
+    "kind": "coefficient",
+    "answer": "9/7",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-5/7",
+      "why": "漏看了「系数」从 -7 改成 7，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-9/7",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "7/9",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "9/7",
+      "correct",
+      "correct"
+     ],
+     [
+      "1.286",
+      "correct",
+      "correct"
+     ],
+     [
+      "-5/7",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-9/7",
+      "sign",
+      "sign"
+     ],
+     [
+      "7/9",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "58/7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-11",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 11 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→4) (x^2-16)/(x-4)",
+  "given": "8",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "8",
+  "tried": 14,
+  "valid": 12,
+  "seconds": 0.07,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) (x^2 - 16)/(x - 4)",
+    "change": "趋向点：4 → 0",
+    "kind": "point",
+    "answer": "4",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "8",
+      "why": "漏看了「趋向点」从 4 改成 0，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "0",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-4",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/4",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "4",
+      "correct",
+      "correct"
+     ],
+     [
+      "8",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "0",
+      "method",
+      "method"
+     ],
+     [
+      "-4",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/4",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "11",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→4) (x^2 + 16)/(x - 4)",
+    "change": "常数项：-16 → 16",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "8",
+      "why": "漏看了「常数项」从 -16 改成 16，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "8",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→4) (x^3 - 16)/(x - 4)",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "8",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "8",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-13",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 13 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→6) (3x-18)/(2x-12)",
+  "given": "3/2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "3/2",
+  "tried": 16,
+  "valid": 8,
+  "seconds": 0.06,
+  "picks": [
+   {
+    "text": "求极限 lim(x→6) (3x - 18)/(2x + 12)",
+    "change": "常数项：-12 → 12",
+    "kind": "constant",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3/2",
+      "why": "漏看了「常数项」从 -12 改成 12，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "3/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→6) (3x - 18)/(3x - 12)",
+    "change": "系数：2 → 3",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "3/2",
+      "why": "漏看了「系数」从 2 改成 3，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "3/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-15",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 15 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(t→9) (t-9)/(sqrt(t)-3)",
+  "given": "6",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "6",
+  "tried": 12,
+  "valid": 7,
+  "seconds": 0.11,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) (x - 9)/(sqrt(x) - 3)",
+    "change": "趋向点：9 → 1",
+    "kind": "point",
+    "answer": "4",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「趋向点」从 9 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "2",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-4",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/4",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "4",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "2",
+      "method",
+      "method"
+     ],
+     [
+      "-4",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/4",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "11",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→9) (x + 9)/(sqrt(x) - 3)",
+    "change": "常数项：-9 → 9",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "6",
+      "why": "漏看了「常数项」从 -9 改成 9，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "6",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-17",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 17 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(θ→π) sin(θ)/tan(θ)",
+  "given": "-1",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-1",
+  "tried": 8,
+  "valid": 4,
+  "seconds": 0.12,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) sin(x)/tan(x)",
+    "change": "趋向点：pi → 1",
+    "kind": "point",
+    "answer": "sin(1)/tan(1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-1",
+      "why": "漏看了「趋向点」从 pi 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "cos(1)/(1 + tan(1)^2)",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-sin(1)/tan(1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "tan(1)/sin(1)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "sin(1)/tan(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.5403",
+      "correct",
+      "correct"
+     ],
+     [
+      "-1",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "cos(1)/(1 + tan(1)^2)",
+      "method",
+      "method"
+     ],
+     [
+      "-sin(1)/tan(1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "tan(1)/sin(1)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "sin(1)/tan(1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-19",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 19 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→1/2) (2x^2+3x-2)/(2x-1)",
+  "given": "5/2",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "5/2",
+  "tried": 19,
+  "valid": 17,
+  "seconds": 0.13,
+  "picks": [
+   {
+    "text": "求极限 lim(x→0) (2x^2 + 3x - 2)/(2x - 1)",
+    "change": "趋向点：1/2 → 0",
+    "kind": "point",
+    "answer": "2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "5/2",
+      "why": "漏看了「趋向点」从 1/2 改成 0，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "3/2",
+      "why": "「趋向点」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "2",
+      "correct",
+      "correct"
+     ],
+     [
+      "5/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "3/2",
+      "method",
+      "method"
+     ],
+     [
+      "-2",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "9",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1/2) (2x^2 + 3x - 2)/(3x - 1)",
+    "change": "系数：2 → 3",
+    "kind": "coefficient",
+    "answer": "0",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "5/2",
+      "why": "漏看了「系数」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "5/3",
+      "why": "「系数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "0",
+      "correct",
+      "correct"
+     ],
+     [
+      "5/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "5/3",
+      "method",
+      "method"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1/2) (2x^2 + 3x + 2)/(2x - 1)",
+    "change": "常数项：-2 → 2",
+    "kind": "constant",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "5/2",
+      "why": "漏看了「常数项」从 -2 改成 2，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "5/2",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-21",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 21 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→-2-) (2x^2+7x-4)/(x^2+x-2)",
+  "given": "-∞",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-∞",
+  "tried": 20,
+  "valid": 12,
+  "seconds": 0.13,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) (2x^2 + 7x - 4)/(x^2 + x - 2)",
+    "change": "趋向点：-2 → ∞",
+    "kind": "point",
+    "answer": "2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「趋向点」从 -2 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "2",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-2",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "9",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→-2-) (2x^2 + 7x - 4)/(x^2 + x - 1)",
+    "change": "常数项：-2 → -1",
+    "kind": "constant",
+    "answer": "-10",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「常数项」从 -2 改成 -1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "1/3",
+      "why": "「常数项」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "10",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "-1/10",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "-10",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "1/3",
+      "method",
+      "method"
+     ],
+     [
+      "10",
+      "sign",
+      "sign"
+     ],
+     [
+      "-1/10",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "-3",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→-2-) (2x^2 + 7x - 4)/(x^3 + x - 2)",
+    "change": "指数：2 → 3",
+    "kind": "exponent",
+    "answer": "5/6",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「指数」从 2 改成 3，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "-1/13",
+      "why": "「指数」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-5/6",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "6/5",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "5/6",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.8333",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-1/13",
+      "method",
+      "method"
+     ],
+     [
+      "-5/6",
+      "sign",
+      "sign"
+     ],
+     [
+      "6/5",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "47/6",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-23",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 23 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→1-) (2x^2+7x-4)/(x^2+x-2)",
+  "given": "-∞",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "-∞",
+  "tried": 19,
+  "valid": 10,
+  "seconds": 0.09,
+  "picks": [
+   {
+    "text": "求极限 lim(x→∞) (2x^2 + 7x - 4)/(x^2 + x - 2)",
+    "change": "趋向点：1 → ∞",
+    "kind": "point",
+    "answer": "2",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「趋向点」从 1 改成 ∞，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-2",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/2",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": true,
+    "readback": true,
+    "sims": [
+     [
+      "2",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-2",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/2",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "9",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1-) (2x^2 + 7x - 4)/(x^2 + x - 1)",
+    "change": "常数项：-2 → -1",
+    "kind": "constant",
+    "answer": "5",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「常数项」从 -2 改成 -1，答的还是原题结果"
+     },
+     {
+      "kind": "method",
+      "value": "11/3",
+      "why": "「常数项」改了以后已经不是 0/0，可以直接代入，照搬原题的洛必达就错了"
+     },
+     {
+      "kind": "sign",
+      "value": "-5",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/5",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "5",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "11/3",
+      "method",
+      "method"
+     ],
+     [
+      "-5",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/5",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "12",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   },
+   {
+    "text": "求极限 lim(x→1) (2x^2 + 7x - 4)/(x^2 + x - 2)",
+    "change": "单侧/双侧：左侧 → 双侧",
+    "kind": "dir",
+    "answer": "不存在",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "-∞",
+      "why": "漏看了「单侧/双侧」从 左侧 改成 双侧，答的还是原题结果"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "不存在",
+      "correct",
+      "correct"
+     ],
+     [
+      "-∞",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os23-45",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 45 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(θ→0) θ^2 cos(1/θ)",
+  "given": "0",
+  "expect_flag": false,
+  "status": "ok",
+  "truth": "0",
+  "tried": 9,
+  "valid": 5,
+  "seconds": 0.1,
+  "picks": [
+   {
+    "text": "求极限 lim(x→1) x^2*cos(1/x)",
+    "change": "趋向点：0 → 1",
+    "kind": "point",
+    "answer": "cos(1)",
+    "traps": [
+     {
+      "kind": "ignore",
+      "value": "0",
+      "why": "漏看了「趋向点」从 0 改成 1，答的还是原题结果"
+     },
+     {
+      "kind": "sign",
+      "value": "-cos(1)",
+      "why": "符号弄反了"
+     },
+     {
+      "kind": "reciprocal",
+      "value": "1/cos(1)",
+      "why": "上下颠倒了（算成了倒数）"
+     }
+    ],
+    "clear": true,
+    "hard": false,
+    "readback": true,
+    "sims": [
+     [
+      "cos(1)",
+      "correct",
+      "correct"
+     ],
+     [
+      "0.5403",
+      "correct",
+      "correct"
+     ],
+     [
+      "0",
+      "ignore",
+      "ignore"
+     ],
+     [
+      "-cos(1)",
+      "sign",
+      "sign"
+     ],
+     [
+      "1/cos(1)",
+      "reciprocal",
+      "reciprocal"
+     ],
+     [
+      "cos(1) + 7",
+      "unknown",
+      "unknown"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "os48-22-改错",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 22 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→0) (e^x-x-1)/x^2",
+  "given": "1",
+  "expect_flag": true,
+  "status": "flagged",
+  "truth": "1/2",
+  "tried": 0,
+  "valid": 0,
+  "seconds": 0.06,
+  "picks": []
+ },
+ {
+  "id": "os48-40-改错",
+  "source": "OpenStax《Calculus Volume 1》4.8 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 40 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/04:_Applications_of_Derivatives/4.08:_LHopitals_Rule/4.8E:_Exercises_for_Section_4.8",
+  "text": "求极限 lim(x→∞) (1-1/x)^x",
+  "given": "e",
+  "expect_flag": true,
+  "status": "flagged",
+  "truth": "e^(-1)",
+  "tried": 0,
+  "valid": 0,
+  "seconds": 0.01,
+  "picks": []
+ },
+ {
+  "id": "os23-11-改错",
+  "source": "OpenStax《Calculus Volume 1》2.3 习题（LibreTexts 版，CC BY-NC-SA 4.0）第 11 题",
+  "url": "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/02%3A_Limits/2.03%3A_The_Limit_Laws/2.3E%3A_Exercises_for_Section_2.3",
+  "text": "求极限 lim(x→4) (x^2-16)/(x-4)",
+  "given": "4",
+  "expect_flag": true,
+  "status": "flagged",
+  "truth": "8",
+  "tried": 0,
+  "valid": 0,
+  "seconds": 0.0,
+  "picks": []
+ }
+]
