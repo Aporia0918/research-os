@@ -32,6 +32,7 @@ const ALLOW = ['OpenRouter', 'AIGC', 'Anki', 'Excel', '#separator:tab', '#html:t
   'key_action must be run_model_call, send_data_out or share',
   'every key action (model call, data out, share) needs your approve or reject first',
   'decision must be approve or reject',
+  'README', 'PPT', 'HH:MM', // 组会之后 prototype: step names and a time-format error
 ] // 'English' = language-switch option, shown in its own language;
 const SKIP_ATTR = new Set(['className', 'data-testid', 'role', 'type', 'key', 'value', 'inputMode', 'autoCapitalize', 'autoComplete', 'id', 'rows', 'style']);
 const files = [];
@@ -55,6 +56,8 @@ function prose(s) {
   if (/^\(prefers-[a-z-]+: [a-z-]+\)$/.test(s.trim())) return false; // media query
   if (/^M[\d.\s,a-zA-Z-]+$/.test(s.trim()) && !/[a-z]{2,}/i.test(s.replace(/[MmLlHhVvCcSsQqTtAaZz](?=[\d.\s-]|$)/g, ''))) return false; // SVG path data (icons.tsx)
   let t = s; for (const a of ALLOW) t = t.split(a).join(' ');
+  t = t.replace(/<style>[\s\S]*?<\/style>/g, ' ').replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/g, ' ');         // HTML markup (exported overview page); its text is Chinese
+  t = t.replace(/"[a-z_]+"(?=\s*:)|"[a-z_]+" (?=写)/g, ' ');       // JSON keys in a model prompt, never shown
   t = t.replace(/\$\{[^}]*\}/g, ' ');
   if (!/[A-Za-z]{2,}/.test(t)) return false;
   if (/^[a-z0-9_.\-/:]*$/.test(s.trim())) return false;              // identifier, path, key

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">思维账本</string>
-    <string name="title_activity_main">思维账本</string>
+    <string name="app_name">组会之后</string>
+    <string name="title_activity_main">组会之后</string>
     <string name="package_name">dev.paperlab.assistant</string>
     <string name="custom_url_scheme">dev.paperlab.assistant</string>
 </resources>

@@ -12,6 +12,7 @@ describe('network allowlist (static scan)', () => {
       'src/screens/LedgerScreen.tsx', // ledger sync with the user's own paired computer, only when computer features are on
       'src/screens/ledger/shared.ts', // the user's own model key: grade an unsure repayment, first feedback, suggest task steps
       'src/logic/photoAsk.ts', // the user's own model key, for one photographed page the user chose to ask about
+      'src/mentor/ai.ts', // 组会之后 prototype: the user's own model key, with offline rules when there is none
       'src/screens/SettingsScreen.tsx', 'src/screens/UpdateCard.tsx', 'src/update/manifest.ts', 'src/update/native.ts']);
     expect(sites.filter(f => !allowed.has(f))).toEqual([]);
   });

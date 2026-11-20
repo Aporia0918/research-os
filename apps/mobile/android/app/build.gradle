@@ -29,8 +29,8 @@ android {
     buildTypes {
         // A test build installs beside the released app instead of over it.
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            applicationIdSuffix ".mentor" // 组会之后 prototype: installs beside 思维账本
+            versionNameSuffix "-mentor"
             signingConfig signingConfigs.fixedDebug
         }
         release {
