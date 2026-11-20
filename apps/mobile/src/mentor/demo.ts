@@ -1,5 +1,6 @@
 // Sample data so the prototype can be shown with no key and no real advisor. Names are made up.
 import { newId } from '../local/store';
+import { ruleRequirements } from './meeting';
 import type { MentorData } from './store';
 import type { Busy, Step, Task } from './types';
 
@@ -20,6 +21,20 @@ export const DEMO_NOTES = `老师：上周说的方法对比，这次只看准�
 学生：好的，我周五前把复现的结果整理成表发您。
 老师：我这周五前把数据集链接发你。
 老师：组会 PPT 不要超过 8 页。`;
+
+/** Two earlier meetings, so the requirement memory and the advisor's usual questions have something to learn from. */
+const PAST_1 = `老师：组会 PPT 不要超过 8 页。
+老师：结果表里要写清用的哪个数据集。
+老师：你为什么选这几篇？
+小林：因为它们都是近两年的。
+老师：和之前的方法比好在哪？`;
+const PAST_2 = `老师：方法对比要同时看准确率和速度。
+老师：这个结果跑了几次，稳定吗？
+小林：跑了一次。
+老师：以后每个结果要跑三次以上，报平均值。
+老师：为什么用这个数据集？`;
+const past = (id: string, at: number, text: string) =>
+  ({ id, at, text, source: 'rules' as const, changes: [], todos: [], requirements: ruleRequirements(text, id, at) });
 
 export function demoData(now: number): MentorData {
   const t = (student: string, ask: string, title: string, dueDays: number, steps: Step[]): Task =>
@@ -46,11 +61,6 @@ export function demoData(now: number): MentorData {
         step('做成 6 到 8 页幻灯片', '幻灯片初稿', 90),
       ]),
     ],
-    meetings: [{
-      id: newId(), at: now - 7 * DAY, source: 'rules', changes: [],
-      text: '老师：方法对比要同时看准确率和速度。',
-      todos: [],
-      requirements: [{ id: newId(), text: '方法对比要同时看准确率和速度', meetingId: 'm0', at: now - 7 * DAY }],
-    }],
+    meetings: [past('m1', now - 14 * DAY, PAST_1), past('m2', now - 7 * DAY, PAST_2)],
   };
 }

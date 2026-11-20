@@ -31,6 +31,8 @@ export interface Task {
   confirmed: boolean;
   /** model = drafted by the user's own model key; rules = the offline templates. */
   source: 'model' | 'rules';
+  /** What the student asked when the ask left something out, and the advisor's answer. */
+  asked?: { question: string; answer: string }[];
 }
 
 export interface Todo {

@@ -6,7 +6,10 @@ import { preferencesKV, type KV } from '../storage/kv';
 import { newId } from '../local/store';
 import { parseSteps, ruleBreakdown, selfCheck } from './breakdown';
 import { compareRequirements, parseDue, ruleClassify, ruleRequirements, ruleTodos } from './meeting';
-import type { Change, ChangeKind, Requirement, Role, Step, Todo } from './types';
+import { chooseQuestions, SLOTS, type Gap, type Slot } from './gaps';
+import type { Standing } from './memory';
+import { ruleFeedback, ruleProbes, type Probe } from './rehearse';
+import type { Change, ChangeKind, Meeting, Requirement, Role, Step, Todo } from './types';
 
 export interface Drafted<T> { value: T; source: 'model' | 'rules'; note: string }
 interface Deps { kv?: KV; f?: FetchLike }
@@ -108,4 +111,52 @@ export async function helpMessage(task: string, step: string, words: string, dep
 
 export function helpTemplate(task: string, step: string, words: string): string {
   return `老师好，我在做「${task}」的「${step}」这一步。\n${words.trim() || '（写下你试过什么）'}\n我想到两个办法：①（办法一）②（办法二），您看哪个更合适？`;
+}
+
+const GAP_SYS = `判断导师布置给本科新生的一句话任务缺了哪些信息。对每一项给出"缺失概率"（0 到 1 的小数），只输出 JSON 对象，键固定为：
+${SLOTS.map(d => d.slot).join('、')}。任务里已经说清的给低分；这类任务用不到的一项给 0。`;
+
+/** Which parts of the ask are missing (model estimate, rules if none), then the 选问 algorithm picks what to ask. */
+export async function findGaps(ask_: string, memory: Standing[], deps: Deps = {}): Promise<Drafted<{ ask: Gap[]; filled: Gap[] }>> {
+  try {
+    const reply = await ask(GAP_SYS, ask_, deps);
+    const o = JSON.parse(/\{[\s\S]*\}/.exec(reply)?.[0] ?? 'null') as Record<string, unknown> | null;
+    if (o && SLOTS.every(d => typeof o[d.slot] === 'number')) {
+      const missing = Object.fromEntries(SLOTS.map(d => [d.slot, Math.min(1, Math.max(0, o[d.slot] as number))])) as Record<Slot, number>;
+      return { value: chooseQuestions(ask_, memory, missing), source: 'model', note: '模型判断缺什么（自训的缺口模型上线前的临时替代）' };
+    }
+  } catch (e) {
+    return { value: chooseQuestions(ask_, memory), source: 'rules', note: `${describeModelError(e)}（已用离线规则）` };
+  }
+  return { value: chooseQuestions(ask_, memory), source: 'rules', note: '模型回复看不懂，已用离线规则' };
+}
+
+const REHEARSE_SYS = `你扮演本科生的导师，在组会上就学生的工作提问。先问导师以前提过的要求有没有做到，再问导师常问的那类问题。
+只输出 JSON 数组，最多 4 项，每项 {"question":"导师的原话风格提问","why":"为什么会问","keys":["回答里应提到的词"]}。不要编造导师没说过的要求。`;
+
+export async function rehearse(work: string, memory: Standing[], meetings: Meeting[], deps: Deps = {}): Promise<Drafted<Probe[]>> {
+  const offline = () => ruleProbes(work, memory, meetings);
+  try {
+    const earlier = memory.slice(0, 8).map(m => `- ${m.now.text}`).join('\n') || '（无）';
+    const reply = await ask(REHEARSE_SYS, `学生要汇报的工作：${work}\n导师以前的要求：\n${earlier}`, deps);
+    const arr = JSON.parse(/\[[\s\S]*\]/.exec(reply)?.[0] ?? 'null') as Probe[] | null;
+    const ok = Array.isArray(arr) ? arr.filter(p => typeof p?.question === 'string' && p.question.trim()).slice(0, 4)
+      .map(p => ({ question: p.question.trim(), why: String(p.why ?? ''), keys: Array.isArray(p.keys) ? p.keys.map(String).slice(0, 4) : [] })) : [];
+    if (ok.length) return { value: ok, source: 'model', note: '模型扮演导师提问' };
+  } catch (e) {
+    return { value: offline(), source: 'rules', note: `${describeModelError(e)}（已用导师以前的要求和常问问题）` };
+  }
+  return { value: offline(), source: 'rules', note: '模型回复看不懂，已用导师以前的要求和常问问题' };
+}
+
+const FEEDBACK_SYS = `你是组会上的导师。学生回答了你的问题。用两句话以内说：回答里缺了什么、怎么补一句更好。只依据问题和回答，不要编造。`;
+
+export async function feedback(p: Probe, answer: string, deps: Deps = {}): Promise<Drafted<string>> {
+  try {
+    const text = (await ask(FEEDBACK_SYS, `问题：${p.question}\n应提到：${p.keys.join('、') || '（无）'}\n学生回答：${answer}`, deps)).trim();
+    if (text) return { value: text, source: 'model', note: '模型点评' };
+  } catch (e) {
+    return { value: ruleFeedback(p, answer), source: 'rules', note: `${describeModelError(e)}（已用规则点评）` };
+  }
+  return { value: ruleFeedback(p, answer), source: 'rules', note: '模型没有回复，已用规则点评' };
 }

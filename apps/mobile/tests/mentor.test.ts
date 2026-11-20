@@ -97,7 +97,7 @@ describe('meeting rules', () => {
     expect(todos.filter(t => t.who === '导师').map(t => t.what)).toEqual(['我这周五前把数据集链接发你']);
     expect(todos.some(t => t.who === '学生' && /第四篇/.test(t.what))).toBe(true);
     const reqs = ruleRequirements(DEMO_NOTES, 'm1', meetingAt);
-    const history = demoData(mon).meetings[0].requirements;
+    const history = demoData(mon).meetings.flatMap(m => m.requirements);
     const changes = compareRequirements(reqs, history);
     expect(changes.find(c => /准确率/.test(c.now.text))?.kind).toMatch(/改变|矛盾/);
   });

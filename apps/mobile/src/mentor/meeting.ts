@@ -72,7 +72,7 @@ function grams(s: string): Set<string> {
   return out;
 }
 const STOP = new Set(['这个', '那个', '一下', '我们', '你们', '下周', '然后', '就是', '可以', '要用', '不要', '只看']);
-function overlap(a: string, b: string): number {
+export function overlap(a: string, b: string): number {
   const A = [...grams(a)].filter(g => !STOP.has(g)); const B = grams(b);
   const hit = A.filter(g => B.has(g)).length;
   return A.length ? hit / Math.min(A.length, Math.max(1, B.size)) : 0;

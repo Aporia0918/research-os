@@ -10,16 +10,16 @@ import { preferencesKV } from '../storage/kv';
 import { demoData } from './demo';
 import { syncReminders } from './remind';
 import { EMPTY, loadMentor, saveMentor, type MentorData } from './store';
-import { AdvisorScreen } from './ui/AdvisorScreen';
+import { MemoryScreen } from './ui/MemoryScreen';
 import type { Update } from './ui/common';
 import { MeetingScreen } from './ui/MeetingScreen';
 import { TasksScreen } from './ui/TasksScreen';
 import { TodayScreen } from './ui/TodayScreen';
 
-type Tab = 'today' | 'tasks' | 'meeting' | 'advisor' | 'settings';
+type Tab = 'today' | 'tasks' | 'meeting' | 'memory' | 'settings';
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
-  { id: 'today', label: '今天', icon: 'log' }, { id: 'tasks', label: '任务', icon: 'plan' },
-  { id: 'meeting', label: '组会', icon: 'ask' }, { id: 'advisor', label: '导师', icon: 'list' },
+  { id: 'today', label: '今天', icon: 'log' }, { id: 'tasks', label: '新任务', icon: 'plan' },
+  { id: 'meeting', label: '组会', icon: 'ask' }, { id: 'memory', label: '要求账', icon: 'ledger' },
   { id: 'settings', label: '设置', icon: 'settings' },
 ];
 const PRESSABLE = 'button.primary, button.ghost, .tab, .chip';
@@ -53,7 +53,7 @@ export function MentorApp() {
         {tab === 'today' && <TodayScreen {...props} />}
         {tab === 'tasks' && <TasksScreen {...props} />}
         {tab === 'meeting' && <MeetingScreen {...props} />}
-        {tab === 'advisor' && <AdvisorScreen {...props} />}
+        {tab === 'memory' && <MemoryScreen {...props} />}
         {tab === 'settings' && <>
           <div className="card">
             <b>我的名字</b>
