@@ -18,4 +18,4 @@ const g = call('generate', { problem: r.problem });
 const gr = call('grade', { original: r.problem, variant: g.variant.problem, answer: '不存在' });
 const ms = Math.round(performance.now() - t0);
 console.log(JSON.stringify({ ms, variant: g.variant.segments.map((s) => s[0]).join(''), answer: g.variant.answer.text, verdict: gr.verdict }));
-if (!r.ok || !g.variant || gr.verdict !== 'missed') process.exit(1);
+if (!r.ok || !g.ok || !g.variant || !gr.ok || gr.verdict !== 'missed') process.exit(1); // the phone reads ok first

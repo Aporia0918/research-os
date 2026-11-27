@@ -70,7 +70,7 @@ def api_grade(original: dict, variant: dict, answer: str, mastery: dict | None =
     before = {k: (mastery or {}).get(k, bkt.P0) for k in readings}
     after = before if d["obs"] is None else bkt.update(bkt.Probe(readings), before, d["obs"],
                                                        1 / choices if choices else bkt.GUESS)
-    return {**d, "correct": d["verdict"] == "correct", "truth": truth.to_json(), "verifier": VERIFIER,
+    return {"ok": True, **d, "correct": d["verdict"] == "correct", "truth": truth.to_json(), "verifier": VERIFIER,
             "mastery": {k: round(v, 4) for k, v in after.items()},
             "mastered": sorted(k for k, v in after.items() if v >= bkt.MASTERED),
             "missed": [explain(p, q, s) if s == sid else label(q, s) for s in d["slots"]]}

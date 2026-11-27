@@ -147,7 +147,7 @@ def test_api_round_trip():
     g = api_generate(r["problem"], claim=r["claim"], methods=r["methods"])
     assert g["ok"] and g["aiDisagrees"] is False and len(g["variant"]["options"]) >= 3
     gr = api_grade(r["problem"], g["variant"]["problem"], "不存在")  # 把单侧看成双侧
-    assert gr["verdict"] == "missed" and gr["mastery"]["单侧方向"] < bkt.P0
+    assert gr["ok"] and gr["verdict"] == "missed" and gr["mastery"]["单侧方向"] < bkt.P0
     both = api_grade(r["problem"], g["variant"]["problem"], "1")  # 去掉 |x| 和左右看反都得 1
     assert both["verdict"] == "review" and len(both["missed"]) == 2
     right = api_grade(r["problem"], g["variant"]["problem"], g["variant"]["answer"]["text"], choices=4)
