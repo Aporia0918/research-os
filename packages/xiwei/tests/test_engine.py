@@ -169,3 +169,11 @@ def test_every_option_reads_back(text):
     v = api_generate(r["problem"])["variant"]
     verdicts = [api_grade(r["problem"], v["problem"], o["text"], choices=4)["verdict"] for o in v["options"]]
     assert "unparsed" not in verdicts and verdicts.count("correct") == 1
+
+
+@pytest.mark.parametrize("text", ["∫₀² |x−1| dx", "∫_{0}^{2} |x-1| dx", "计算 ∫(0→2) |x-1| dx", r"$\int_0^2 |x-1| dx$"])
+def test_read_typeset_integrals(text):
+    """AI 应用复制出来的几种积分写法读成同一道题。"""
+    p, _ = read(text)
+    assert [(s.type, s.value) for s in p.slots] == [("lower", "0"), ("upper", "2"), ("abs", True)]
+    assert solve(p).text() == "1"

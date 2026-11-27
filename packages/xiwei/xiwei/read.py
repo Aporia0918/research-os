@@ -13,7 +13,8 @@ from .problem import UNKNOWNS, Problem, Slot, to_expr
 
 _PARAM = re.compile(r"(?:设|令|其中|已知)\s*((?:[A-Za-z]\s*=\s*[-+]?[\d./]+\s*[,，、和及]?\s*)+)")
 _LIM = re.compile(r"lim\s*[({_]?\s*\{?\s*([a-zα-ω])\s*(?:→|->|\\to)\s*([^)}\s]+?)\s*\}?\s*[)}]?\s+(.+)", re.S)
-_INT = re.compile(r"∫\s*(?:从\s*)?([^\s^到]+)\s*(?:\^|到)\s*([^\s，,]+)\s*[，,]?\s*(?:被积函数\s*)?(.+?)\s*d([a-z])\b")
+_INT = re.compile(r"∫\s*(?:从\s*)?[_(]?\s*\{?([^\s^到→{}()]+)\}?\s*(?:\^|到|→)\s*\{?([^\s，,{}()]+)\}?\s*\)?\s*[，,]?\s*"
+                  r"(?:被积函数\s*)?(.+?)\s*d([a-z])\b")
 _EXT = re.compile(r"f\(([a-z])\)\s*=\s*(.+?)\s*在\s*[\[［]\s*([^,，\]]+)\s*[,，]\s*([^\]］]+?)\s*[\]］]\s*"
                   r"上的?\s*(最大值|最小值)")
 _EQ = re.compile(r"[-+]?\s*\d*\s*[xyzw](?:\s*[-+]\s*\d*\s*[xyzw])+\s*=\s*[-+]?\s*[\d./]+")
@@ -119,8 +120,19 @@ def _from_plain(text: str, params: list[Slot]) -> Problem | None:
     return None
 
 
+_SUB, _SUP = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789"), str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+
+
+def _tidy(text: str) -> str:
+    """AI 应用复制出来的排版字符换回键盘写法：∫₀² → ∫_0^2，x² → x^2，− → -。"""
+    text = re.sub(r"[₀-₉]+", lambda m: "_" + m[0].translate(_SUB), text)
+    text = re.sub(r"[⁰¹²³⁴-⁹]+", lambda m: "^" + m[0].translate(_SUP), text)
+    return text.translate(str.maketrans({"−": "-", "×": "*", "÷": "/", "（": "(", "）": ")"}))
+
+
 def read(text: str) -> tuple[Problem, str | None]:
     """返回（题目结构，AI 给的答案原文或 None）。认不出抛 ValueError。"""
+    text = _tidy(text)
     params, rest = _params(text)
     blocks = [next(g for g in m.groups() if g) for m in _LATEX.finditer(rest)]
     p = next((q for b in blocks if ("\\lim" in b or "\\int" in b) and (q := _from_latex(b, params))), None)
