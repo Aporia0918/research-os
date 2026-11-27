@@ -7,7 +7,6 @@ import { LedgerScreen } from '../src/screens/LedgerScreen';
 import { today } from '../src/ledger/book';
 import { addDays } from '../src/ledger/ledger';
 import { book } from '../src/ledger/book';
-import { savePaper } from '../src/local/paperStore';
 import { preferencesKV } from '../src/storage/kv';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -23,6 +22,8 @@ function type(el: Element | undefined, value: string) {
     el.dispatchEvent(new Event(el instanceof HTMLInputElement && el.type === 'date' ? 'change' : 'input', { bubbles: true }));
   });
 }
+/** A paper as an earlier version stored it on the phone (the recall and citation source). */
+const keepPaper = (name: string, pages: string[]) => preferencesKV.set('paper.localDocument.v2', JSON.stringify({ ref: { name }, doc: { pages: pages.map(text => ({ text })) } }));
 const button = (h: HTMLElement, text: string) => [...h.querySelectorAll('button')].find(b => b.textContent === text);
 const field = (h: HTMLElement, hint: string) => [...h.querySelectorAll('textarea')].find(t => t.placeholder.startsWith(hint));
 
@@ -62,8 +63,7 @@ describe('召回单 on the ledger screen (演示第三段, phone half)', () => {
     await book.add({ clientId: 'r1', board: '科研', question: '空间滤波为什么放在分类之前', answer: '空间滤波应放在分类之前。', helpLevel: 'answer',
       ai: '豆包' }, addDays(today(), -20));
     const pages = ['引言。', '综述指出，空间滤波应在分类之后进行。'];
-    await savePaper(preferencesKV, { ref: { versionId: 'v1', name: '导师发的综述.pdf', parseState: 'parsed' },
-      doc: { pages: pages.map((text, i) => ({ page: i + 1, text })), numPages: 2, chars: 30 }, chunks: [] });
+    await keepPaper('导师发的综述.pdf', pages);
     host = document.createElement('div'); document.body.appendChild(host);
     root = createRoot(host);
     await act(async () => { root!.render(createElement(LedgerScreen)); });
@@ -123,8 +123,7 @@ describe('讲给我听 talks back, and 引用债 needs the original', () => {
     expect((await book.all()).find(e => e.clientId === 'w2')!.dueOn).toBe(addDays(today(), 1));
   });
   it('books a citation debt and clears it only with the sentence from the imported paper', async () => {
-    await savePaper(preferencesKV, { ref: { versionId: 'v2', name: '方法.pdf', parseState: 'parsed' },
-      doc: { pages: [{ page: 1, text: '我们用 0.5 到 40 Hz 带通滤波。' }], numPages: 1, chars: 20 }, chunks: [] });
+    await keepPaper('方法.pdf', ['我们用 0.5 到 40 Hz 带通滤波。']);
     const h = await open();
     await act(async () => { button(h, '记一笔')!.click(); });
     await act(async () => { h.querySelector<HTMLButtonElement>('[data-testid=kind-citation]')!.click(); });

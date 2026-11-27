@@ -1,10 +1,5 @@
 import { tr, trObj } from '../i18n';
-import type { CompareResult, LocalLog } from '../logic/types';
-import type { Detected, Task } from '../logic/nullworld';
-import type { AuditReport } from '../logic/audit';
-export type { Answer, CompareResult, Guidance, GuidanceDecision, GuidanceDecisionIn, Hypothesis, HypothesisStatus, KeyAction, Plan, PlanCategory, PlanItemEdit, Passage, LocalLog as ServerLogEntry } from '../logic/types';
 export interface Health { status: string; version: string; db_ok: boolean }
-export interface ServerLog { id: string; client_id: string; created: boolean; kind: string }
 /** 多设备推送: what changed on the owner's other devices since this phone last asked. */
 export interface Push { id: string; kind: 'recall' | 'recall_settled' | 'entry' | 'used'; entity_id: string; text: string; created_at: string }
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
@@ -29,10 +24,6 @@ export class ResearchOsClient {
   authState(): Promise<{ authenticated: boolean; device_name?: string | null }> { return this.request('GET', '/api/v1/auth/state'); }
   pushes(): Promise<Push[]> { return this.request('GET', '/api/v1/pushes'); }
   seenPushes(ids: string[]): Promise<{ seen: number }> { return this.request('POST', '/api/v1/pushes/seen', { ids }); }
-  createLog(form: FormData, idempotencyKey: string): Promise<ServerLog> { return this.request('POST', '/api/v1/mobile/logs', form, { 'Idempotency-Key': idempotencyKey }); }
-  compare(logId: string, versionId: string, idempotencyKey: string, useModel = false): Promise<CompareResult> {
-    return this.request('POST', '/api/v1/mobile/compare', { log_id: logId, version_id: versionId, use_model: useModel }, { 'Idempotency-Key': idempotencyKey });
-  }
   // 思维账本: entries by client id and repayments by a fixed key, so a replay after a dropped connection never counts twice.
   ledgerEntry(body: Record<string, unknown>, idempotencyKey: string): Promise<{ id: string }> {
     return this.request('POST', '/api/v1/mind-ledger/entries', body, { 'Idempotency-Key': idempotencyKey });
@@ -43,37 +34,18 @@ export class ResearchOsClient {
   ledgerDue<T>(): Promise<T> { return this.request('GET', '/api/v1/mind-ledger/due'); }
   ledgerMark(entryId: string, m: Record<string, unknown>): Promise<unknown> { return this.request('PATCH', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}`, m); }
   ledgerRecall(entryId: string, r: Record<string, unknown>): Promise<unknown> { return this.request('POST', `/api/v1/mind-ledger/entries/${encodeURIComponent(entryId)}/recalls`, r); }
-  listLogs(limit = 20): Promise<LocalLog[]> { return this.request('GET', `/api/v1/mobile/logs?limit=${Math.min(20, Math.max(1, Math.floor(limit)))}`); }
-  // 零世界考试: the computer runs the exam as a task that waits for the owner's approval of its exact payload.
-  detectColumns(data: string): Promise<Detected> { return this.request('POST', '/api/v1/null-world/detect', { data }); }
-  /** 规则体检: the computer parses the script inside a read root; nothing is run. */
-  auditScript(path: string, subjectColumns: string[]): Promise<AuditReport> {
-    return this.request('POST', '/api/v1/leak-audit/script', { path, subject_columns: subjectColumns });
-  }
-  createTask(kind: string, payload: Record<string, unknown>, idempotencyKey: string): Promise<Task> {
-    return this.request('POST', '/api/v1/tasks', { kind, payload }, { 'Idempotency-Key': idempotencyKey });
-  }
-  task(id: string): Promise<Task> { return this.request('GET', `/api/v1/tasks/${encodeURIComponent(id)}`); }
-  cancelTask(id: string): Promise<Task> { return this.request('POST', `/api/v1/tasks/${encodeURIComponent(id)}/cancel`); }
-  /** Approves exactly what was shown: the server refuses if the task changed since its hash was read. */
-  async approveTask(id: string): Promise<void> {
-    const q = new URLSearchParams({ subject_type: 'task', subject_id: id });
-    const { hash } = await this.request<{ hash: string }>('GET', `/api/v1/approvals/subject-hash?${q}`);
-    await this.request('POST', '/api/v1/approvals', { subject_type: 'task', subject_id: id, expected_hash: hash });
-  }
   private async request<T>(method: string, path: string, body?: unknown, extra: Record<string, string> = {}): Promise<T> {
-    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     const ctrl = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     // Hard limit: Promise.race, because the native HTTP bridge on Android may ignore AbortSignal.
     const limit = new Promise<never>((_, rej) => { timer = setTimeout(() => { ctrl.abort(); rej(new Error('timeout')); }, Math.min(5000, Math.max(1000, this.timeoutMs))); });
     const headers: Record<string, string> = { Accept: 'application/json', ...extra, 'x-researchos-client': 'android' };
     if (this.token) headers.Authorization = `Bearer ${this.token}`;
-    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
     let res: Response;
     let text: string;
     try {
-      res = await Promise.race([this.fetchImpl(this.base + path, { method, headers, body: body === undefined ? undefined : isForm ? body as FormData : JSON.stringify(body), credentials: 'include', signal: ctrl.signal }), limit]);
+      res = await Promise.race([this.fetchImpl(this.base + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'include', signal: ctrl.signal }), limit]);
       text = await Promise.race([res.text(), limit]);
     }
     catch { throw new ApiError(0, 'network', tr('电脑未连接，已用手机处理')); }
@@ -89,15 +61,7 @@ export class ResearchOsClient {
 }
 export const ERROR_ZH: Record<string, string> = trObj({
   not_found: '找不到这项内容。', bad_decision: '这个选择不合法,请重新选。',
-  plan_confirmed: '计划已经确认,不能再改。', plan_not_confirmed: '请先确认计划。',
   unauthenticated: '还没登录。请先在「设置」页配对。',
-  plan_action_unapproved: '有关键动作需要你先批准或拒绝,再确认计划。',
-  citation_gate_open: '有数字在引用页找不到原文(需确认),请逐条确认或否认后再确认计划。',
-  guidance_confirmed: '这份指导已经确认,不能再改。',
-  bad_hypothesis: '假设内容不合法(请写文字并至少勾一条计划条目)。',
-  outside_roots: '这个文件不在电脑允许读取的文件夹里，电脑不会碰它。',
-  bad_input: '读不了这个表格。请确认是 CSV 或 TSV 文件，第一行是列名，并且不超过 50 MB。',
-  invalid_payload: '考试设置不完整或不合法，请重新认结构。',
   network: '电脑未连接，已用手机处理', busy: '电脑正忙,请稍后再试。',
   internal_error: '电脑出错了,请稍后再试。', http_error: '请求没有成功。',
 });

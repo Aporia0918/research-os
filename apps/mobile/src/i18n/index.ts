@@ -18,8 +18,6 @@ export function setLang(l: Lang): void {
 export function onLang(f: (l: Lang) => void): () => void { listeners.add(f); return () => { listeners.delete(f); }; }
 export async function loadLang(kv: KV): Promise<Lang> { const v = await kv.get(LANG_KEY); return v === 'en' ? 'en' : 'zh'; }
 export async function saveLang(kv: KV, l: Lang): Promise<void> { await kv.set(LANG_KEY, l); }
-export function dateLocale(): string { return current === 'en' ? 'en-US' : 'zh-CN'; }
-export function fmtDate(d: string | number | Date): string { return new Date(d).toLocaleString(dateLocale()); }
 
 /** Translate a Chinese UI string into the current language and fill {0}, {1}, ... */
 export function tr(zh: string, ...args: unknown[]): string {

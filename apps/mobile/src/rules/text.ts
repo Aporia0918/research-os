@@ -5,7 +5,7 @@ const LIGATURES: Record<string, string> = { 'ﬀ': 'ff', 'ﬁ': 'fi', 'ﬂ': 'fl
 const DASHES: Record<string, string> = { '‐': '-', '‑': '-', '‒': '-', '–': '-', '—': '-', '−': '-' };
 const QUOTES: Record<string, string> = { '‘': "'", '’': "'", '“': '"', '”': '"' };
 
-export function charMap(c: string): string {
+function charMap(c: string): string {
   if (c in LIGATURES) return LIGATURES[c];
   return (DASHES[c] ?? QUOTES[c] ?? c).normalize('NFKC');
 }
@@ -34,7 +34,6 @@ export function normalize(text: string): Normalized {
 }
 
 export function norm(text: string): string { return normalize(text).text.trim(); }
-export function normKeepCase(text: string): string { return text.normalize('NFKC').split(/\s+/).filter(Boolean).join(' '); }
 
 /** ORIGINAL (start,end) offsets of the quote inside the page text, or null. */
 export function findSpan(pageText: string, quote: string): [number, number] | null {

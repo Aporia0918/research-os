@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { chat, describeModelError, withFallback, ModelError } from '../src/model/direct';
+import { chat, describeModelError, ModelError } from '../src/model/direct';
 import { DEFAULT_MODEL_SETTINGS, MODEL_KEY_KEY, loadModelSettings, saveModelSettings } from '../src/model/settings';
 import { memoryKV } from '../src/storage/kv';
 import { readSecret, writeSecret, type PlainMap, type SecretStore } from '../src/storage/secureKeyStore';
@@ -98,12 +98,5 @@ describe('direct model client (local mock server)', () => {
     expect((await chat({ ...S('ok'), baseUrl: '' }, FAKE, msg).catch(x => x)).code).toBe('no_base_url');
     expect((await chat({ ...S('ok'), baseUrl: 'ftp://x' }, FAKE, msg).catch(x => x)).code).toBe('bad_base_url');
     expect(seen.length).toBe(n);
-  });
-  it('falls back to rule-only mode with a reason', async () => {
-    const out = await withFallback(S('deny'), FAKE, msg, () => 'rules-answer');
-    expect(out).toMatchObject({ mode: 'rules', result: 'rules-answer' });
-    if (out.mode === 'rules') expect(out.reason).toMatch(/规则模式/);
-    expect(await withFallback(S('ok'), FAKE, msg, () => 'x')).toEqual({ mode: 'model', text: 'pong' });
-    expect((await withFallback(S('ok'), '', msg, () => 'r')).mode).toBe('rules');
   });
 });

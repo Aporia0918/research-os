@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import {
   AUTO_INTERVAL_MS, DEFAULT_MANIFEST_URL, DEFAULT_RELEASE_BASE, UpdateError, decide, describeUpdateError,
   downloadVerified, MIN_MIRROR_RATE, fetchDownloader, fetchManifest, isAssetName, loadMirrorPrefix, loadSource, manualAllowed,
-  markAutoCheck, parseManifest, releaseUrl, saveMirrorPrefix, saveSource, shouldAutoCheck, sha256Hex,
+  autoCheckUpdate, markAutoCheck, parseManifest, releaseUrl, saveMirrorPrefix, saveSource, shouldAutoCheck, sha256Hex,
   withMirrorPrefix, type Manifest, UPDATE_SOURCES, UPDATE_TIMEOUT_MS, sourceList, fetchManifestFromSources, percent,
 } from '../src/update/manifest';
 import { LOCAL_VERSION_CODE, LOCAL_VERSION_NAME } from '../src/update/version';
@@ -287,5 +287,28 @@ describe('a slow mirror does not hold the update', () => {
     };
     expect(await downloadVerified(m(['https://a/x.apk', 'https://c/x.apk', 'https://d/x.apk']), dl2)).toEqual({ path: 'q', url: 'https://c/x.apk' });
     expect(asked.at(-1)).toEqual(['https://c/x.apk', 0]);
+  });
+});
+
+describe('cold-start auto update check', () => {
+  it('silent and no request when no source configured', async () => {
+    const kv = memoryKV(); await saveSource(kv, ''); // explicit empty disables (default would hit GitHub)
+    const n = hits.length;
+    expect(await autoCheckUpdate(kv, 1e12, 1, 'stable')).toBeNull(); expect(hits.length).toBe(n);
+  });
+  it('reports a newer version, then throttles for 12h', async () => {
+    const apks = () => hits.filter(h => h.startsWith('/apk/')).length; const a0 = apks();
+    const kv = memoryKV(); await saveSource(kv, `${base}/v/ok.json`); const t = 1.8e12;
+    expect((await autoCheckUpdate(kv, t, 1, 'stable'))?.versionName).toBe('0.2.0');
+    const n = hits.length;
+    expect(await autoCheckUpdate(kv, t + 3600e3, 1, 'stable')).toBeNull(); expect(hits.length).toBe(n);
+    expect(await autoCheckUpdate(kv, t + AUTO_INTERVAL_MS, 1, 'stable')).not.toBeNull();
+    expect(apks()).toBe(a0); // never downloads
+  });
+  it('failures are silent (null), same version -> null', async () => {
+    const kv = memoryKV(); await saveSource(kv, `${base}/v/broken.json`);
+    expect(await autoCheckUpdate(kv, 1e12, 1, 'stable')).toBeNull();
+    const kv2 = memoryKV(); await saveSource(kv2, `${base}/v/ok.json`);
+    expect(await autoCheckUpdate(kv2, 1e12, 2, 'stable')).toBeNull();
   });
 });

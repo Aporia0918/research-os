@@ -4,7 +4,6 @@ import { preferencesKV } from '../storage/kv';
 import { loadComputerSettings, saveComputerSettings, DEFAULT_COMPUTER_URL, type ComputerSettings } from '../settings';
 import { ApiError, ResearchOsClient, describeError } from '../api/computer';
 import { loadSession, pairWith } from '../api/session';
-import { DEMO_LABEL, demoSource } from '../demo/demo';
 import { UpdateCard } from './UpdateCard';
 import { MeCard } from './MeCard';
 import { BackupCard } from './BackupCard';
@@ -17,10 +16,10 @@ import { chat, describeModelError, listModels } from '../model/direct';
 
 const JOBS: { id: Job; label: string }[] = [{ id: 'grade', label: '判「讲给我听」用的模型' }, { id: 'photo', label: '看照片用的模型（要能读图）' }];
 
-export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onLook, onComputer, onJelly }: { demo: boolean; onDemo: (on: boolean) => void; lang: Lang; onLang: (l: Lang) => void; look?: Appearance; onLook?: (a: Appearance) => void; onComputer?: (enabled: boolean) => void; onJelly?: () => void }) {
+export function SettingsScreen({ lang, onLang, look = 'light', onLook }: { lang: Lang; onLang: (l: Lang) => void; look?: Appearance; onLook?: (a: Appearance) => void}) {
   const [computer, setComputer] = useState<ComputerSettings>({ enabled: false, url: DEFAULT_COMPUTER_URL });
   useEffect(() => { void loadComputerSettings(preferencesKV).then(setComputer); }, []);
-  async function updateComputer(next: ComputerSettings) { setComputer(next); await saveComputerSettings(preferencesKV, next); onComputer?.(next.enabled); }
+  async function updateComputer(next: ComputerSettings) { setComputer(next); await saveComputerSettings(preferencesKV, next); }
   async function testComputer() {
     setStatus(tr('正在连接电脑,最多等 5 秒…'));
     try {
@@ -73,7 +72,6 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onL
   return (
     <section>
       <h1>{tr('设置')}</h1>
-      {onJelly && <button className="ghost" data-testid="open-jelly" onClick={onJelly}>{tr('看账账和果冻界面演示')}</button>}
       <MeCard />
       <div className="card" data-testid="lang-switch">
         <div><b>{tr('界面语言')}</b></div>
@@ -91,13 +89,9 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onL
           </div>
         </div>
       )}
-      <div className="card">
-        <label className="row"><input type="checkbox" checked={demo} onChange={e => onDemo(e.target.checked)} aria-label={tr('演示模式')} /> {tr('演示模式(')}{tr(DEMO_LABEL)})</label>
-        <div className="muted">{tr('显示一篇公开论文(EEGNet)和一条示例日志的预先计算结果。离线可用,不发送任何数据。')} {demo ? tr(demoSource) : ''}</div>
-      </div>
       <div className="card" data-testid="computer-settings">
         <label className="row"><input type="checkbox" checked={computer.enabled} onChange={e => void updateComputer({ ...computer, enabled: e.target.checked })} aria-label={tr('连接电脑（增强功能）')} /> {tr('连接电脑（增强功能）')}</label>
-        <div className="muted">{tr('默认关闭。关闭时，导入、解析、提问、记录、计划的本地部分和指导都不联系电脑。')}</div>
+        <div className="muted">{tr('默认关闭。关闭时，账本只存在这台手机上，不联系电脑。')}</div>
         {computer.enabled && <>
           <label>{tr('电脑地址')}</label>
           <input value={computer.url} onChange={e => { const next = { ...computer, url: e.target.value }; setComputer(next); void saveComputerSettings(preferencesKV, next); }} inputMode="url" autoCapitalize="off" aria-label={tr('电脑地址')} />
@@ -107,7 +101,7 @@ export function SettingsScreen({ demo, onDemo, lang, onLang, look = 'light', onL
             <input value={code} onChange={e => setCode(e.target.value)} maxLength={16} autoCapitalize="characters" aria-label={tr('配对码')} data-testid="pair-code" />
             <button className="ghost" disabled={code.trim().length < 4} onClick={pairComputer}>{tr('配对')}</button>
           </div>
-          <div className="muted">{tr('只有下面明确标注“电脑增强”的功能会在开启后使用它。每次最多等 5 秒,失败后自动用手机处理。')}</div>
+          <div className="muted">{tr('开启并配对后，账本会和电脑同步。每次最多等 5 秒，失败后自动用手机处理。')}</div>
         </>}
       </div>
       <div className="card" data-testid="model-settings">

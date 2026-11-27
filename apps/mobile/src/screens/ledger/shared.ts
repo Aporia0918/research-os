@@ -4,7 +4,6 @@ import type { Ask, Entry, Grade } from '../../ledger/ledger';
 import { chat } from '../../model/direct';
 import { forJob, loadKey, loadModelSettings } from '../../model/settings';
 import { preferencesKV } from '../../storage/kv';
-import { loadPaper, paperPages } from '../../local/paperStore';
 import type { Source } from '../../rules/recall';
 import { SPLIT_SYSTEM } from '../../ledger/growth';
 
@@ -18,10 +17,12 @@ export async function modelAsk(): Promise<Ask | undefined> {
     { role: 'user', content: `问题：\n${q}\n\n参考答案：\n${ref}\n\n不看 AI 写的作答：\n${attempt}` }]);
 }
 
-/** The paper imported on this phone, as the recall and citation rules read it; null before any import. */
+/** The paper an earlier version imported on this phone, as the recall and citation rules read it; null when there is none. */
 export async function importedPaper(): Promise<Source | null> {
-  const p = await loadPaper(preferencesKV);
-  return p ? { name: p.ref.name, pages: paperPages(p) } : null;
+  try {
+    const p = JSON.parse((await preferencesKV.get('paper.localDocument.v2')) ?? 'null') as { ref?: { name?: string }; doc?: { pages?: { text: string }[] } } | null;
+    return p?.ref?.name && Array.isArray(p.doc?.pages) ? { name: p.ref.name, pages: p.doc.pages.map(x => x.text) } : null;
+  } catch { return null; }
 }
 
 export const missed = (g: Grade): string[] => g.points.filter((_, i) => !g.hits.includes(i));

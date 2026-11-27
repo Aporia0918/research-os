@@ -56,13 +56,6 @@ export async function chat(s: ModelSettings, key: string, messages: ChatMessage[
   } finally { clearTimeout(timer); }
 }
 
-export type Outcome<T> = { mode: 'model'; text: string } | { mode: 'rules'; result: T; reason: string };
-/** Try the model; on any failure (or no key) run the rule-only path and say why, in plain Chinese. */
-export async function withFallback<T>(s: ModelSettings, key: string, messages: ChatMessage[], rules: () => T, f?: FetchLike): Promise<Outcome<T>> {
-  try { return { mode: 'model', text: await chat(s, key, messages, f) }; }
-  catch (e) { return { mode: 'rules', result: rules(), reason: describeModelError(e) }; }
-}
-
 /** Model names the service offers, read from its public /models list (OpenRouter needs no key for it, so none is sent). */
 export async function listModels(baseUrl: string, f: FetchLike = fetch): Promise<string[]> {
   if (!/^https?:\/\//i.test(baseUrl)) throw new ModelError('bad_base_url');

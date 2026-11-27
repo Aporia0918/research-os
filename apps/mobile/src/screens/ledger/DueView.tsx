@@ -73,7 +73,7 @@ export function DueView({ entries, exam, title, head, done }: Props) {
   async function letGo(e: Entry) { await book.drop(e.id, today()); setOpen(null); await after(tr('这一笔不用了，不算进结余。'), null); }
   async function origin(e: Entry) {
     const paper = await importedPaper();
-    if (!paper) { setNote(tr('还没导入论文。先在「提问」里导入那篇，再贴原文。')); return; }
+    if (!paper) { setNote(tr('这台手机上还没有导入过论文。')); return; }
     if (await book.findOrigin(e.id, said, [paper], today())) { setSaid(''); setOpen(null); await after(tr('找到原文了，这笔引用债还清。'), 'paid'); }
     else setNote(tr('在《{0}》里没找到这句原话，或者它和 AI 给的数字、说法对不上。', paper.name));
   }

@@ -27,8 +27,7 @@ import { refreshReminders } from '../remind';
 import { risk } from '../rules/care';
 import { CareNote } from './CareNote';
 import { LinkList } from './PaperExtras';
-import { linksFor } from '../local/paperExtras';
-import type { PaperLink } from '../rules/paperLinks';
+import { linksFor, type PaperLink } from '../local/paperExtras';
 
 /** Opened from outside the ledger: text shared in from another app, or a tapped reminder. `at` makes each one new. */
 export type LedgerIntent = { kind: 'share'; text: string; at: number } | { kind: 'due'; entryId: string; at: number };
@@ -61,7 +60,7 @@ async function remote(): Promise<LedgerRemote | null> {
     mark: (id, m) => c.ledgerMark(id, m), recall: (id, r) => c.ledgerRecall(id, r), pushes: () => c.pushes(), seen: (ids) => c.seenPushes(ids) };
 }
 
-export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => void; intent?: LedgerIntent | null }) {
+export function LedgerScreen({ intent }: { intent?: LedgerIntent | null }) {
   const [board, setBoard] = useState<Board>('科研');
   useEffect(() => applyBoard(board), [board]);
   const [exam, setExam] = useState('');
@@ -152,7 +151,7 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
   /** Check the paper already imported here against the ledger (a new import does this by itself). */
   async function scan() {
     const paper = await importedPaper();
-    if (!paper) { setNote(tr('还没导入论文。先在「提问」里导入一篇。')); return; }
+    if (!paper) { setNote(tr('这台手机上还没有导入过论文。')); return; }
     const hits = await book.recallScan(paper, today());
     setNote(hits.length ? tr('{0} 条 AI 的说法被《{1}》的原话推翻，召回单在最上面。', hits.length, paper.name)
       : tr('《{0}》里没有和账上说法相反的原话。', paper.name));
@@ -408,17 +407,10 @@ export function LedgerScreen({ onGo, intent }: { onGo?: (to: 'ask' | 'exam') => 
           </div>
         </div>
       )}
-      <nav className={`orbs${research ? ' orbs-4' : ''}`} aria-label={tr('账本')}>
-        {research ? [
-          orb('plus', '记一笔', go('add')),
-          orb('list', '考前清单', go('list')),
-          orb('recall', '召回单', go('recall')),
-          orb('exam', '结论体检', () => onGo?.('exam')),
-        ] : [
-          orb('plus', '记一笔', go('add')),
-          orb('list', '考前清单', go('list')),
-          orb('camera', '拍一页问', () => onGo?.('ask')),
-        ]}
+      <nav className="orbs" aria-label={tr('账本')}>
+        {orb('plus', '记一笔', go('add'))}
+        {orb('list', '考前清单', go('list'))}
+        {research && orb('recall', '召回单', go('recall'))}
       </nav>
       {list.length > 0 && (
         <div className="card courses" data-testid="courses">

@@ -8,8 +8,8 @@ describe('zh UI', () => {
     expect(out).toContain('zh-scan: OK');
   });
   it('computer error codes are shown in Chinese, never the English message', () => {
-    const msg = describeError(new ApiError(409, 'citation_gate_open', 'numbers not found on cited page'));
-    expect(msg).toBe(ERROR_ZH.citation_gate_open);
+    const msg = describeError(new ApiError(401, 'unauthenticated', 'not signed in'));
+    expect(msg).toBe(ERROR_ZH.unauthenticated);
     expect(describeError(new ApiError(418, 'weird_code', 'Some English'))).not.toContain('Some English');
   });
 });

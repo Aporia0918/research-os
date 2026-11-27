@@ -1,22 +1,15 @@
 import { tr, trObj, getLang, setLang, onLang, loadLang, saveLang, type Lang } from './i18n';
-import { applyBoard } from '@jelly/theme';
 import { useEffect, useState } from 'react';
-import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
 import { XiweiScreen } from './screens/XiweiScreen';
-import { ResearchScreen } from './screens/ResearchScreen';
-import { EnhancedScreen } from './screens/EnhancedScreen';
-import { loadComputerSettings } from './settings';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { preferencesKV } from './storage/kv';
 import { autoBackup } from './backup/native';
 import { followAppearance, loadAppearance, saveAppearance } from './appearance';
 import type { Appearance } from '@jelly/theme';
-import { loadDemo, saveDemo } from './demo/demo';
 import { autoCheckUpdate } from './update/manifest';
 import { CURRENT, TEST_BUILD } from './update/version';
 import { Icon, type IconName } from './icons';
-import { JellyDemo } from './jelly/JellyDemo';
 import { Backdrop } from '@jelly/Backdrop';
 import { jellyPress } from '@jelly/spring';
 import { Welcome } from './screens/Welcome';
@@ -30,14 +23,12 @@ import { markReady } from './perf/timing';
 
 /** The startup update check waits until the first screen is on, then runs in the background. */
 const STARTUP_CHECK_DELAY_MS = 1500;
-/** Everything a finger presses on the real pages squashes and springs back like the jelly demo. */
+/** Everything a finger presses on the real pages squashes and springs back. */
 const PRESSABLE = 'button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip';
-/** The main line first: 析微 (one condition changed, answered without the AI), then borrow (提问), repay and read the
- *  report (账本). Research tools sit in one tab. */
-type Tab = 'xiwei' | 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
+/** The main line first: 析微 (one condition changed, answered without the AI), then repay and read the report (账本). */
+type Tab = 'xiwei' | 'ledger' | 'settings';
 const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
-  { id: 'xiwei', label: '析微', icon: 'xiwei' }, { id: 'ledger', label: '账本', icon: 'ledger' }, { id: 'ask', label: '提问', icon: 'ask' },
-  { id: 'research', label: '科研', icon: 'research' }, { id: 'settings', label: '设置', icon: 'settings' },
+  { id: 'xiwei', label: '析微', icon: 'xiwei' }, { id: 'ledger', label: '账本', icon: 'ledger' }, { id: 'settings', label: '设置', icon: 'settings' },
 ]);
 
 export function App() {
@@ -63,15 +54,9 @@ export function App() {
     await preferencesKV.set('mindledger.board.v1', board);
     setProfile(p); void refreshReminders();
   }
-  useEffect(() => { if (tab === 'research') applyBoard('科研'); }, [tab]); // 账本 sets its own board's colours
   useEffect(() => jellyPress(PRESSABLE), []);
   useEffect(() => { if (profile !== undefined) requestAnimationFrame(() => markReady()); }, [profile]); // first screen painted
   useEffect(() => { const t = setTimeout(() => void autoBackup(), 3000); return () => clearTimeout(t); }, []); // daily private snapshot, after first paint
-  const [researchStart, setResearchStart] = useState<'exam' | null>(null);
-  /** From the ledger home straight into 提问 or 科研 → 零世界. */
-  const go = (to: 'ask' | 'exam') => { setResearchStart(to === 'exam' ? 'exam' : null); setTab(to === 'exam' ? 'research' : 'ask'); };
-  const [demo, setDemo] = useState(false);
-  useEffect(() => { void loadDemo(preferencesKV).then(setDemo); }, []);
   const [lang, setLangState] = useState<Lang>(getLang());
   useEffect(() => {
     const off = onLang(setLangState);
@@ -82,8 +67,6 @@ export function App() {
   useEffect(() => { void loadAppearance(preferencesKV).then(setLook); }, []);
   useEffect(() => followAppearance(look), [look]);
   const chooseLook = (a: Appearance) => { setLook(a); void saveAppearance(preferencesKV, a); };
-  const [enhanced, setEnhanced] = useState(false);
-  useEffect(() => { void loadComputerSettings(preferencesKV).then(s => setEnhanced(s.enabled)); }, [tab]);
   const [newVer, setNewVer] = useState<string | null>(null);
   useEffect(() => { // cold start: background check after first paint, 10 s limit, 12h throttle, never installs
     let live = true;
@@ -93,11 +76,7 @@ export function App() {
     }, STARTUP_CHECK_DELAY_MS);
     return () => { live = false; clearTimeout(t); };
   }, []);
-  /** The jelly demo page (owner approved the look 2026-11-17); 设置 opens it. */
-  const [jelly, setJelly] = useState(false);
   const chooseLang = (l: Lang) => { setLang(l); void saveLang(preferencesKV, l); };
-  const toggleDemo = (on: boolean) => { setDemo(on); void saveDemo(preferencesKV, on); };
-  if (jelly) return <JellyDemo onExit={() => setJelly(false)} />;
   if (profile === null) return <div className="app" data-lang={lang}><Backdrop /><main className="screen"><Welcome onDone={(p, b) => void welcomed(p, b)} /></main></div>;
   return (
     <div className="app" data-lang={lang}>
@@ -111,16 +90,13 @@ export function App() {
       )}
       <main className="screen">
         {tab === 'xiwei' && <XiweiScreen shared={shared} onLedger={toLedger} />}
-        {tab === 'ledger' && profile !== undefined && <LedgerScreen onGo={go} intent={intent} />}
-        {tab === 'ask' && <AskScreen demo={demo} />}
-        {tab === 'research' && <ResearchScreen demo={demo} start={researchStart} />}
-        {tab === 'enhanced' && enhanced && <EnhancedScreen />}
-        {tab === 'settings' && <SettingsScreen demo={demo} onDemo={toggleDemo} lang={lang} onLang={chooseLang} look={look} onLook={chooseLook} onComputer={setEnhanced} onJelly={() => setJelly(true)} />}
+        {tab === 'ledger' && profile !== undefined && <LedgerScreen intent={intent} />}
+        {tab === 'settings' && <SettingsScreen lang={lang} onLang={chooseLang} look={look} onLook={chooseLook} />}
       </main>
       <nav className="tabbar" role="tablist" aria-label={tr('主导航')}>
-        {[...TABS, ...(enhanced ? [{ id: 'enhanced' as Tab, label: tr('电脑增强'), icon: 'computer' as IconName }] : [])].map(t => (
+        {TABS.map(t => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'tab active' : 'tab'}
-                  onClick={() => { setResearchStart(null); setTab(t.id); }}>
+                  onClick={() => setTab(t.id)}>
             <span className="tab-icon"><Icon name={t.icon} size={22} /></span><span>{t.label}</span>
           </button>
         ))}

@@ -26,28 +26,27 @@ h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 
 h2 { font-size: 1.05rem; margin: 4px 0; }
 
 /* surfaces: the jelly recipe (packages/jelly/jelly.css), here on the app's own surface classes */
-.card, .tabbar, .demo-banner, .orb, .tile, .alert, .seg, .ghost, .chip, .course-row {
+.card, .tabbar, .orb, .alert, .seg, .ghost, .chip, .course-row {
   position: relative; isolation: isolate; background: var(--jelly-fill); border: var(--jelly-rim);
   box-shadow: var(--jelly-glow), var(--jelly-cast); backdrop-filter: var(--jelly-blur); -webkit-backdrop-filter: var(--jelly-blur);
 }
 /* Small pieces skip the live blur: each blurred surface is one more full render pass on every frame while the field
  * behind drifts, and at chip size the blur reads the same as a denser clear fill. */
 .orb, .ghost, .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background-color: rgb(var(--w) / .34); }
-.card::before, .tile::before, .orb::before, .tabbar::before, .alert::before, .seg::before {
+.card::before, .orb::before, .tabbar::before, .alert::before, .seg::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2.5px; opacity: .5; pointer-events: none; z-index: -1;
   background: var(--jelly-ring);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .card, .tabbar, .orb, .tile, .alert, .seg, .ghost, .chip, .course-row { background-color: rgb(var(--w) / .3); }
+  .card, .tabbar, .orb, .alert, .seg, .ghost, .chip, .course-row { background-color: rgb(var(--w) / .3); }
 }
 /* pressed things squash from the bottom edge (spring.ts jellyPress) */
 button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip { transform-origin: 50% 100%; }
-.card > *, .tile > *, .alert > * { position: relative; }
+.card > *, .alert > * { position: relative; }
 .card { border-radius: 27px; padding: 18px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
 .card.error { color: var(--bad); background: var(--bad-bg); }
 .card.warn { background: var(--warn-bg); }
-.demo-banner { color: var(--warn); border-radius: 16px; padding: 8px 12px; font-weight: 700; margin-bottom: 12px; text-align: center; }
 
 /* home: one number, one button, three round ways in */
 .hero { padding: 22px; gap: 12px; }
@@ -65,9 +64,6 @@ button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-
 .alert { width: 100%; text-align: left; border-radius: 18px; padding: 12px 16px; margin-bottom: 12px; color: var(--bad); font-weight: 600; min-height: 0; }
 .note { margin: 0 4px 12px; color: var(--deep); font-weight: 600; }
 .back { background: none; color: var(--deep); font-weight: 700; padding: 6px 0; min-height: 40px; }
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.tile { border-radius: 24px; padding: 16px; min-height: 150px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; color: var(--text); }
-.tile .orb { width: 48px; height: 48px; }
 .item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; background: none; padding: 4px 0; min-height: 44px; color: var(--text); font-weight: 600; }
 .pill { display: inline-block; flex: none; border-radius: 999px; padding: 3px 10px; font-size: .75rem; font-weight: 700; color: var(--deep); background: var(--accent-soft); border: 1px solid var(--rim); }
 .pill.bad { color: var(--bad); background: var(--bad-bg); margin-left: 6px; }
@@ -95,32 +91,16 @@ button:disabled { opacity: .45; cursor: default; }
     0 14px 20px -10px color-mix(in srgb, var(--c2) 70%, transparent); text-shadow: 0 1px 2px color-mix(in srgb, var(--deep) 60%, transparent); }
 .ghost { color: var(--deep); font-weight: 600; }
 button:not([class]) { background: var(--accent-soft); color: var(--deep); font-weight: 600; }
-.danger { background: var(--bad); color: #fff; }
 button.small { min-height: 36px; padding: 6px 14px; font-size: .85em; }
 button[aria-pressed=true], .row > button[role=radio][aria-checked=true] { background: var(--deep); color: var(--on-accent); }
-.confirm { width: 100%; margin-bottom: 12px; }
 progress { width: 100%; height: 10px; accent-color: var(--accent); }
 
 /* text */
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .muted { color: var(--muted); font-size: .85rem; }
-.mono { font-family: ui-monospace, Menlo, monospace; font-size: .75rem; overflow-wrap: anywhere; }
-.answer, .prewrap { white-space: pre-wrap; } .answer { font-size: .8rem; margin: 0; }
-.entry { flex-direction: row; align-items: center; }
-.entry-kind { background: var(--accent-soft); color: var(--deep); border-radius: 12px; padding: 6px 10px; font-weight: 600; text-transform: capitalize; }
-.cite { color: var(--deep); font-weight: 600; font-size: .85em; }
-.passage { border-top: 1px solid var(--line); padding: 8px 0; font-size: .92em; }
-.compare { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
-.cmp-item { padding: 6px 0; border-bottom: 1px dashed var(--line); }
-.cmp-item.mismatch b { color: var(--bad); } .cmp-item.match b { color: var(--ok); }
-.quote { font-size: .88em; color: var(--muted); margin: 4px 0; }
-.plan-item { border-top: 1px solid var(--line); padding: 8px 0; display: flex; flex-direction: column; gap: 6px; }
-.plan-item.key-action { border-left: 4px solid var(--warn); padding-left: 8px; background: var(--warn-bg); }
-.key-action-head { display: flex; flex-direction: column; gap: 4px; }
-.number-gate { border-left: 4px solid var(--bad); padding-left: 8px; background: var(--bad-bg); }
+.prewrap { white-space: pre-wrap; }
 .verdict { font-weight: 600; margin: 4px 0; }
 .verdict.ok { color: var(--ok); } .verdict.bad { color: var(--bad); } .verdict.warn { color: var(--warn); }
-.tabs-inline { gap: 6px; margin-bottom: 8px; }
 
 /* floating tab bar */
 .tabbar {
@@ -133,22 +113,9 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .tab-icon { line-height: 0; }
 .tab.active { color: var(--deep); font-weight: 700; background: color-mix(in srgb, var(--c2) 26%, transparent); box-shadow: inset 0 0 10px rgb(var(--w) / .8); }
 
-/* 零世界考试: one accent per verdict */
-.verdict-hero { border-left: 6px solid var(--warn); } .verdict-hero b { font-size: 1.15rem; }
-.verdict-hero.ok { border-left-color: var(--ok); } .verdict-hero.ok b { color: var(--ok); }
-.verdict-hero.bad { border-left-color: var(--bad); } .verdict-hero.bad b { color: var(--bad); }
-.verdict-hero.warn b { color: var(--warn); }
-.strip { position: relative; height: 56px; border-bottom: 1px solid var(--line); margin: 8px 6px 0; }
-.strip > span { position: absolute; transform: translateX(-50%); }
-.strip-dot { bottom: 6px; width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 45%, transparent); }
-.strip-chance { bottom: 0; top: 8px; border-left: 2px dashed var(--muted); }
-.strip-real { bottom: 0; top: 0; width: 4px; border-radius: 2px; background: var(--warn); }
-.strip-real.ok { background: var(--ok); } .strip-real.bad { background: var(--bad); }
-.strip-axis { justify-content: space-between; }
-.facts { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
 
 @media (prefers-reduced-transparency: reduce) {
-  .card, .tabbar, .demo-banner, .orb, .tile, .alert, .seg, .ghost, .chip, .course-row { backdrop-filter: none; -webkit-backdrop-filter: none; background-color: rgb(var(--w) / .8); }
+  .card, .tabbar, .orb, .alert, .seg, .ghost, .chip, .course-row { backdrop-filter: none; -webkit-backdrop-filter: none; background-color: rgb(var(--w) / .8); }
 }
 /* 讲不出来: marked, never scored. Goes first on the pre-exam list. */
 .exam-list { margin: 8px 0; padding-left: 1.4em; display: grid; gap: 6px; }
@@ -166,8 +133,6 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .eyebrow { margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--deep); padding-right: 120px; }
 .kpis-3 { grid-template-columns: repeat(3, 1fr); }
 .kpis-3 .big { font-size: 2.4rem; }
-.orbs-4 { grid-template-columns: repeat(4, 1fr); }
-.orbs-4 .orb { width: 56px; height: 56px; }
 
 /* 学习: independent mastery as a ring, debts by course */
 .ring-row { display: flex; align-items: center; gap: 16px; }
@@ -311,43 +276,23 @@ input[type=search] { width: 100%; margin-bottom: 12px; }
   .drop-card { grid-column: 2 / span 4; width: 60%; justify-self: center; margin-top: 0; }
 }
 
-/* Entry icons as clear beads (owner's reference 2026-11-17): the ways in on the 学习 and 科研 ledger homes and on the 科研
- * tab. Each bead has its own shape and size; the tint follows the board (学习 mint, 科研 ice blue). */
+/* Entry icons as clear beads (owner's reference 2026-11-17): the ways in on the 学习 and 科研 ledger homes. Each bead has its own shape and size; the tint follows the board (学习 mint, 科研 ice blue). */
 .home-study { --tint: #8ce2c4; }
 .home-research { --tint: #9fd3f5; }
-.orbs .orb, .research .tile .orb {
+.orbs .orb {
   border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; color: var(--deep);
   background: radial-gradient(circle at 30% 26%, rgb(var(--w) / .9) 0 16%, rgb(var(--w) / .16) 52%, color-mix(in srgb, var(--tint, #8ce2c4) 32%, transparent));
   box-shadow: inset 0 0 0 1px rgb(var(--w) / .3), inset 0 0 14px rgb(var(--w) / .75), inset 0 -6px 12px -6px color-mix(in srgb, var(--tint, #8ce2c4) 60%, transparent);
 }
-.orbs .orb::before, .research .tile .orb::before { opacity: .25; filter: blur(1px); }
+.orbs .orb::before { opacity: .25; filter: blur(1px); }
 .orbs .orb-button:nth-child(1) .orb { width: 66px; height: 62px; border-radius: 38% 46% 40% 48% / 44% 38% 50% 42%; }
 .orbs .orb-button:nth-child(2) .orb { width: 54px; height: 54px; margin-top: 6px; border-radius: 50%; }
 .orbs .orb-button:nth-child(3) .orb { width: 58px; height: 66px; border-radius: 50% 50% 50% 50% / 62% 62% 40% 40%; }
-.orbs .orb-button:nth-child(4) .orb { width: 64px; height: 54px; margin-top: 6px; border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
 
-/* 科研 entries as jelly bubbles (owner's reference 2026-11-17): same soft-edged recipe as 成长空间, tinted ice blue,
- * each entry its own size and shape on an uneven grid; the icon sits in a small clear bead. */
-.research .bubble { --tint: #9fd3f5; --accent: #6cb4e8; }
-.research .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px 10px; align-items: start; }
-.research .tile { min-height: 0; padding: 20px 18px; }
-.research .b-exam { grid-column: 1 / span 4; min-height: 150px; border-radius: 60px 40px 66px 44px / 44px 62px 40px 58px; --clear: .09; }
-.research .b-plan { grid-column: 5 / span 2; aspect-ratio: 1; margin-top: 18px; border-radius: 50%; align-items: center; justify-content: center; text-align: center; padding: 10px; }
-.research .b-plan .muted { display: none; }
-.research .b-log { grid-column: 1 / span 3; border-radius: 30px 30px 34px 30px / 30px 34px 30px 30px; --clear: .11; }
-.research .b-guide { grid-column: 4 / span 3; aspect-ratio: .9; border-radius: 50% 50% 50% 50% / 62% 62% 40% 40%; --clear: .05; }
-.research .b-papers { grid-column: 2 / -1; border-radius: 34px 70px 40px 64px / 56px 34px 62px 40px; --clear: .07; }
-@media (max-width: 360px) { .research .b-exam, .research .b-log, .research .b-guide, .research .b-papers { grid-column: 1 / -1; aspect-ratio: auto; } .research .b-plan { grid-column: 2 / span 4; } }
 
-/* 科研 merges: data files on a record, a paper's links and its reference. Long names and links wrap, never widen the page. */
-.file-name, .link-url { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* 科研: a paper's code and data links. Long links wrap, never widen the page. */
+.link-url { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .link-kind { flex: none; font-size: .78em; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: rgb(var(--w) / .45); color: var(--deep); }
-.paper-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px dashed rgb(var(--w) / .7); }
-.paper-item:first-child { border-top: 0; }
-.paper-part { display: flex; flex-direction: column; gap: 6px; }
-.paper-part .row input { flex: 1; min-width: 0; }
-.ref-line { overflow-wrap: anywhere; font-size: .9em; }
-.data-files { display: flex; flex-direction: column; gap: 4px; }
 /* 析微: the conditions of a question are underlined; the one a variant changed sits in a red box */
 .xiwei-q { font-size: 1.05rem; line-height: 1.9; }
 .xiwei-q .cond { border-bottom: 2px dotted var(--accent); }
