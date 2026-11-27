@@ -88,7 +88,7 @@ def _from_latex(tex: str, params: list[Slot]) -> Problem | None:
 
 def _plain_body(body: str) -> tuple[str, bool]:
     """去掉题面尾巴（句号、「的值」），认出外层绝对值 |…|。"""
-    body = re.split(r"[。；;\n]|的值|等于|=", body.strip())[0].strip().rstrip(".，,")
+    body = re.split(r"[。；;，\n=\u4e00-\u9fff]", body.strip())[0].strip().rstrip(".,")  # 式子里不会有汉字：到第一个汉字为止
     if whole := re.fullmatch(r"\|([^|]+)\|", body):
         return whole.group(1), True
     return re.sub(r"\|([^|]+)\|", r" Abs(\1) ", body).strip(), False  # 留空格，x|x| 才读成乘法

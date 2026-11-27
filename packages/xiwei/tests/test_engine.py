@@ -154,3 +154,18 @@ def test_api_round_trip():
     assert right["correct"] and right["mastery"]["单侧方向"] > bkt.P0
     assert json.loads(call("read", json.dumps({"text": "随便写"})))["ok"] is False
     assert "引擎出错" in json.loads(call("grade", "{}"))["error"]
+
+
+def test_shared_text_keeps_problem_and_ai_claim_apart():
+    r = api_read("求极限 lim(x→0⁺) |x|/x，AI 说答案是 -1")
+    assert r["problem"]["expr"] == "Abs(x) /x" and r["claim"] == "-1"
+    assert api_generate(r["problem"], claim=r["claim"])["aiDisagrees"] is True
+
+
+@pytest.mark.parametrize("text", SAMPLES)
+def test_every_option_reads_back(text):
+    """手机上点选项就是把选项文字当答案交上来，所以每个选项都得读得回去，正确选项判对。"""
+    r = api_read(text)
+    v = api_generate(r["problem"])["variant"]
+    verdicts = [api_grade(r["problem"], v["problem"], o["text"], choices=4)["verdict"] for o in v["options"]]
+    assert "unparsed" not in verdicts and verdicts.count("correct") == 1
