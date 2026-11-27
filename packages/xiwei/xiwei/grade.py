@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 import sympy as sp
@@ -18,6 +19,7 @@ try:  # 手机里没装上 Math-Verify 时退回 SymPy 比对，结果标出用�
     from math_verify import verify as _mv_verify
 
     VERIFIER = "math-verify"
+    logging.getLogger("math_verify").setLevel(logging.ERROR)  # 超时由手机端看门狗负责，这条提醒不用每次都打
 except ImportError:  # pragma: no cover
     VERIFIER = "sympy"
 
