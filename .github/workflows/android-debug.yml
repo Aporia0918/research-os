@@ -50,11 +50,6 @@ jobs:
           export VITE_TEST_BUILD=1 VITE_VERSION_CODE=$((100 + VERSION_CODE))
           npm ci && npm run build && npx cap sync android
 
-      - name: 析微 main line in Chrome (the built Web Worker loads the engine)
-        run: |
-          npm i --no-save playwright-core@1.49.1
-          node scripts/xiwei-browser-smoke.mjs
-
       - name: Build the debug APK
         # The wrapper jar is not in the repo, so fetch the Gradle version the wrapper names and run it directly.
         working-directory: apps/mobile/android
@@ -85,6 +80,11 @@ jobs:
           path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: 析微 main line in Chrome (the built Web Worker loads the engine; before any publishing)
+        run: |
+          npm i --no-save playwright-core@1.49.1
+          node scripts/xiwei-browser-smoke.mjs
 
       - name: Publish the 测试版 (test-builds branch and tb tag for jsDelivr, then the GitHub pre-release)
         # GitHub downloads are often unreachable from mainland China, so each test build also goes on the orphan
