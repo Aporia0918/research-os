@@ -42,7 +42,7 @@ jobs:
           set -eu
           python3 ../../packages/xiwei/build_site.py "$RUNNER_TEMP/engine"
           node ../../packages/xiwei/smoke.mjs "$RUNNER_TEMP/engine"
-          cp -r "$RUNNER_TEMP/engine" public/engine
+          mkdir -p public && cp -r "$RUNNER_TEMP/engine" public/engine
 
       - name: Build the web app and copy it into the Android project
         run: |
