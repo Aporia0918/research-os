@@ -17,7 +17,7 @@
 | 　模拟漏看 / 常见错法 | 云端 | 40 条全部定位正确；9 条错法，误判 0 |
 | 单题耗时（读题 + 出变式 + 判分，桌面 CPython） | 云端 | 自编题中位 0.11 s、最长 0.65 s；OpenStax 中位 0.07 s、最长 0.20 s |
 | 打包后的引擎在 Node 里跑一遍（Pyodide + site.zip，和手机同一套文件） | GitHub Actions | 通过，含加载约 5 s |
-| 在 Chrome 里点 App 走主线（Vite 打出来的 Web Worker 加载引擎） | GitHub Actions | 通过 |
+| 在 Chrome 里点 App 走主线（Vite 打出来的 Web Worker 加载引擎） | GitHub Actions | 通过：从读题到出第一张条件卡约 6.7 秒（含引擎冷启动），整条主线约 6.9 秒；变式「lim(x→0⁻) \|x\|/x」答「不存在」，判为漏看「单侧方向」并记进账本 |
 | debug APK 打包，图标检查 | GitHub Actions | 通过，APK 约 20 MB |
 
 「待复核」的意思：这个错答同时能用两处漏看解释，光看答案分不出是哪一处，按补充方案 1.2 不硬判，留给下一道变式去区分。
