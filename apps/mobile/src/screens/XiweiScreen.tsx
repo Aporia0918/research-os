@@ -43,7 +43,7 @@ export function XiweiScreen({ shared, onLedger }: { shared: { text: string; at: 
 
   async function run<T>(f: () => Promise<T>): Promise<T | undefined> {
     setBusy(true); setNote('');
-    try { return await f(); } finally { setBusy(false); }
+    try { return await f(); } catch (e) { setNote(tr('出错了：{0}', (e as Error).message)); } finally { setBusy(false); }
   }
 
   const ask = (round: Round) => run(async () => {

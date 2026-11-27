@@ -1026,6 +1026,7 @@ export const EN: Record<string, string> = {
   "再来一道": "Another one",
   "换一道题": "New problem",
   "变式债": "Variant debt",
+  "出错了：{0}": "Something went wrong: {0}",
   "变式债靠复测还：到「析微」不看 AI 再做一道变式。": "Repay a variant debt by retesting: in Xiwei, solve another variant without the AI.",
   "趋近点": "Limit point",
   "单侧方向": "One-sided direction",

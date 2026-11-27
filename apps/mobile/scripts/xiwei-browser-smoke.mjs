@@ -10,6 +10,7 @@ const browser = await chromium.launch({ channel: 'chrome' });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   page.on('pageerror', (e) => console.error('page error:', e.message));
+  page.on('console', (m) => m.type() === 'error' && console.error('console:', m.text()));
   await page.addInitScript(() => localStorage.setItem('CapacitorStorage.profile.v1', JSON.stringify({ who: 'college', slots: [], remind: false })));
   for (let i = 0; ; i += 1) { // wait for vite preview
     try { await page.goto(`http://127.0.0.1:${PORT}/`); break; } catch (e) { if (i > 30) throw e; await page.waitForTimeout(500); }
@@ -23,7 +24,8 @@ try {
   const question = await page.locator('[data-testid=xiwei-variant] .xiwei-q').innerText();
   await page.getByTestId('xiwei-answer').fill('不存在');
   await page.getByRole('button', { name: '交答案' }).click();
-  const result = await page.getByTestId('xiwei-result').innerText({ timeout: 30_000 });
+  const result = await page.getByTestId('xiwei-result').innerText({ timeout: 30_000 })
+    .catch(async (e) => { console.error('screen:', await page.locator('main').innerText()); throw e; });
   console.log(JSON.stringify({ firstAnswerMs: loaded, totalMs: Date.now() - t0, question, result: result.split('\n').slice(0, 3) }));
   if (!result.includes('漏看了一处条件')) process.exitCode = 1;
 } finally {
