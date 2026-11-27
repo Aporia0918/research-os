@@ -1,0 +1,16 @@
+[project]
+name = "xiwei"
+version = "0.1.0"
+description = "析微：AI 讲完一道题后，改一处条件出变式，答错时反推漏看了哪个前提（手机端在 Pyodide 里运行）"
+requires-python = ">=3.12"
+dependencies = ["sympy==1.13.3", "mpmath==1.3.0", "math-verify==0.9.0"]
+
+[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore"]
