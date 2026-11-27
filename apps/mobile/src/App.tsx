@@ -3,6 +3,7 @@ import { applyBoard } from '@jelly/theme';
 import { useEffect, useState } from 'react';
 import { AskScreen } from './screens/AskScreen';
 import { LedgerScreen } from './screens/LedgerScreen';
+import { XiweiScreen } from './screens/XiweiScreen';
 import { ResearchScreen } from './screens/ResearchScreen';
 import { EnhancedScreen } from './screens/EnhancedScreen';
 import { loadComputerSettings } from './settings';
@@ -31,22 +32,25 @@ import { markReady } from './perf/timing';
 const STARTUP_CHECK_DELAY_MS = 1500;
 /** Everything a finger presses on the real pages squashes and springs back like the jelly demo. */
 const PRESSABLE = 'button.primary, button.ghost, .orb-button, .tab, .alert, .seg > button, .course-row, .chip';
-/** One main line on the surface: borrow (提问), repay and read the report (账本). Research tools sit in one tab. */
-type Tab = 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
+/** The main line first: 析微 (one condition changed, answered without the AI), then borrow (提问), repay and read the
+ *  report (账本). Research tools sit in one tab. */
+type Tab = 'xiwei' | 'ledger' | 'ask' | 'research' | 'enhanced' | 'settings';
 const TABS: { id: Tab; label: string; icon: IconName }[] = trObj([
-  { id: 'ledger', label: '账本', icon: 'ledger' }, { id: 'ask', label: '提问', icon: 'ask' },
+  { id: 'xiwei', label: '析微', icon: 'xiwei' }, { id: 'ledger', label: '账本', icon: 'ledger' }, { id: 'ask', label: '提问', icon: 'ask' },
   { id: 'research', label: '科研', icon: 'research' }, { id: 'settings', label: '设置', icon: 'settings' },
 ]);
 
 export function App() {
-  const [tab, setTab] = useState<Tab>('ledger');
+  const [tab, setTab] = useState<Tab>('xiwei');
   /** undefined while loading; null = first open, show the welcome. */
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   useEffect(() => { void loadProfile(preferencesKV).then(setProfile); }, []);
-  /** Text shared in from another app, or a tapped reminder: the ledger opens on it. */
+  /** Text shared in from another app opens in 析微 (只记一笔 hands it to the ledger); a tapped reminder opens the ledger. */
   const [intent, setIntent] = useState<LedgerIntent | null>(null);
+  const [shared, setShared] = useState<{ text: string; at: number } | null>(null);
+  const toLedger = (text: string) => { setTab('ledger'); setIntent({ kind: 'share', text, at: Date.now() }); };
   useEffect(() => {
-    const offShare = onShared(text => { setTab('ledger'); setIntent({ kind: 'share', text, at: Date.now() }); });
+    const offShare = onShared(text => { setTab('xiwei'); setShared({ text, at: Date.now() }); });
     const offTap = onTap(async t => {
       if (t.action === 'open') { setTab('ledger'); setIntent({ kind: 'due', entryId: t.entryId, at: Date.now() }); return; }
       await (t.action === 'later' ? book.snooze(t.entryId, today()) : book.drop(t.entryId, today()));
@@ -106,6 +110,7 @@ export function App() {
         </div>
       )}
       <main className="screen">
+        {tab === 'xiwei' && <XiweiScreen shared={shared} onLedger={toLedger} />}
         {tab === 'ledger' && profile !== undefined && <LedgerScreen onGo={go} intent={intent} />}
         {tab === 'ask' && <AskScreen demo={demo} />}
         {tab === 'research' && <ResearchScreen demo={demo} start={researchStart} />}

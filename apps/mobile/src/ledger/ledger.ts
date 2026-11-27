@@ -3,7 +3,8 @@
 // The phone grader adds one guard the Python one lacks: a point said back turned round (正比 → 反比) is never a pass.
 // A model, when the user has set one, is asked only where it can change the result (judge.needs_model).
 import type { KV } from '../storage/kv';
-import { ratingOf, review, seed, type Memory } from './memory';
+import { ratingOf, retestRating, review, seed, type Memory } from './memory';
+import type { Problem } from '../xiwei/xiwei';
 import { backs, opposing, type Source } from '../rules/recall';
 import { findSpan } from '../rules/text';
 
@@ -52,6 +53,11 @@ export function nextDue(w: Weight, passes: number, last: string, exam?: string):
 }
 
 export const verdict = (hits: number, points: number): boolean => points > 0 && hits / points >= PASS_RATIO;
+
+/** 析微 过手: right twice without the AI on two different days, and the engine puts this condition's mastery at 0.95 or more. */
+export const MASTERED = 0.95;
+export const overHand = (tries: Try[], mastery: number): boolean =>
+  mastery >= MASTERED && new Set(tries.filter((t) => t.ok).map((t) => t.on)).size >= 2;
 
 export function statusOf(passes: number, attempts: number, w: Weight | null): Status {
   if (w === null) return 'own';
@@ -211,7 +217,8 @@ export interface Entry {
   serverId?: string; // set once the computer has the entry (multi-device)
   fromComputer?: boolean; // borrowed on the computer (browser extension), repaid here
   red?: boolean; // 讲不出来: the last try fell short or the user said so; no score, it just goes first on the pre-exam list
-  kind?: 'conclusion' | 'citation'; // 结论债: repaid by the null-world exam; 引用债: repaid by finding the original page
+  kind?: 'conclusion' | 'citation' | 'variant'; // 结论债: null-world exam; 引用债: the original page; 变式债: 析微 retests
+  problem?: Problem; // 变式债: the problem the user brought in, so a retest makes a fresh variant of it
   tries?: Try[]; // every repayment try, in order: the 今天 card, 思考结余 and its curve read these
   dropped?: string; // 这个不用了: the day the user let this one go; it leaves the schedule, the report and the balance
   usedIn?: string; // 用在哪里: where the user used this answer (a chapter, a slide), so a recall says where to go back to
@@ -232,8 +239,14 @@ export interface Recall {
   sent?: boolean; // the computer has it
 }
 
-export interface Try { on: string; ok: boolean }
+/** What the help was, for the debts that are not one of the four help levels. */
+export const KIND_HELP: Record<NonNullable<Entry['kind']>, string> = { citation: 'AI 给的引用', conclusion: 'AI 写的分析', variant: '变式漏看条件' };
+
+export interface Try { on: string; ok: boolean; fast?: boolean } // fast: a 析微 retest answered quickly, typed
 const tried = (e: Entry, on: string, ok: boolean) => { e.tries = [...(e.tries ?? []), { on, ok }]; };
+
+/** One 析微 answer without the AI. `key` names the problem and `kc` the condition owed; `mastery` is the engine's for kc. */
+export interface Retest { key: string; kc: string; question: string; problem: Problem; ok: boolean; fast: boolean; mastery: number }
 
 export type ExamOutcome = 'pass' | 'fail' | 'unsure';
 /** One exam of one analysis: `key` names the analysis (script, data, label), so a retake lands on the same debt. */
@@ -361,6 +374,30 @@ export class Book {
     tried(e, today, passed);
     Object.assign(e, { attempts: e.attempts + 1, passes: passed ? STEPS.heavy.length : 0, red: c.outcome === 'fail',
       dueOn: passed ? null : today });
+    await this.save(es);
+    return e;
+  }
+
+  /**
+   * 析微 → 变式债. A missed condition books the debt (a right first answer owes nothing); every later answer to a variant
+   * of that problem is a try, FSRS sets the next retest, and 过手 (see overHand) settles it.
+   */
+  async retest(r: Retest, today: string): Promise<Entry | null> {
+    const es = await this.all();
+    const clientId = `xiwei-${r.key}-${r.kc}`;
+    let e = es.find((x) => x.clientId === clientId);
+    if (!e && r.ok) return null;
+    if (!e) {
+      e = { id: `mind_${clientId}`, clientId, board: '学习', topic: r.kc, question: r.question, answer: '', ownIdea: '',
+        helpLevel: 'answer', weight: 'heavy', passes: 0, attempts: 0, dueOn: today, createdOn: today, kind: 'variant', problem: r.problem };
+      es.push(e);
+    }
+    const last = e.tries?.at(-1);
+    e.mem = review(e.mem, e.createdOn, today, retestRating(r.ok, r.fast, Boolean(last?.ok && last.fast)));
+    e.tries = [...(e.tries ?? []), { on: today, ok: r.ok, ...(r.fast ? { fast: true } : {}) }];
+    const settled = overHand(e.tries, r.mastery);
+    Object.assign(e, { attempts: e.attempts + 1, passes: settled ? STEPS.heavy.length : 0, red: !r.ok,
+      dueOn: settled ? null : r.ok ? e.mem.due : addDays(today, 1) });
     await this.save(es);
     return e;
   }
@@ -502,7 +539,8 @@ export class Book {
   async processRecord(today: string, exam?: string, board?: Entry['board']): Promise<string> {
     const LEVEL: Record<HelpLevel, string> = { own: '自己想的', hint: '提示', approach: '思路', answer: '完整答案' };
     const STATUS: Record<Status, string> = { own: '自己想的', settled: '已讲清', shaky: '讲到一半', untested: '还没讲' };
-    const state = (e: Entry): string => e.dropped ? '不用了' : e.kind === 'citation'
+    const state = (e: Entry): string => e.dropped ? '不用了' : e.kind === 'variant'
+      ? (e.passes ? '过手' : e.red ? '变式又错了' : '复测中') : e.kind === 'citation'
       ? (e.origin ? `找到原文（《${e.origin.paper}》第 ${e.origin.page} 页）` : '还没找到原文')
       : e.kind
       ? (e.red ? '崩分，改好再考' : statusOf(e.passes, e.attempts, e.weight) === 'settled' ? '零世界考过' : '还没考过')
@@ -514,7 +552,7 @@ export class Book {
     const pct = head?.independence == null ? '—' : `${Math.round(head.independence * 100)}%`;
     return [`思维账本过程记录 · ${today}${board ? ` · ${board}` : ''}`,
       ...(head ? [`独立掌握度 ${pct}，共 ${head.total} 笔`] : []),
-      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), e.kind === 'citation' ? 'AI 给的引用' : e.kind ? 'AI 写的分析' : LEVEL[e.helpLevel],
+      ...es.map((e) => [e.createdOn, e.board, e.question.slice(0, 40), e.kind ? KIND_HELP[e.kind] : LEVEL[e.helpLevel],
         ...(e.kind ? [] : [e.ownIdea.trim() ? '先想过' : '没先想']), state(e)].join(' · '))].join('\n');
   }
 
@@ -533,7 +571,7 @@ export class Book {
     const es = await this.all();
     let sent = 0, pulled = 0;
     try {
-      for (const e of es.filter((x) => !x.serverId)) {
+      for (const e of es.filter((x) => !x.serverId && x.kind !== 'variant')) { // 变式债 stays on the phone
         e.serverId = (await remote.entry({ client_id: e.clientId, question: e.question, help_level: e.helpLevel, answer: e.answer,
           own_idea: e.ownIdea, topic: e.topic, source: 'app', board: e.board, ...(e.kind ? { kind: e.kind } : {}), used_in: e.usedIn ?? '' },
         `entry-${e.clientId}`)).id;

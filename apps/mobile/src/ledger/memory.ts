@@ -20,6 +20,14 @@ export function ratingOf(passed: boolean, share: number): FsrsGrade {
   return share >= 0.8 ? Rating.Good : Rating.Hard;
 }
 
+/** A 析微 retest, answered without the AI: wrong → Again, right but slow or from options → Hard, right and quick → Good,
+ *  quick twice in a row → Easy. */
+export function retestRating(ok: boolean, fast: boolean, lastFast: boolean): FsrsGrade {
+  if (!ok) return Rating.Again;
+  if (!fast) return Rating.Hard;
+  return lastFast ? Rating.Easy : Rating.Good;
+}
+
 function cardOf(m: Memory | undefined, booked: string): Card {
   if (!m) return createEmptyCard(at(booked));
   return { ...createEmptyCard(at(m.last)), stability: m.s, difficulty: m.d, reps: m.reps, lapses: m.lapses, state: m.state as State,

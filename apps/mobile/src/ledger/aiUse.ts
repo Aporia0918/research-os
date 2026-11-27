@@ -2,13 +2,13 @@
 // same ledger as the pre-exam report, laid out in three parts: what the user thought of first (进账), what the AI helped
 // with and at which level (借款), and which of those the user later explained without the AI, and on which day (销账).
 // It lists only what the user booked; it is not an AIGC detector and does not say no other AI was used.
-import { statusOf, type Entry, type HelpLevel } from './ledger';
+import { KIND_HELP, statusOf, type Entry, type HelpLevel } from './ledger';
 
 const LEVEL: Record<HelpLevel, string> = { own: '自己想的', hint: '提示', approach: '思路', answer: '完整答案' };
 const MAX_Q = 60;
 
 const short = (s: string): string => { const t = s.replace(/\s+/g, ' ').trim(); return t.length > MAX_Q ? `${t.slice(0, MAX_Q)}…` : t; };
-const help = (e: Entry): string => e.kind === 'citation' ? 'AI 给的引用' : e.kind === 'conclusion' ? 'AI 写的分析' : LEVEL[e.helpLevel];
+const help = (e: Entry): string => e.kind ? KIND_HELP[e.kind] : LEVEL[e.helpLevel];
 
 /** The day the user explained it without the AI: the citation's original page found, or the last passing try. */
 export function settledOn(e: Entry): string | null {

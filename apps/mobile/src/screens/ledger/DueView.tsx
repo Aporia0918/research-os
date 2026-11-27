@@ -1,7 +1,7 @@
 // 讲给我听 (plan 2.2): you explain, it only listens. A good explanation is praised by name; one that falls short is not
 // scored or called a failure: 「一起捋一遍？」 walks the missed points and the debt comes back tomorrow. When the free
 // grader is 拿不准 it asks for the explanation again in other words, once, without counting it. 改天再聊 and 这个不用了 are
-// always one tap away. 结论债 is repaid by the null-world exam, 引用债 by pasting the original sentence.
+// always one tap away. 结论债 is repaid by the null-world exam, 引用债 by pasting the original sentence, 变式债 in 析微.
 import { useState, type ReactNode } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { tr } from '../../i18n';
@@ -103,7 +103,12 @@ export function DueView({ entries, exam, title, head, done }: Props) {
         </div>
       )}
       {entries.length === 0 && !walk && <div className="card"><p>{tr('今天没有要还的。')}</p></div>}
-      {entries.map(e => e.kind === 'conclusion' ? (
+      {entries.map(e => e.kind === 'variant' ? (
+        <div key={e.id} className={`card${e.red ? ' red-mark' : ''}`} data-testid="variant-due">
+          <b>{e.question}</b><span className="pill">{tr('变式债')}</span>
+          <div className="muted">{tr('变式债靠复测还：到「析微」不看 AI 再做一道变式。')}</div>
+        </div>
+      ) : e.kind === 'conclusion' ? (
         <div key={e.id} className={`card${e.red ? ' red-mark' : ''}`} data-testid="conclusion-due">
           <b>{e.question}</b>{e.red && <span className="pill bad">{redTag(e)}</span>}
           <div className="muted">{tr('结论债靠零世界考试还：改好后到「科研 → 零世界」再考一次。')}</div>

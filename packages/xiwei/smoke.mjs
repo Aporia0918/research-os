@@ -8,9 +8,11 @@ const dir = resolve(process.argv[2]);
 const { loadPyodide } = await import(pathToFileURL(`${dir}/pyodide.mjs`).href);
 const t0 = performance.now();
 const py = await loadPyodide({ indexURL: `${dir}/` });
-py.FS.writeFile('/site.zip', readFileSync(`${dir}/site.zip`));
-py.runPython("import sys, zipfile; zipfile.ZipFile('/site.zip').extractall('/site'); sys.path.insert(0, '/site')");
-const call = (name, args) => JSON.parse(py.runPython(`from xiwei.api import call; call(${JSON.stringify(name)}, ${JSON.stringify(JSON.stringify(args))})`));
+// 和手机上的 engine.worker.ts 同一套加载方式
+py.unpackArchive(readFileSync(`${dir}/site.zip`).buffer, 'zip', { extractDir: '/site' });
+py.pyimport('sys').path.insert(0, '/site');
+const api = py.pyimport('xiwei.api');
+const call = (name, args) => JSON.parse(api.call(name, JSON.stringify(args)));
 const r = call('read', { text: '求极限 lim(x→0⁺) |x|/x' });
 const g = call('generate', { problem: r.problem });
 const gr = call('grade', { original: r.problem, variant: g.variant.problem, answer: '不存在' });

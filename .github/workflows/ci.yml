@@ -6,7 +6,7 @@ name: ci
 on:
   workflow_dispatch:
   push:
-    branches: ["integrate/whole-app", "feat/**"]
+    branches: ["integrate/whole-app", "feat/**", "claude/**"]
   pull_request:
 
 permissions:
@@ -55,6 +55,26 @@ jobs:
             apps/mobile/vitest-junit.xml
             apps/mobile/perf-logic.json
           if-no-files-found: ignore
+
+  engine:
+    name: 析微 engine (ruff, pytest, question-set evaluation)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: packages/xiwei
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Install the pinned engine wheels (the same ones the phone gets), then the test tools
+        run: |
+          uv venv -q --python 3.12
+          uv pip install -q --require-hashes -r requirements.txt
+          uv pip install -q pytest ruff
+      - run: .venv/bin/ruff check .
+      - run: .venv/bin/python -m pytest -q
+      - name: Question sets (reading, answers, variants, locating missed conditions, timing)
+        run: .venv/bin/python eval.py
 
   backend:
     name: backend (ruff, mypy, import rules, architecture, plugins, pytest)

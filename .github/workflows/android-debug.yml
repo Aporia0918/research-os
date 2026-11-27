@@ -8,7 +8,7 @@ name: android-debug
 on:
   workflow_dispatch:
   push:
-    branches: ["feat/mobile-apk-ci", "integrate/whole-app"]
+    branches: ["feat/mobile-apk-ci", "integrate/whole-app", "claude/**"]  # claude/**: artifact only, never published
 
 permissions:
   contents: read
@@ -36,11 +36,24 @@ jobs:
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
+      - name: Build the 析微 engine (Pyodide + pinned wheels) and run it once in Node
+        # 17 MB of WebAssembly Python and wheels, so it is built here and never committed (public/engine is ignored).
+        run: |
+          set -eu
+          python3 ../../packages/xiwei/build_site.py "$RUNNER_TEMP/engine"
+          node ../../packages/xiwei/smoke.mjs "$RUNNER_TEMP/engine"
+          cp -r "$RUNNER_TEMP/engine" public/engine
+
       - name: Build the web app and copy it into the Android project
         run: |
           set -eu
           export VITE_TEST_BUILD=1 VITE_VERSION_CODE=$((100 + VERSION_CODE))
           npm ci && npm run build && npx cap sync android
+
+      - name: 析微 main line in Chrome (the built Web Worker loads the engine)
+        run: |
+          npm i --no-save playwright-core@1.49.1
+          node scripts/xiwei-browser-smoke.mjs
 
       - name: Build the debug APK
         # The wrapper jar is not in the repo, so fetch the Gradle version the wrapper names and run it directly.
